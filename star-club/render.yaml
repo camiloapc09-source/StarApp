@@ -7,15 +7,13 @@ services:
     buildCommand: npm install && npm run build
     startCommand: npm start
     envVars:
-      - key: DATABASE_URL
-        value: file:/data/star-club.db
+      - key: TURSO_DATABASE_URL
+        sync: false        # Set in Render dashboard
+      - key: TURSO_AUTH_TOKEN
+        sync: false        # Set in Render dashboard
       - key: AUTH_SECRET
         generateValue: true
       - key: NEXTAUTH_URL
-        sync: false        # Set manually in Render dashboard to your app URL
+        sync: false        # Set to your app URL after first deploy
       - key: NODE_ENV
         value: production
-    disk:
-      name: star-club-data
-      mountPath: /data
-      sizeGB: 1
