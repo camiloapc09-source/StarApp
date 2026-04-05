@@ -14,12 +14,14 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const unreadCount = await db.notification.count({
-    where: {
-      userId: session.user.id,
-      isRead: false,
-    },
-  });
+  let unreadCount = 0;
+  try {
+    unreadCount = await db.notification.count({
+      where: { userId: session.user.id, isRead: false },
+    });
+  } catch {
+    // DB unavailable — continue without notification count
+  }
 
   return (
     <DashboardShell

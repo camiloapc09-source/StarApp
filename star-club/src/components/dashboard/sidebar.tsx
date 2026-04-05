@@ -80,7 +80,7 @@ interface SidebarProps {
 export function Sidebar({ role, userName, userAvatar, notificationCount = 0 }: SidebarProps) {
   const pathname = usePathname();
   const dict = getClientDictionary();
-  const links = roleNavigationIds[role.toLowerCase()] || [];
+  const links = roleNavigationIds[(role ?? "").toLowerCase()] || [];
 
   return (
     <aside className="fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[var(--bg-secondary)] border-r border-[var(--border-primary)]">
