@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: star-club
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        value: file:/data/star-club.db
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: NEXTAUTH_URL
+        sync: false        # Set manually in Render dashboard to your app URL
+      - key: NODE_ENV
+        value: production
+    disk:
+      name: star-club-data
+      mountPath: /data
+      sizeGB: 1

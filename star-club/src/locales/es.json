@@ -1,0 +1,200 @@
+{
+  "header": {
+    "searchPlaceholder": "Buscar...",
+    "coachTitle": "Panel del entrenador",
+    "coachSubtitle": "Bienvenido, {name} — ¿listo para entrenar?",
+    "playerTitleTemplate": "Hola, {firstName} 👋",
+    "playerSubtitle": "Tu panel de rendimiento personal"
+  },
+  "evidence": {
+    "pendingTitle": "Evidencias pendientes",
+    "acceptAll": "Aceptar todas",
+    "noPending": "No hay evidencias pendientes.",
+    "accept": "Aceptar",
+    "reject": "Rechazar"
+  },
+  "player": {
+    "profileNotSet": "Perfil no creado todavía. Contacta con tu administrador.",
+    "attendanceTitle": "Asistencia",
+    "thisMonth": "este mes",
+    "rewardsHeading": "Recompensas",
+    "noRewards": "¡Completa misiones para ganar recompensas!",
+    "myMissionsTitle": "Mis misiones",
+    "myMissionsSubtitle": "Completa misiones para ganar XP y subir de nivel",
+    "recentSessionsTitle": "Sesiones recientes",
+    "noSessionsThisMonth": "No hay sesiones registradas este mes."
+  },
+  "common": {
+    "dashboard": "Panel",
+    "players": "Jugadores",
+    "attendance": "Asistencia",
+    "payments": "Pagos",
+    "gamification": "Arise System",
+    "reports": "Informes",
+    "settings": "Configuración",
+    "sessions": "Sesiones",
+    "missions": "Misiones",
+    "stats": "Estadísticas",
+    "rewards": "Recompensas",
+    "notifications": "Notificaciones",
+    "signOut": "Cerrar sesión",
+    "viewAll": "Ver todo →",
+    "noPlayersYet": "No hay jugadores todavía. Añade tu primer jugador para empezar.",
+    "addFirstPlayer": "Añadir primer jugador",
+    "addPlayer": "Añadir jugador",
+    "createPlayer": "Crear jugador",
+    "cancel": "Cancelar",
+    "creating": "Creando...",
+    "addNewPlayer": "Añadir nuevo jugador",
+    "playerInformation": "Información del jugador",
+    "backToPlayers": "Volver a jugadores",
+    "noCategories": "No hay categorías creadas todavía.",
+    "quickActions": "Acciones rápidas",
+    "overview": "Resumen",
+    "totalSessions": "Sesiones totales",
+    "pendingPayments": "Pagos pendientes",
+    "categories": "Categorías",
+    "pendingPlayers": "Jugadores pendientes",
+    "activePlayers": "Jugadores activos",
+    "paidThisMonth": "Pagado este mes",
+    "overduePayments": "Pagos atrasados",
+    "recentPlayers": "Jugadores recientes",
+    "coaches": "Entrenadores",
+    "adminDashboard": "Panel de administrador",
+    "adminSubtitle": "Bienvenido de nuevo — esto está pasando en tu club",
+    "createSession": "Crear sesión",
+    "recordPayment": "Registrar pago",
+    "viewReports": "Ver informes",
+    "allPlayers": "Todos los jugadores",
+    "category": "Categoría",
+    "jersey": "Dorsal",
+    "attendanceLabel": "Asistencia",
+    "pendingLabel": "pendiente",
+    "status": {
+      "ACTIVE": "ACTIVO",
+      "PENDING": "PENDIENTE",
+      "SUSPENDED": "SUSPENDIDO"
+    },
+    "platformSubtitle": "Plataforma deportiva"
+    ,"fullReport": "Informe completo"
+    ,"evidence": "Evidencias"
+    ,"categories": "Categorías"
+    ,"profile": "Mi perfil"
+  },
+  "reports": {
+    "topPerformers": "Mejores jugadores",
+    "attendanceBreakdown": "Desglose de asistencia",
+    "paymentStatus": "Estado de pagos",
+    "totalRevenue": "Ingresos totales",
+    "avgAttendance": "Asistencia media",
+    "pendingRevenue": "Ingresos pendientes"
+  },
+  "coach": {
+    "mySessions": "Mis sesiones",
+    "upcomingSessions": "Próximas sesiones",
+    "recentSessions": "Sesiones recientes",
+    "allSessionsLink": "Todas las sesiones →",
+    "noSessionsYet": "No hay sesiones todavía. Crea tu primera sesión.",
+    "allCategories": "Todas las categorías",
+    "present": "presentes",
+    "noUpcoming": "No hay sesiones programadas."
+  },
+  "payments": {
+    "subtitle": "Gestiona y controla todos los registros de pago",
+    "collected": "Recaudado",
+    "pending": "Pendiente",
+    "overdue": "Atrasado",
+    "allPayments": "Todos los pagos",
+    "addPayment": "+ Añadir pago",
+    "noRecords": "No hay registros de pago. Añade pagos para tus jugadores.",
+    "duePrefix": "Vence",
+    "paidPrefix": "Pagado"
+  },
+  "attendance": {
+    "subtitle": "Historial de sesiones y registros de asistencia",
+    "noSessions": "No hay sesiones registradas todavía.",
+    "allLabel": "Todas",
+    "coachPrefix": "Entrenador",
+    "presentLabel": "presentes",
+    "takeAttendance": "Tomar asistencia",
+    "save": "Guardar",
+    "saved": "Asistencia guardada",
+    "saveError": "Error al guardar la asistencia"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "unread": "{count} sin leer",
+    "allNotifications": "Todas las notificaciones",
+    "none": "¡Estás al día! No hay notificaciones."
+  },
+  "errors": {
+    "createPlayerFailed": "Error al crear el jugador",
+    "generic": "Algo salió mal"
+  },
+  "attendanceStatus": {
+    "PRESENT": "Presente",
+    "ABSENT": "Ausente",
+    "LATE": "Tarde",
+    "EXCUSED": "Justificado"
+  },
+  "gamification": {
+    "subtitle": "Sistema de XP, misiones y logros de jugadores",
+    "leaderboard": "Ranking de XP",
+    "noPlayers": "No hay jugadores todavía.",
+    "missionsTitle": "Misiones",
+    "noMissions": "No hay misiones creadas. Crea misiones para motivar a los jugadores.",
+    "playersAssigned": "jugadores asignados",
+    "xpSuffix": "XP"
+  },
+  "form": {
+    "fullName": "Nombre completo",
+    "email": "Correo electrónico",
+    "initialPassword": "Contraseña inicial",
+    "selectCategory": "Selecciona categoría...",
+    "jerseyNumber": "Número dorsal",
+    "position": "Posición",
+    "dateOfBirth": "Fecha de nacimiento"
+    ,"documentNumber": "Número de documento",
+    "address": "Dirección",
+    "phone": "Teléfono (WhatsApp)",
+    "joinDate": "Fecha de ingreso",
+    "paymentDay": "Día de pago",
+    "monthlyFee": "Cuota mensual",
+    "parentName": "Nombre del acudiente",
+    "parentEmail": "Correo acudiente",
+    "parentPhone": "Teléfono acudiente",
+    "parentRelation": "Relación"
+  },
+  "login": {
+    "welcomeBack": "Bienvenido",
+    "signInPrompt": "Inicia sesión en tu cuenta para continuar",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "passwordLabel": "Contraseña",
+    "signInButton": "Iniciar sesión",
+    "signingIn": "Iniciando sesión...",
+    "invalidCredentials": "Correo o contraseña inválidos. Inténtalo de nuevo.",
+    "demoAccounts": "Cuentas de demostración"
+  },
+  "home": {
+    "heroDescription": "La plataforma premium para clubes deportivos. Gestiona, registra y potencia a tus deportistas.",
+    "features": ["XP y niveles", "Estadísticas en tiempo real", "Seguimiento inteligente de asistencia", "Pagos integrados"],
+    "headlinePrimary": "MEJORA TU",
+    "headlineAccent": "RENDIMIENTO",
+    "getStarted": "Comenzar",
+    "register": "Registrarse",
+    "signIn": "Iniciar sesión"
+  },
+  "parent": {
+    "notLinked": "Tu cuenta no está vinculada a ningún jugador todavía. Contacta con el administrador del club.",
+    "parentDashboard": "Panel de padres",
+    "trackingProgress": "Seguimiento del progreso de {name}",
+    "attendanceThisMonth": "Asistencia este mes",
+    "attendanceRate": "tasa de asistencia",
+    "pendingPayments": "Pagos pendientes",
+    "paymentsUpToDate": "Todos los pagos están al día ✓",
+    "duePrefix": "Vence",
+    "recentAchievements": "Logros recientes",
+    "unassigned": "Sin asignar"
+  }
+}

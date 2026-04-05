@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+/* ─── STAR CLUB DESIGN SYSTEM ─────────────────────────── */
+/* Premium dark-mode design inspired by Nike / Adidas      */
+
+:root {
+  /* Core palette */
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-card: #161616;
+  --bg-elevated: #1a1a1a;
+  --bg-hover: #222222;
+
+  /* Borders */
+  --border-primary: #222222;
+  --border-subtle: #1a1a1a;
+
+  /* Text */
+  --text-primary: #f5f5f5;
+  --text-secondary: #a0a0a0;
+  --text-muted: #666666;
+
+  /* Brand accent — electric green */
+  --accent: #00ff87;
+  --accent-dim: #00cc6a;
+  --accent-glow: rgba(0, 255, 135, 0.15);
+
+  /* Status colors */
+  --success: #00ff87;
+  --warning: #ffb800;
+  --error: #ff4757;
+  --info: #3b82f6;
+
+  /* Gamification */
+  --xp-bar: #00ff87;
+  --level-glow: rgba(0, 255, 135, 0.25);
+  --streak-fire: #ff6b35;
+
+  /* Spacing */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  /* Shadows */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 20px rgba(0, 255, 135, 0.1);
+}
+
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-card: var(--bg-card);
+  --color-card-hover: var(--bg-hover);
+  --color-border: var(--border-primary);
+  --color-accent: var(--accent);
+  --color-accent-dim: var(--accent-dim);
+  --color-muted: var(--text-muted);
+  --color-secondary: var(--text-secondary);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+  --color-xp: var(--xp-bar);
+  --color-streak: var(--streak-fire);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #333 transparent;
+}
+
+body {
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Smooth scrollbar for Webkit */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+/* Glass card effect */
+.glass-card {
+  background: rgba(22, 22, 22, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+}
+
+/* Glow effect for accent elements */
+.glow-accent {
+  box-shadow: 0 0 20px rgba(0, 255, 135, 0.15), 0 0 60px rgba(0, 255, 135, 0.05);
+}
+
+/* XP progress bar animation */
+@keyframes xp-fill {
+  from { width: 0%; }
+}
+
+.xp-bar-animate {
+  animation: xp-fill 1s ease-out;
+}
+
+/* Pulse animation for streaks */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.streak-pulse {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Level up animation */
+@keyframes level-up {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.level-up-animate {
+  animation: level-up 0.6s ease-in-out;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-card) 25%,
+    var(--bg-elevated) 50%,
+    var(--bg-card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}

@@ -1,0 +1,278 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─── USER & AUTH ──────────────────────────────────────────
+model User {
+  id             String    @id @default(cuid())
+  name           String
+  email          String    @unique
+  password       String
+  role           String    @default("PLAYER") // ADMIN | COACH | PLAYER | PARENT
+  phone          String?
+  branch         String?
+  emergencyContact String?
+  eps            String?
+  avatar         String?
+  avatarPending  String?   // URL of pending avatar awaiting admin approval
+  avatarStatus   String    @default("NONE") // NONE | PENDING | APPROVED | REJECTED
+  // Coach: optional category assignment (admin sets which category this coach manages)
+  coachCategoryId String?
+  coachCategory   Category? @relation("CoachCategory", fields: [coachCategoryId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relations
+  coachSessions  Session[]      @relation("CoachSessions")
+  playerProfile  Player?
+  parentProfile  Parent?
+  notifications  Notification[]
+  verifiedEvidences Evidence[]
+}
+
+// ─── CATEGORY (age groups / divisions) ────────────────────
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  ageMin      Int
+  ageMax      Int
+  createdAt   DateTime @default(now())
+
+  players Player[]
+  sessions Session[]
+  coachUsers User[] @relation("CoachCategory")
+}
+
+// ─── PLAYER ───────────────────────────────────────────────
+model Player {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  dateOfBirth DateTime?
+  documentNumber String?
+  address       String?
+  phone         String?
+  joinDate      DateTime?
+  paymentDay    Int?       // day of month (1-28)
+  monthlyAmount Float?     // monthly fee amount
+  position    String?
+  jerseyNumber Int?
+  status      String   @default("ACTIVE") // ACTIVE | PENDING | INACTIVE
+
+  // Gamification
+  xp          Int      @default(0)
+  level       Int      @default(1)
+  streak      Int      @default(0)
+  lastActive  DateTime?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  parentLinks    ParentPlayer[]
+  attendances    Attendance[]
+  payments       Payment[]
+  playerMissions PlayerMission[]
+  rewards        PlayerReward[]
+  evidences      Evidence[]
+  uniformOrders  UniformOrder[]
+}
+
+// ─── PARENT ───────────────────────────────────────────────
+model Parent {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phone  String?
+  relation String?
+
+  children ParentPlayer[]
+  uniformOrders UniformOrder[]
+}
+
+model Invite {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  role      String   @default("PLAYER")
+  payload   Json?
+  used      Boolean  @default(false)
+  usedBy    String?
+  usedAt    DateTime?
+  createdBy String?
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+}
+
+model ParentPlayer {
+  id       String @id @default(cuid())
+  parentId String
+  parent   Parent @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  playerId String
+  player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, playerId])
+}
+
+// ─── SESSION (training / match) ───────────────────────────
+model Session {
+  id          String   @id @default(cuid())
+  title       String
+  type        String   @default("TRAINING") // TRAINING | MATCH | EVENT
+  date        DateTime
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  coachId     String?
+  coach       User?     @relation("CoachSessions", fields: [coachId], references: [id])
+  notes       String?
+  createdAt   DateTime  @default(now())
+
+  attendances Attendance[]
+}
+
+// ─── ATTENDANCE ───────────────────────────────────────────
+model Attendance {
+  id        String   @id @default(cuid())
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  sessionId String
+  session   Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  status    String   @default("ABSENT") // PRESENT | ABSENT | LATE | EXCUSED
+  createdAt DateTime @default(now())
+
+  @@unique([playerId, sessionId])
+}
+
+// ─── PAYMENT ──────────────────────────────────────────────
+model Payment {
+  id            String   @id @default(cuid())
+  playerId      String
+  player        Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  amount        Float
+  concept       String
+  status        String   @default("PENDING") // PENDING | SUBMITTED | COMPLETED | OVERDUE
+  dueDate       DateTime
+  paidAt        DateTime?
+  paymentMethod String?  // CASH | TRANSFER | OTHER
+  proofUrl      String?
+  proofNote     String?
+  createdAt     DateTime @default(now())
+}
+
+// ─── GAMIFICATION ─────────────────────────────────────────
+model Mission {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  xpReward    Int
+  type        String   @default("DAILY") // DAILY | WEEKLY | CHALLENGE | SPECIAL
+  icon        String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  playerMissions PlayerMission[]
+}
+
+model PlayerMission {
+  id         String   @id @default(cuid())
+  playerId   String
+  player     Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  missionId  String
+  mission    Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  status     String   @default("ACTIVE") // ACTIVE | COMPLETED | EXPIRED
+  progress   Int      @default(0)
+  target     Int      @default(1)
+  completedAt DateTime?
+  assignedAt DateTime @default(now())
+
+  
+  // Evidence submitted by player for this mission
+  evidences  Evidence[]
+
+  @@unique([playerId, missionId])
+}
+
+model Reward {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  icon        String?
+  levelRequired Int   @default(1)
+  createdAt   DateTime @default(now())
+
+  playerRewards PlayerReward[]
+}
+
+model PlayerReward {
+  id        String   @id @default(cuid())
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  rewardId  String
+  reward    Reward   @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  earnedAt  DateTime @default(now())
+
+  @@unique([playerId, rewardId])
+}
+
+// ─── EVIDENCE (photo / proof for missions) ──────────────────
+model Evidence {
+  id              String   @id @default(cuid())
+  playerId        String
+  player          Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  playerMissionId String
+  playerMission   PlayerMission @relation(fields: [playerMissionId], references: [id], onDelete: Cascade)
+
+  url             String   // storage path or signed URL
+  filename        String?
+  mimeType        String?
+  size            Int?
+
+  status          String   @default("PENDING") // PENDING | ACCEPTED | REJECTED
+  submittedAt     DateTime @default(now())
+  verifiedAt      DateTime?
+  verifiedBy      String?
+  verifiedByUser  User?    @relation(fields: [verifiedBy], references: [id])
+
+  notes           String?
+  deletedAt       DateTime?
+}
+
+// ─── NOTIFICATIONS ────────────────────────────────────────
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   @default("INFO") // INFO | ALERT | ACHIEVEMENT | PAYMENT | ATTENDANCE
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
+
+// ─── UNIFORM ORDERS ───────────────────────────────────────
+model UniformOrder {
+  id             String   @id @default(cuid())
+  parentId       String
+  parent         Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  playerId       String
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  type           String   // TRAINING | GAME | PRESENTATION
+  jerseySize     String   // XS | S | M | L | XL | XXL
+  shortsSize     String   // XS | S | M | L | XL | XXL
+  nameOnJersey   String   // any name for TRAINING/PRESENTATION; must be last name for GAME
+  numberOnJersey Int?     // optional for TRAINING; must be unique per type for GAME
+  unitPrice      Float
+  totalPrice     Float
+  status         String   @default("PENDING") // PENDING | CONFIRMED | DELIVERED | CANCELLED
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
