@@ -2,6 +2,7 @@ import type { NextAuthConfig } from "next-auth";
 
 // Edge-safe auth config — no Node.js-only imports (no db, no bcrypt)
 export const authConfig = {
+  trustHost: true,
   session: { strategy: "jwt" as const },
   pages: { signIn: "/login" },
   providers: [], // Credentials provider added in auth.ts (Node.js only)
