@@ -75,15 +75,21 @@ interface SidebarProps {
   userName: string;
   userAvatar?: string | null;
   notificationCount?: number;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function Sidebar({ role, userName, userAvatar, notificationCount = 0 }: SidebarProps) {
+export function Sidebar({ role, userName, userAvatar, notificationCount = 0, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const dict = getClientDictionary();
   const links = roleNavigationIds[(role ?? "").toLowerCase()] || [];
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[var(--bg-secondary)] border-r border-[var(--border-primary)]">
+    <aside className={cn(
+      "fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[var(--bg-secondary)] border-r border-[var(--border-primary)] transition-transform duration-300",
+      // Mobile: hidden by default, slides in when open
+      isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+    )}>
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6 border-b border-[var(--border-primary)]">
         <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center">
@@ -105,7 +111,7 @@ export function Sidebar({ role, userName, userAvatar, notificationCount = 0 }: S
             (link.href !== `/dashboard/${role.toLowerCase()}` &&
               pathname.startsWith(link.href));
           return (
-            <Link key={link.href} href={link.href}>
+            <Link key={link.href} href={link.href} onClick={onClose}>
               <motion.div
                 whileTap={{ scale: 0.98 }}
                 className={cn(
@@ -128,7 +134,7 @@ export function Sidebar({ role, userName, userAvatar, notificationCount = 0 }: S
         })}
 
         {/* Notifications link */}
-        <Link href={`/dashboard/${role.toLowerCase()}/notifications`}>
+        <Link href={`/dashboard/${role.toLowerCase()}/notifications`} onClick={onClose}>
             <motion.div
             whileTap={{ scale: 0.98 }}
             className={cn(
