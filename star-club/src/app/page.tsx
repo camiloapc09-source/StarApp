@@ -22,7 +22,7 @@ export default async function Home() {
             width: 800,
             height: 800,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(0,255,135,0.06) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)",
             top: "50%",
             left: "50%",
             transform: "translate(-50%, -50%)",
@@ -32,9 +32,9 @@ export default async function Home() {
 
         {/* Logo badge */}
         <div className="mb-8">
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-[var(--bg-card)] border border-[var(--border-primary)] mb-8">
-            <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-              <span className="text-black font-black text-sm">SC</span>
+          <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-[var(--bg-card)] border border-[var(--border-primary)] mb-8">
+            <div className="w-8 h-8 rounded-full overflow-hidden border border-[var(--accent)]" style={{ boxShadow: "0 0 8px rgba(139,92,246,0.5)" }}>
+              <img src="/logo.jpeg" alt="Star Club" className="w-full h-full object-cover" />
             </div>
             <span className="font-bold tracking-widest text-sm uppercase text-[var(--text-primary)]">Star Club</span>
           </div>

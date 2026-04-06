@@ -65,12 +65,13 @@ export default function LoginPage() {
           transition={{ duration: 0.6 }}
           className="relative z-10 text-center"
         >
-          {/* Logo */}
-          <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[var(--accent)] mx-auto mb-8" style={{ boxShadow: "0 0 24px rgba(139,92,246,0.35)" }}>
-            <img src="/logo.jpeg" alt="Star Club" className="w-full h-full object-cover" />
+          {/* StarApp platform brand */}
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-8" style={{ background: "linear-gradient(135deg, #6D28D9 0%, #8B5CF6 100%)", boxShadow: "0 0 32px rgba(139,92,246,0.40)" }}>
+            <span className="text-white font-black text-3xl tracking-tighter">S</span>
           </div>
 
-          <h2 className="text-4xl font-black tracking-tighter mb-4 text-[var(--text-primary)]">STAR CLUB</h2>
+          <h2 className="text-4xl font-black tracking-tighter mb-2 text-[var(--text-primary)]">StarApp</h2>
+          <p className="text-[var(--accent)] text-xs font-bold tracking-widest uppercase mb-4">Plataforma Deportiva</p>
           <p className="text-[var(--text-secondary)] text-lg mb-12 leading-relaxed max-w-sm">{dict.home.heroDescription}</p>
 
           {/* Features */}
