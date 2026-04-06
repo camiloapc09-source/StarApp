@@ -147,6 +147,7 @@ export default async function PlayerProfilePage({ params }: Props) {
               />
               <DeletePlayerButton playerId={player.id} playerName={player.user.name} />
               </div>
+            </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
               {player.dateOfBirth && (
                 <>
