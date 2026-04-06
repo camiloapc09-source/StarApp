@@ -11,6 +11,7 @@ import { es } from "date-fns/locale";
 import { calculateLevel } from "@/lib/utils";
 import PlayerActivateButton from "@/components/admin/player-activate-button";
 import AdminEditPlayerButton from "@/components/admin/admin-edit-player-button";
+import DeletePlayerButton from "@/components/admin/delete-player-button";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -127,6 +128,7 @@ export default async function PlayerProfilePage({ params }: Props) {
                   <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>{player.user.email}</p>
                 </div>
               </div>
+              <div className="flex items-center gap-2">
               <AdminEditPlayerButton
                 player={{
                   id: player.id,
@@ -143,7 +145,8 @@ export default async function PlayerProfilePage({ params }: Props) {
                 }}
                 categories={categories}
               />
-            </div>
+              <DeletePlayerButton playerId={player.id} playerName={player.user.name} />
+              </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
               {player.dateOfBirth && (
                 <>

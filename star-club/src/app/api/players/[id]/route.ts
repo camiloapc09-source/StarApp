@@ -10,7 +10,7 @@ const updateSchema = z.object({
   position: z.string().optional().nullable(),
   xp: z.number().optional(),
   paymentDay: z.number().min(1).max(31).optional(),
-  monthlyAmount: z.number().positive().optional().nullable(),
+  monthlyAmount: z.number().min(0).optional().nullable(),
   joinDate: z.string().optional().nullable(),
   phone: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
