@@ -163,8 +163,17 @@ export default async function PlayerProfilePage({ params }: Props) {
               {player.joinDate && (
                 <InfoRow label="Fecha de ingreso" value={format(player.joinDate, "dd/MM/yyyy", { locale: es })} />
               )}
-              {player.paymentDay != null && <InfoRow label="Dia de pago" value={`Dia ${player.paymentDay}`} />}
-              {player.monthlyAmount != null && <InfoRow label="Monto mensual" value={`$${player.monthlyAmount.toLocaleString("es-CO")}`} />}
+              {player.paymentDay != null && !( player.monthlyAmount === 0) && <InfoRow label="Dia de pago" value={`Dia ${player.paymentDay}`} />}
+              {player.monthlyAmount === 0 ? (
+                <div className="flex items-center justify-between py-2 border-b" style={{ borderColor: "var(--border-subtle)" }}>
+                  <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Mensualidad</span>
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: "rgba(139,92,246,0.15)", color: "var(--accent)", border: "1px solid rgba(139,92,246,0.3)" }}>
+                    BECADO
+                  </span>
+                </div>
+              ) : player.monthlyAmount != null ? (
+                <InfoRow label="Monto mensual" value={`$${player.monthlyAmount.toLocaleString("es-CO")}`} />
+              ) : null}
             </div>
           </Card>
 

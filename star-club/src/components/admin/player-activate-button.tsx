@@ -8,6 +8,7 @@ type Props = { playerId: string; playerName: string; dateOfBirth?: string | null
 export default function PlayerActivateButton({ playerId, playerName, dateOfBirth }: Props) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
+  const [isBeca, setIsBeca] = useState(false);
   const [joinDate, setJoinDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [categoryId, setCategoryId] = useState("");
   const [categories, setCategories] = useState<{ id: string; name: string; ageMin: number; ageMax: number }[]>([]);
@@ -35,7 +36,8 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
 
   async function handleActivate(e: React.FormEvent) {
     e.preventDefault();
-    if (!amount || parseFloat(amount) <= 0) return setError("Ingresa el monto mensual.");
+    const finalAmount = isBeca ? 0 : parseFloat(amount);
+    if (!isBeca && (!amount || finalAmount <= 0)) return setError("Ingresa el monto mensual.");
     if (!joinDate) return setError("Selecciona la fecha de ingreso.");
     setLoading(true);
     setError(null);
@@ -46,7 +48,7 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
       const patchBody: Record<string, unknown> = {
         status: "ACTIVE",
         paymentDay,
-        monthlyAmount: parseFloat(amount),
+        monthlyAmount: finalAmount,
         joinDate,
       };
       if (categoryId) patchBody.categoryId = categoryId;
@@ -58,21 +60,24 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
       });
       if (!r1.ok) throw new Error("Error al activar jugador");
 
-      const now = new Date();
-      let dueDate = new Date(now.getFullYear(), now.getMonth(), paymentDay);
-      if (dueDate <= now) dueDate = new Date(now.getFullYear(), now.getMonth() + 1, paymentDay);
+      // Becados: no se genera mensualidad
+      if (!isBeca) {
+        const now = new Date();
+        let dueDate = new Date(now.getFullYear(), now.getMonth(), paymentDay);
+        if (dueDate <= now) dueDate = new Date(now.getFullYear(), now.getMonth() + 1, paymentDay);
 
-      const r2 = await fetch("/api/payments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          playerId,
-          amount: parseFloat(amount),
-          concept: "Mensualidad",
-          dueDate: dueDate.toISOString(),
-        }),
-      });
-      if (!r2.ok) throw new Error("Jugador activado pero error al crear pago");
+        const r2 = await fetch("/api/payments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            playerId,
+            amount: finalAmount,
+            concept: "Mensualidad",
+            dueDate: dueDate.toISOString(),
+          }),
+        });
+        if (!r2.ok) throw new Error("Jugador activado pero error al crear pago");
+      }
 
       setDone(true);
       setTimeout(() => { window.location.reload(); }, 1600);
@@ -114,7 +119,9 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
                 <CheckCircle2 size={40} style={{ color: "var(--success)" }} />
                 <p className="font-semibold">Jugador activado</p>
                 <p className="text-xs text-center" style={{ color: "var(--text-muted)" }}>
-                  Primera mensualidad generada. El dia de pago sera el {new Date(joinDate).getDate()} de cada mes.
+                  {isBeca
+                    ? "Jugador activado con beca. No se generan mensualidades."
+                    : `Primera mensualidad generada. El dia de pago sera el ${new Date(joinDate).getDate()} de cada mes.`}
                 </p>
               </div>
             ) : (
@@ -141,16 +148,38 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
                   <label className="text-xs font-medium block mb-1.5" style={{ color: "var(--text-muted)" }}>
                     MONTO MENSUAL (COP)
                   </label>
+                  {/* Beca toggle */}
+                  <label
+                    className="flex items-center gap-2 mb-2 cursor-pointer select-none"
+                    style={{ color: isBeca ? "var(--accent)" : "var(--text-secondary)" }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isBeca}
+                      onChange={(e) => {
+                        setIsBeca(e.target.checked);
+                        if (e.target.checked) setAmount("0");
+                        else setAmount("");
+                      }}
+                      className="w-4 h-4 accent-[var(--accent)]"
+                    />
+                    <span className="text-xs font-semibold">Beca (mensualidad $0)</span>
+                  </label>
                   <input
                     type="number"
                     min="0"
                     step="1000"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    value={isBeca ? "0" : amount}
+                    onChange={(e) => !isBeca && setAmount(e.target.value)}
                     placeholder="Ej: 80000"
-                    required
+                    disabled={isBeca}
                     className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
-                    style={{ background: "var(--bg-elevated)", borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
+                    style={{
+                      background: "var(--bg-elevated)",
+                      borderColor: isBeca ? "var(--accent)" : "var(--border-primary)",
+                      color: isBeca ? "var(--accent)" : "var(--text-primary)",
+                      opacity: isBeca ? 0.7 : 1,
+                    }}
                   />
                 </div>
                 {categories.length > 0 && (
