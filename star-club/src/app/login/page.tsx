@@ -52,7 +52,7 @@ export default function LoginPage() {
             width: 600,
             height: 600,
             borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(0,255,135,0.08) 0%, transparent 70%)",
+            background: "radial-gradient(circle, rgba(139,92,246,0.10) 0%, transparent 70%)",
             bottom: -100,
             right: -100,
             pointerEvents: "none",
@@ -66,8 +66,8 @@ export default function LoginPage() {
           className="relative z-10 text-center"
         >
           {/* Logo */}
-          <div className="w-16 h-16 rounded-2xl bg-[var(--accent)] flex items-center justify-center mx-auto mb-8">
-            <span className="text-black font-black text-2xl">SC</span>
+          <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[var(--accent)] mx-auto mb-8" style={{ boxShadow: "0 0 24px rgba(139,92,246,0.35)" }}>
+            <img src="/logo.jpeg" alt="Star Club" className="w-full h-full object-cover" />
           </div>
 
           <h2 className="text-4xl font-black tracking-tighter mb-4 text-[var(--text-primary)]">STAR CLUB</h2>
@@ -88,13 +88,29 @@ export default function LoginPage() {
       {/* Right — login form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-sm">
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2 mb-10">
-            <div className="w-9 h-9 rounded-xl bg-[var(--accent)] flex items-center justify-center">
-              <span className="text-black font-black text-sm">SC</span>
-            </div>
-            <span className="font-bold text-xl">STAR CLUB</span>
-          </div>
+          {/* Logo animado — visible en todos los tamaños */}
+          <motion.div
+            className="flex flex-col items-center mb-8"
+            initial={{ opacity: 0, scale: 0.7, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+          >
+            <motion.div
+              className="w-24 h-24 rounded-full overflow-hidden mb-3"
+              style={{ border: "2px solid var(--accent)" }}
+              animate={{
+                boxShadow: [
+                  "0 0 15px rgba(139,92,246,0.3)",
+                  "0 0 38px rgba(139,92,246,0.65)",
+                  "0 0 15px rgba(139,92,246,0.3)",
+                ],
+              }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <img src="/logo.jpeg" alt="Star Club" className="w-full h-full object-cover" />
+            </motion.div>
+            <span className="font-black text-xs tracking-widest uppercase" style={{ color: "var(--text-secondary)" }}>STAR CLUB</span>
+          </motion.div>
 
           <div className="mb-8">
             <h1 className="text-2xl font-bold mb-2">{dict.login.welcomeBack}</h1>

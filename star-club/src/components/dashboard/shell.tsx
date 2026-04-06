@@ -55,8 +55,8 @@ export function DashboardShell({
             </svg>
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center">
-              <span className="text-black font-black text-xs">SC</span>
+            <div className="w-7 h-7 rounded-full overflow-hidden border border-[var(--accent)]" style={{ boxShadow: "0 0 8px rgba(139,92,246,0.4)" }}>
+              <img src="/logo.jpeg" alt="Star Club" className="w-full h-full object-cover" />
             </div>
             <span className="font-bold text-sm tracking-tight">STAR CLUB</span>
           </div>

@@ -20,10 +20,11 @@
   --text-secondary: #a0a0a0;
   --text-muted: #666666;
 
-  /* Brand accent — electric green */
-  --accent: #00ff87;
-  --accent-dim: #00cc6a;
-  --accent-glow: rgba(0, 255, 135, 0.15);
+  /* Brand accent — Star Club violet */
+  --accent: #8B5CF6;
+  --accent-dim: #7C3AED;
+  --accent-secondary: #6D28D9;
+  --accent-glow: rgba(139, 92, 246, 0.15);
 
   /* Status colors */
   --success: #00ff87;
@@ -32,8 +33,8 @@
   --info: #3b82f6;
 
   /* Gamification */
-  --xp-bar: #00ff87;
-  --level-glow: rgba(0, 255, 135, 0.25);
+  --xp-bar: #8B5CF6;
+  --level-glow: rgba(139, 92, 246, 0.30);
   --streak-fire: #ff6b35;
 
   /* Spacing */
@@ -45,7 +46,7 @@
   /* Shadows */
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 20px rgba(0, 255, 135, 0.1);
+  --shadow-glow: 0 0 20px rgba(139, 92, 246, 0.15);
 }
 
 @theme inline {

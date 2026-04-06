@@ -100,8 +100,8 @@ export function Sidebar({ role, userName, userAvatar, notificationCount = 0, isO
       </button>
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6 border-b border-[var(--border-primary)]">
-        <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center">
-          <span className="text-black font-bold text-sm">SC</span>
+        <div className="w-9 h-9 rounded-full overflow-hidden border border-[var(--accent)] flex-shrink-0" style={{ boxShadow: "0 0 10px rgba(139,92,246,0.4)" }}>
+          <img src="/logo.jpeg" alt="Star Club" className="w-full h-full object-cover" />
         </div>
         <div>
           <h1 className="font-bold text-base tracking-tight">STAR CLUB</h1>
