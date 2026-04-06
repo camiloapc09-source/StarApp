@@ -85,11 +85,19 @@ export function Sidebar({ role, userName, userAvatar, notificationCount = 0, isO
   const links = roleNavigationIds[(role ?? "").toLowerCase()] || [];
 
   return (
-    <aside className={cn(
-      "fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[var(--bg-secondary)] border-r border-[var(--border-primary)] transition-transform duration-300",
-      // Mobile: hidden by default, slides in when open
-      isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-    )}>
+    <aside
+      className={`dashboard-sidebar${isOpen ? " sidebar-open" : ""} fixed left-0 top-0 z-40 h-screen w-64 flex flex-col bg-[var(--bg-secondary)] border-r border-[var(--border-primary)] transition-transform duration-300`}
+    >
+      {/* Close button — mobile only */}
+      <button
+        onClick={onClose}
+        className="md:hidden absolute top-4 right-4 p-1.5 rounded-lg bg-[var(--bg-hover)] text-[var(--text-muted)]"
+        aria-label="Cerrar menú"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6 border-b border-[var(--border-primary)]">
         <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center">

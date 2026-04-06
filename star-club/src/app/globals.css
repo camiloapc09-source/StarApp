@@ -73,6 +73,17 @@
   scrollbar-color: #333 transparent;
 }
 
+/* ─── MOBILE SIDEBAR ─────────────────────────────────────── */
+/* Hide sidebar off-screen on mobile by default */
+@media (max-width: 767px) {
+  aside.dashboard-sidebar {
+    transform: translateX(-100%);
+  }
+  aside.dashboard-sidebar.sidebar-open {
+    transform: translateX(0);
+  }
+}
+
 body {
   background: var(--bg-primary);
   color: var(--text-primary);
