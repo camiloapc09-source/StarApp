@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ShoppingCart, Loader2, Check, ChevronDown, Info } from "lucide-react";
 
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
+const SIZES = ["12", "14", "16", "18", "XS", "S", "M", "L", "XL", "XXL"] as const;
 
 export default function UniformOrderForm({
   type,
