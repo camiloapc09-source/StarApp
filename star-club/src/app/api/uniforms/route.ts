@@ -15,7 +15,7 @@ const NAMES: Record<string, string> = {
   PRESENTATION: "Uniforme de presentación",
 };
 
-const SIZES = ["XS", "S", "M", "L", "XL", "XXL"] as const;
+const SIZES = ["12", "14", "16", "18", "XS", "S", "M", "L", "XL", "XXL"] as const;
 
 const orderSchema = z.object({
   type:           z.enum(["TRAINING", "GAME", "PRESENTATION"]),
