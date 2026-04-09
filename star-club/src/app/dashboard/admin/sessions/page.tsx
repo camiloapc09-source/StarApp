@@ -94,11 +94,11 @@ export default async function AdminSessionsPage() {
                       {s._count.attendances}
                     </div>
                     <Link
-                      href={`/dashboard/coach/attendance/${s.id}`}
+                      href={`/dashboard/admin/attendance/${s.id}`}
                       className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
                       style={{ background: "var(--accent)", color: "#000" }}
                     >
-                      Ver asistencia
+                      Tomar asistencia
                     </Link>
                     <EditSessionButton
                       session={{ id: s.id, title: s.title, type: s.type, date: s.date.toISOString(), notes: s.notes, categoryId: s.categoryId, coachId: s.coachId }}

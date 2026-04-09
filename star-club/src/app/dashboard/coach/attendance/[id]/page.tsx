@@ -9,12 +9,13 @@ import type { Prisma } from "@/generated/prisma/client";
 
 type PlayerWithUser = Prisma.PlayerGetPayload<{ include: { user: true } }>;
 
-export default async function SessionAttendancePage({ params }: { params: { id: string } }) {
+export default async function SessionAttendancePage({ params }: { params: Promise<{ id: string }> }) {
   const userSession = await auth();
   if (!userSession?.user || !["ADMIN", "COACH"].includes(userSession.user.role)) redirect("/login");
 
+  const { id } = await params;
   const sess = await db.session.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { category: true, attendances: { include: { player: { include: { user: true } } } } },
   });
 

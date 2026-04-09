@@ -24,6 +24,8 @@ export default function AttendanceForm({
 
   const [statuses, setStatuses] = useState<Record<string, string>>(initial);
   const [loading, setLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const statusKeys = Object.keys(t?.attendanceStatus || {
     PRESENT: "Present",
@@ -34,6 +36,8 @@ export default function AttendanceForm({
 
   async function handleSave() {
     setLoading(true);
+    setSaved(false);
+    setError(null);
     try {
       const attendances = players.map((p) => ({
         playerId: p.id,
@@ -46,14 +50,13 @@ export default function AttendanceForm({
         body: JSON.stringify({ sessionId, attendances }),
       });
       if (res.ok) {
-        alert(t?.attendance?.saved ?? "Attendance saved");
+        setSaved(true);
       } else {
-        console.error(await res.text());
-        alert(t?.attendance?.saveError ?? "Failed to save attendance");
+        setError(t?.attendance?.saveError ?? "Error al guardar. Intenta de nuevo.");
       }
     } catch (e) {
       console.error(e);
-      alert(t?.attendance?.saveError ?? "Failed to save attendance");
+      setError(t?.attendance?.saveError ?? "Error al guardar. Intenta de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -86,10 +89,18 @@ export default function AttendanceForm({
             </Card>
           ))}
 
-          <div className="pt-2">
+          <div className="pt-2 space-y-2">
             <Button variant="primary" onClick={handleSave} disabled={loading}>
-              {t?.attendance?.save ?? "Save"}
+              {loading ? "Guardando..." : (t?.attendance?.save ?? "Guardar asistencia")}
             </Button>
+            {saved && (
+              <p className="text-sm font-medium" style={{ color: "var(--success)" }}>
+                ✓ Asistencia guardada correctamente
+              </p>
+            )}
+            {error && (
+              <p className="text-sm" style={{ color: "var(--error)" }}>{error}</p>
+            )}
           </div>
         </div>
       )}

@@ -6,6 +6,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { format } from "date-fns";
+import Link from "next/link";
+import { ClipboardList } from "lucide-react";
 import { getDictionary } from "@/lib/dict";
 
 export default async function AdminAttendancePage() {
@@ -77,6 +79,14 @@ export default async function AdminAttendancePage() {
                     >
                       {s.type}
                     </Badge>
+                    <Link
+                      href={`/dashboard/admin/attendance/${s.id}`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80 flex-shrink-0"
+                      style={{ background: "var(--accent)", color: "#000" }}
+                    >
+                      <ClipboardList size={13} />
+                      Tomar asistencia
+                    </Link>
                   </div>
                 </div>
 
