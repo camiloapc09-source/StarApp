@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       await db.notification.create({
         data: {
           userId: pm.player.userId,
-          title: "¡Nueva misión asignada! ðŸŽ¯",
+          title: "Nueva mision asignada",
           message: `Completa "${pm.mission.title}" para ganar ${pm.mission.xpReward} XP.`,
           type: "ACHIEVEMENT",
         },
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
       await db.notification.create({
         data: {
           userId: player.userId,
-          title: `¡Subiste de nivel! ðŸš€ Nivel ${newLevel}`,
+          title: `Subiste de nivel ${newLevel}`,
           message: `¡Felicitaciones! Alcanzaste el Nivel ${newLevel}. ¡Sigue así!`,
           type: "ACHIEVEMENT",
         },
@@ -99,7 +99,7 @@ export async function POST(req: NextRequest) {
           await db.notification.createMany({
             data: toGrant.map((r) => ({
               userId: player.userId,
-              title: `¡Nueva recompensa! ${r.icon ?? "ðŸ†"} ${r.title}`,
+              title: `Nueva recompensa ${r.icon ?? ""} ${r.title}`,
               message: r.description,
               type: "ACHIEVEMENT",
               link: "/dashboard/player/rewards",
@@ -143,7 +143,7 @@ export async function POST(req: NextRequest) {
     await db.notification.create({
       data: {
         userId: pm.player.userId,
-        title: `¡Misión completada! âš¡ +${pm.mission.xpReward} XP`,
+        title: `Mision completada +${pm.mission.xpReward} XP`,
         message: `Completaste "${pm.mission.title}" y ganaste ${pm.mission.xpReward} XP.`,
         type: "ACHIEVEMENT",
       },
@@ -153,7 +153,7 @@ export async function POST(req: NextRequest) {
       await db.notification.create({
         data: {
           userId: pm.player.userId,
-          title: `¡Subiste de nivel! ðŸš€ Nivel ${newLevel}`,
+          title: `Subiste de nivel ${newLevel}`,
           message: `¡Alcanzaste el Nivel ${newLevel}!`,
           type: "ACHIEVEMENT",
         },
@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
           await db.notification.createMany({
             data: toGrant.map((r) => ({
               userId: pm.player.userId,
-              title: `¡Nueva recompensa! ${r.icon ?? "ðŸ†"} ${r.title}`,
+              title: `Nueva recompensa ${r.icon ?? ""} ${r.title}`,
               message: r.description,
               type: "ACHIEVEMENT",
               link: "/dashboard/player/rewards",

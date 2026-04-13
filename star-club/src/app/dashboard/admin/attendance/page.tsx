@@ -62,7 +62,7 @@ export default async function AdminAttendancePage() {
                   <div className="flex-1">
                     <h3 className="font-semibold">{s.title}</h3>
                     <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                      {s.category?.name || dict.attendance?.allLabel} · {dict.attendance?.coachPrefix ?? "Coach"}: {s.coach?.name || ""}
+                      {s.category?.name || dict.attendance?.allLabel} · {dict.attendance?.coachPrefix ?? "Coach"}: {s.coach?.name || "Sin asignar"}
                     </p>
                   </div>
                   <div className="flex items-center gap-4">

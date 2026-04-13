@@ -76,7 +76,7 @@ export default async function AdminPaymentsPage() {
   const overdue   = payments.filter((p) => p.status === "OVERDUE");
   const completed = payments.filter((p) => p.status === "COMPLETED");
 
-  // Last paid map: playerId â†’ most recent completed payment
+  // Last paid map: playerId -> most recent completed payment
   const lastPaidMap = new Map<string, typeof payments[0]>();
   for (const p of [...completed].sort(
     (a, b) => new Date(b.paidAt ?? b.dueDate).getTime() - new Date(a.paidAt ?? a.dueDate).getTime()
@@ -171,7 +171,7 @@ export default async function AdminPaymentsPage() {
           <MarkOverdueButton />
         </div>
 
-        {/* â”€â”€ POR VERIFICAR â”€â”€ */}
+        {/* POR VERIFICAR */}
         {submitted.length > 0 && (
           <Card className="p-0 overflow-hidden">
             <div
@@ -257,7 +257,7 @@ export default async function AdminPaymentsPage() {
           </Card>
         )}
 
-        {/* â”€â”€ ACCIÃ“N REQUERIDA â”€â”€ */}
+        {/* ACCION REQUERIDA */}
         {actionItems.length > 0 && (
           <Card className="p-0 overflow-hidden">
             <div
@@ -288,8 +288,8 @@ export default async function AdminPaymentsPage() {
                 const lastPaid = lastPaidMap.get(payment.playerId);
                 const waMsg = encodeURIComponent(
                   isLate
-                    ? `Hola ${parentLink?.user?.name || payment.player.user.name}, le informamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" está *vencido* desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")}. Por favor regularice su situación. ¡Gracias! ðŸ€`
-                    : `Hola ${parentLink?.user?.name || payment.player.user.name}, le recordamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" vence el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}*. ¡No olvide realizarlo a tiempo! ðŸ€`
+                    ? `Hola ${parentLink?.user?.name || payment.player.user.name}, le informamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" esta vencido desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")}. Por favor regularice su situacion. Gracias.`
+                    : `Hola ${parentLink?.user?.name || payment.player.user.name}, le recordamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" vence el ${format(new Date(payment.dueDate), "dd/MM/yyyy")}. No olvide realizarlo a tiempo.`
                 );
                 const waHref = digits ? `https://wa.me/${digits}?text=${waMsg}` : null;
                 return (
@@ -301,7 +301,7 @@ export default async function AdminPaymentsPage() {
                         <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{payment.concept}</p>
                         {lastPaid ? (
                           <p className="text-[11px] mt-1" style={{ color: "var(--text-muted)" }}>
-                            Ültimo pago: {format(new Date(lastPaid.paidAt ?? lastPaid.dueDate), "dd MMM yyyy", { locale: es })} · ${lastPaid.amount.toLocaleString("es-CO")}
+                            Ultimo pago: {format(new Date(lastPaid.paidAt ?? lastPaid.dueDate), "dd MMM yyyy", { locale: es })} · ${lastPaid.amount.toLocaleString("es-CO")}
                           </p>
                         ) : (
                           <p className="text-[11px] mt-1" style={{ color: "var(--warning)" }}>Sin pagos anteriores</p>
@@ -337,7 +337,7 @@ export default async function AdminPaymentsPage() {
           </Card>
         )}
 
-        {/* â”€â”€ PROGRAMADOS â”€â”€ */}
+        {/* PROGRAMADOS */}
         {scheduled.length > 0 && (
           <Card className="p-0 overflow-hidden">
             <div className="px-6 py-4 border-b flex items-center gap-3" style={{ borderColor: "var(--border-primary)" }}>
@@ -353,7 +353,7 @@ export default async function AdminPaymentsPage() {
                 const digits = phone?.replace?.(/[^0-9]/g, "");
                 const daysLeft = differenceInDays(new Date(payment.dueDate), new Date());
                 const waMsg = encodeURIComponent(
-                  `Hola ${parentLink?.user?.name || payment.player.user.name}, le recordamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" vence el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}*. ¡No olvide realizarlo a tiempo! ðŸ€`
+                  `Hola ${parentLink?.user?.name || payment.player.user.name}, le recordamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" vence el ${format(new Date(payment.dueDate), "dd/MM/yyyy")}. No olvide realizarlo a tiempo.`
                 );
                 const waHref = digits ? `https://wa.me/${digits}?text=${waMsg}` : null;
                 return (
@@ -387,12 +387,12 @@ export default async function AdminPaymentsPage() {
           </Card>
         )}
 
-        {/* â”€â”€ PAGADOS â”€â”€ */}
+        {/* PAGADOS */}
         {completed.length > 0 && (
           <Card className="p-0 overflow-hidden">
             <div className="px-6 py-4 border-b flex items-center gap-3" style={{ borderColor: "var(--border-primary)" }}>
               <CheckCircle2 size={14} style={{ color: "var(--success)" }} />
-              <h2 className="text-sm font-semibold">Pagos confirmados â€” {completed.length}</h2>
+              <h2 className="text-sm font-semibold">Pagos confirmados - {completed.length}</h2>
             </div>
             <div className="divide-y" style={{ borderColor: "var(--border-primary)" }}>
               {[...completed]
@@ -407,7 +407,7 @@ export default async function AdminPaymentsPage() {
                     <div className="text-right">
                       <p className="text-sm font-bold">${payment.amount.toLocaleString("es-CO")}</p>
                       <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                        {payment.paymentMethod === "CASH" ? "ðŸ’µ " : payment.paymentMethod === "TRANSFER" ? "ðŸ’³ " : payment.paymentMethod === "NEQUI" ? "ðŸ“± " : ""}
+                        {payment.paymentMethod === "CASH" ? "Efectivo " : payment.paymentMethod === "TRANSFER" ? "Transferencia " : payment.paymentMethod === "NEQUI" ? "Nequi " : ""}
                         {format(new Date(payment.paidAt ?? payment.dueDate), "dd MMM yyyy", { locale: es })}
                       </p>
                     </div>

@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import * as XLSX from "xlsx";
 
-// GET /api/admin/uniforms/export  export all orders to Excel
+// GET /api/admin/uniforms/export - export all orders to Excel
 export async function GET(req: NextRequest) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {

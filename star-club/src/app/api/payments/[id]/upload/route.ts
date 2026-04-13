@@ -7,7 +7,7 @@ import { join, extname } from "path";
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
-// POST /api/payments/[id]/upload  parent uploads proof image
+// POST /api/payments/[id]/upload - parent uploads proof image
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

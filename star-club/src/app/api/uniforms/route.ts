@@ -26,7 +26,7 @@ const orderSchema = z.object({
   notes:          z.string().max(300).optional(),
 });
 
-// GET /api/uniforms â€” parent sees their orders
+// GET /api/uniforms - parent sees their orders
 export async function GET() {
   const session = await auth();
   if (!session?.user || session.user.role !== "PARENT") {
@@ -48,7 +48,7 @@ export async function GET() {
   return NextResponse.json(orders);
 }
 
-// POST /api/uniforms â€” parent places an order
+// POST /api/uniforms - parent places an order
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user || session.user.role !== "PARENT") {
@@ -136,8 +136,8 @@ export async function POST(req: NextRequest) {
       await db.notification.createMany({
         data: admins.map((a) => ({
           userId:  a.id,
-          title:   "Nuevo pedido de uniforme ðŸ‘•",
-          message: `${playerName} solicitó ${NAMES[parsed.data.type]} â€” Camiseta ${parsed.data.jerseySize} / Pantaloneta ${parsed.data.shortsSize}${parsed.data.numberOnJersey != null ? ` #${parsed.data.numberOnJersey}` : ""}. $${unitPrice.toLocaleString("es-CO")}.`,
+          title:   "Nuevo pedido de uniforme",
+          message: `${playerName} solicito ${NAMES[parsed.data.type]} - Camiseta ${parsed.data.jerseySize} / Pantaloneta ${parsed.data.shortsSize}${parsed.data.numberOnJersey != null ? ` #${parsed.data.numberOnJersey}` : ""}. $${unitPrice.toLocaleString("es-CO")}.`,
           type:    "INFO",
           link:    "/dashboard/admin/uniforms",
         })),

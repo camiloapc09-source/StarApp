@@ -55,19 +55,19 @@ export function xpProgress(xp: number, level: number): number {
 
 export const LEVEL_TITLES = [
   "",
-  "Rookie",       // Level 1  P
-  "Aspirante",    // Level 2  PP
-  "Contendiente", // Level 3  PPP
-  "Rising Star",  // Level 4  PPPP
-  "Estrella",     // Level 5  PPPPP
-  "All-Star",     // Level 6  <
-  "MVP",          // Level 7  <<
-  "Élite",        // Level 8  <<<
-  "Leyenda",      // Level 9  <<<<
-  "Super Star",   // Level 10  <<<<<
+  "Rookie",       // Level 1
+  "Aspirante",    // Level 2
+  "Contendiente", // Level 3
+  "Rising Star",  // Level 4
+  "Estrella",     // Level 5
+  "All-Star",     // Level 6
+  "MVP",          // Level 7
+  "Élite",        // Level 8
+  "Leyenda",      // Level 9
+  "Super Star",   // Level 10
 ];
 
-/** Returns P stars string for a given level (1-5 regular, 6-10 gold <) */
+/** Returns stars string for a given level (1-5 regular, 6-10 gold). */
 export function getLevelStars(level: number): string {
   const n = Math.min(Math.max(level, 1), 10);
   if (n <= 5) return "P".repeat(n);

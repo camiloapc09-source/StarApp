@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "STAR CLUB  Plataforma de rendimiento deportivo",
+  title: "STAR CLUB - Plataforma de rendimiento deportivo",
   description: "Plataforma de gestión deportiva con gamificación, seguimiento de rendimiento e insights en tiempo real.",
 };
 

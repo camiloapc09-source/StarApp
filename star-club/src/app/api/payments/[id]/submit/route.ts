@@ -8,7 +8,7 @@ const schema = z.object({
   proofNote: z.string().max(500).optional(),
 });
 
-// POST /api/payments/[id]/submit  parent reports a payment
+// POST /api/payments/[id]/submit - parent reports a payment
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

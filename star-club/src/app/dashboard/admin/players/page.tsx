@@ -156,11 +156,11 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
 
                     <div className="hidden md:flex items-center gap-6 text-sm">
                       <div className="text-center">
-                        <p className="font-medium">{player.category?.name || ""}</p>
+                        <p className="font-medium">{player.category?.name || "-"}</p>
                         <p className="text-xs" style={{ color: "var(--text-muted)" }}>{t.common.category}</p>
                       </div>
                       <div className="text-center">
-                        <p className="font-medium">#{player.jerseyNumber || ""}</p>
+                        <p className="font-medium">#{player.jerseyNumber || "-"}</p>
                         <p className="text-xs" style={{ color: "var(--text-muted)" }}>{t.common.jersey}</p>
                       </div>
                       <div className="text-center">

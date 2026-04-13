@@ -8,7 +8,7 @@ const schema = z.object({
   userId: z.string().cuid(),
 });
 
-// POST /api/admin/avatar-review  admin approves or rejects a pending avatar
+// POST /api/admin/avatar-review - admin approves or rejects a pending avatar
 export async function POST(req: NextRequest) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") {

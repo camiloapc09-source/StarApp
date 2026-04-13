@@ -61,7 +61,7 @@ export default function PaymentReportButton({ paymentId, concept, amount, dueDat
   const due = new Date(dueDate);
   const periodStart = due;
   const periodEnd = new Date(due.getFullYear(), due.getMonth() + 1, due.getDate() - 1);
-  const periodLabel = `${periodStart.toLocaleDateString("es-CO", { day: "numeric", month: "long" })} â€“ ${periodEnd.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })}`;
+  const periodLabel = `${periodStart.toLocaleDateString("es-CO", { day: "numeric", month: "long" })} - ${periodEnd.toLocaleDateString("es-CO", { day: "numeric", month: "long", year: "numeric" })}`;
 
   // Prevent body scroll when open
   useEffect(() => {
@@ -154,8 +154,8 @@ export default function PaymentReportButton({ paymentId, concept, amount, dueDat
   ] as const;
 
   const soonOptions = [
-    { label: "Tarjeta", icon: "ðŸ’³", sub: "Próximamente" },
-    { label: "PSE", icon: "ðŸ¦", sub: "Próximamente" },
+    { label: "Tarjeta", icon: "CARD", sub: "Próximamente" },
+    { label: "PSE", icon: "BANK", sub: "Próximamente" },
   ];
 
   return (
@@ -208,7 +208,7 @@ export default function PaymentReportButton({ paymentId, concept, amount, dueDat
                   </motion.div>
 
                   <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                    <p className="text-2xl font-black tracking-tight">¡Pago registrado! ðŸŽ‰</p>
+                    <p className="text-2xl font-black tracking-tight">Pago registrado</p>
                     <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
                       Período: <strong>{periodLabel}</strong>
                     </p>
@@ -326,7 +326,7 @@ export default function PaymentReportButton({ paymentId, concept, amount, dueDat
                         >
                           <Upload size={16} style={{ color: file ? "var(--success)" : "var(--text-muted)" }} />
                           <span className="text-sm" style={{ color: file ? "var(--success)" : "var(--text-muted)" }}>
-                            {file ? `âœ“ ${file.name}` : "Adjuntar captura de pantalla"}
+                            {file ? `OK ${file.name}` : "Adjuntar captura de pantalla"}
                           </span>
                         </button>
                         <input
@@ -372,7 +372,7 @@ export default function PaymentReportButton({ paymentId, concept, amount, dueDat
                       className="w-full py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-40"
                       style={{ background: "var(--accent)", color: "#000" }}
                     >
-                      {loading ? "Registrando..." : "Registrar pago â†’"}
+                      {loading ? "Registrando..." : "Registrar pago ->"}
                     </button>
                   </form>
                 </div>

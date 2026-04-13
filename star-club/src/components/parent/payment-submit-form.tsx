@@ -77,7 +77,7 @@ export default function PaymentSubmitForm({ paymentId }: { paymentId: string }) 
   if (done) {
     return (
       <p className="flex items-center gap-2 text-xs py-1" style={{ color: "var(--success)" }}>
-        <Check size={13} /> Pago reportado  el admin lo verificará pronto.
+        <Check size={13} /> Pago reportado - el admin lo verificara pronto.
       </p>
     );
   }

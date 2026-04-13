@@ -100,7 +100,7 @@ export default async function AdminDashboard() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{player.user.name}</p>
                         <p className="text-xs text-[var(--text-muted)]">
-                          {player.category?.name || "Unassigned"} · #{player.jerseyNumber || ""}
+                          {player.category?.name || "Unassigned"} · #{player.jerseyNumber || "-"}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">

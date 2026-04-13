@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
         });
       }
     } catch {
-      // Non-fatal  don't block registration if notification fails
+      // Non-fatal - don't block registration if notification fails
     }
 
     return NextResponse.json(user, { status: 201 });

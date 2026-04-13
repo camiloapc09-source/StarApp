@@ -105,7 +105,7 @@ export default async function AdminUniformsPage() {
         {confirmed.length > 0 && (
           <Card>
             <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
-              <Package size={15} style={{ color: "var(--success)" }} /> Confirmados â€” en producción
+              <Package size={15} style={{ color: "var(--success)" }} /> Confirmados - en produccion
             </h3>
             <div className="space-y-4">
               {confirmed.map((order) => (
@@ -186,7 +186,7 @@ function OrderRow({
               <span><span style={{ color: "var(--text-muted)" }}>Pantaloneta:</span> <strong>{order.shortsSize}</strong></span>
             </div>
             {order.notes && (
-              <p className="text-xs mt-1.5 italic" style={{ color: "var(--text-muted)" }}>ðŸ“ {order.notes}</p>
+              <p className="text-xs mt-1.5 italic" style={{ color: "var(--text-muted)" }}>Nota: {order.notes}</p>
             )}
             <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
               Pedido: {format(new Date(order.createdAt), "d 'de' MMMM yyyy", { locale: es })}
