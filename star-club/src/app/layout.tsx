@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Star Club",
+    title: "StarApp",
     startupImage: "/icons/icon-512x512.png",
   },
   icons: {

@@ -1,6 +1,6 @@
 {
-  "name": "Star Club - Rendimiento Deportivo",
-  "short_name": "Star Club",
+  "name": "StarApp - Rendimiento Deportivo",
+  "short_name": "StarApp",
   "description": "Plataforma de gestion deportiva con gamificacion y seguimiento de rendimiento.",
   "start_url": "/",
   "display": "standalone",

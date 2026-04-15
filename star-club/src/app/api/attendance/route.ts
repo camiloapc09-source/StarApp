@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { calculateLevel } from "@/lib/utils";
+
+const ATTENDANCE_MISSION_ID = "mision-asistencia-semanal";
 
 const attendanceSchema = z.object({
   sessionId: z.string(),
@@ -69,6 +72,89 @@ export async function POST(req: NextRequest) {
       where: { id: att.playerId },
       data: { xp: { increment: 10 }, lastActive: new Date() },
     });
+  }
+
+  // Auto-complete weekly attendance mission ("Doble Presencia")
+  const now = new Date();
+  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon ... 6=Sat
+  const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() + diffToMonday);
+  weekStart.setHours(0, 0, 0, 0);
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  for (const att of presentPlayers) {
+    // Find the weekly attendance mission for this player (any status)
+    let pm = await db.playerMission.findFirst({
+      where: { playerId: att.playerId, missionId: ATTENDANCE_MISSION_ID },
+      include: {
+        mission: true,
+        player: { select: { userId: true, xp: true, level: true } },
+      },
+    });
+
+    if (!pm) continue; // Mission not assigned to this player
+
+    // If completed in a previous week, reset it for the new week
+    if (pm.status === "COMPLETED" && pm.completedAt && pm.completedAt < weekStart) {
+      pm = await db.playerMission.update({
+        where: { id: pm.id },
+        data: { status: "ACTIVE", progress: 0, completedAt: null },
+        include: {
+          mission: true,
+          player: { select: { userId: true, xp: true, level: true } },
+        },
+      });
+    }
+
+    if (pm.status !== "ACTIVE") continue; // Already completed this week
+
+    // Count PRESENT attendances this week
+    const weeklyCount = await db.attendance.count({
+      where: {
+        playerId: att.playerId,
+        status: "PRESENT",
+        session: { date: { gte: weekStart, lte: weekEnd } },
+      },
+    });
+
+    if (weeklyCount >= 2) {
+      // Complete the mission
+      await db.playerMission.update({
+        where: { id: pm.id },
+        data: { status: "COMPLETED", completedAt: new Date(), progress: weeklyCount },
+      });
+
+      // Award XP
+      const updatedPlayer = await db.player.update({
+        where: { id: att.playerId },
+        data: { xp: { increment: pm.mission.xpReward } },
+        select: { xp: true, level: true },
+      });
+
+      const newLevel = calculateLevel(updatedPlayer.xp);
+      if (newLevel > updatedPlayer.level) {
+        await db.player.update({ where: { id: att.playerId }, data: { level: newLevel } });
+      }
+
+      // Notify player
+      await db.notification.create({
+        data: {
+          userId: pm.player.userId,
+          title: `Mision semanal completada +${pm.mission.xpReward} XP`,
+          message: `Asististe a los dos entrenos de la semana. Ganaste ${pm.mission.xpReward} XP.`,
+          type: "ACHIEVEMENT",
+        },
+      });
+    } else {
+      // Just update progress
+      await db.playerMission.update({
+        where: { id: pm.id },
+        data: { progress: weeklyCount },
+      });
+    }
   }
 
   return NextResponse.json({ count: results.length });

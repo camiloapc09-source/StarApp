@@ -108,6 +108,19 @@ async function main() {
         isActive: true,
       },
     }),
+    prisma.mission.upsert({
+      where: { id: "mision-asistencia-semanal" },
+      update: {},
+      create: {
+        id: "mision-asistencia-semanal",
+        title: "Doble Presencia",
+        description: "Asiste a los dos entrenamientos de la semana (miercoles y viernes). Se completa automaticamente cuando el entrenador toma asistencia.",
+        xpReward: 200,
+        type: "WEEKLY",
+        icon: "📅",
+        isActive: true,
+      },
+    }),
   ]);
   console.log(`âœ… ${missions.length} misiones`);
 
