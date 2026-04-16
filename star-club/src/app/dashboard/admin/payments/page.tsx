@@ -13,6 +13,7 @@ import Link from "next/link";
 import { PaymentConfirmButton, PaymentCashButton, PaymentRejectButton } from "@/components/admin/payment-actions";
 import BulkPaymentButton from "@/components/admin/bulk-payment-button";
 import MarkOverdueButton from "@/components/admin/mark-overdue-button";
+import ProofViewer from "@/components/admin/proof-viewer";
 
 export default async function AdminPaymentsPage() {
   const session = await auth();
@@ -206,16 +207,7 @@ export default async function AdminPaymentsPage() {
 
                     <div className="rounded-xl p-4 flex gap-4" style={{ background: "var(--bg-elevated)" }}>
                       {payment.proofUrl ? (
-                        <a href={payment.proofUrl} target="_blank" rel="noreferrer" className="flex-shrink-0">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={payment.proofUrl}
-                            alt="Comprobante"
-                            loading="lazy"
-                            className="w-20 h-20 object-cover rounded-lg border cursor-pointer hover:opacity-80 transition-opacity"
-                            style={{ borderColor: "var(--border-primary)" }}
-                          />
-                        </a>
+                        <ProofViewer src={payment.proofUrl} />
                       ) : payment.paymentMethod === "TRANSFER" ? (
                         <div className="flex-shrink-0 w-20 h-20 rounded-lg border flex flex-col items-center justify-center gap-1" style={{ borderColor: "var(--border-primary)" }}>
                           <ImageOff size={16} style={{ color: "var(--text-muted)" }} />
