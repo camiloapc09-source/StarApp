@@ -21,39 +21,39 @@ function createPrismaClient() {
 const prisma = createPrismaClient();
 
 /**
- * Production seed â€” safe to re-run at ANY time.
+ * Production seed - safe to re-run at ANY time.
  * Only upserts static base data (categories, admin account, real missions).
  * NEVER deletes existing data. NEVER creates demo players/coaches/parents.
  */
 async function main() {
-  console.log("ðŸŒ± Seeding Star Club (production-safe)...\n");
+  console.log("\u{1F331} Seeding Star Club (production-safe)...\n");
 
-  // â”€â”€ Categories â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Categories
   const categories = await Promise.all([
     prisma.category.upsert({
       where: { name: "U-12" },
       update: {},
-      create: { name: "U-12", description: "Menores de 12 aÃ±os", ageMin: 8, ageMax: 12 },
+      create: { name: "U-12", description: "Menores de 12 a\u00F1os", ageMin: 8, ageMax: 12 },
     }),
     prisma.category.upsert({
       where: { name: "U-15" },
       update: {},
-      create: { name: "U-15", description: "Menores de 15 aÃ±os", ageMin: 12, ageMax: 15 },
+      create: { name: "U-15", description: "Menores de 15 a\u00F1os", ageMin: 12, ageMax: 15 },
     }),
     prisma.category.upsert({
       where: { name: "U-18" },
       update: {},
-      create: { name: "U-18", description: "Menores de 18 aÃ±os", ageMin: 15, ageMax: 18 },
+      create: { name: "U-18", description: "Menores de 18 a\u00F1os", ageMin: 15, ageMax: 18 },
     }),
     prisma.category.upsert({
       where: { name: "Senior" },
       update: {},
-      create: { name: "Senior", description: "DivisiÃ³n adultos", ageMin: 18, ageMax: 40 },
+      create: { name: "Senior", description: "Divisi\u00F3n adultos", ageMin: 18, ageMax: 40 },
     }),
   ]);
-  console.log(`âœ… ${categories.length} categorÃ­as`);
+  console.log(`\u2705 ${categories.length} categor\u00EDas`);
 
-  // â”€â”€ Admin account â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Admin account
   const adminPassword = await hash("admin123", 12);
   await prisma.user.upsert({
     where: { email: "admin@starclub.com" },
@@ -65,80 +65,81 @@ async function main() {
       role: "ADMIN",
     },
   });
-  console.log("âœ… Admin: admin@starclub.com");
+  console.log("\u2705 Admin: admin@starclub.com");
 
-  // â”€â”€ Real missions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Real missions
   const missions = await Promise.all([
     prisma.mission.upsert({
       where: { id: "mision-abdominales" },
-      update: {},
+      update: { icon: "\u{1F4AA}" },
       create: {
         id: "mision-abdominales",
         title: "200 Abdominales",
         description: "Completa 200 abdominales. Puedes hacerlos en cualquier lugar: cancha, parque, casa o gym.",
         xpReward: 150,
         type: "WEEKLY",
-        icon: "ðŸ’ª",
+        icon: "\u{1F4AA}",
         isActive: true,
       },
     }),
     prisma.mission.upsert({
       where: { id: "mision-5km" },
-      update: {},
+      update: { icon: "\u{1F3C3}", title: "Correr 5 Kil\u00F3metros" },
       create: {
         id: "mision-5km",
-        title: "Correr 5 KilÃ³metros",
-        description: "Corre 5 kilÃ³metros sin parar. Trota por el parque, cancha o cualquier terreno.",
+        title: "Correr 5 Kil\u00F3metros",
+        description: "Corre 5 kil\u00F3metros sin parar. Trota por el parque, cancha o cualquier terreno.",
         xpReward: 200,
         type: "WEEKLY",
-        icon: "ðŸƒ",
+        icon: "\u{1F3C3}",
         isActive: true,
       },
     }),
     prisma.mission.upsert({
       where: { id: "mision-saltos" },
-      update: {},
+      update: { icon: "\u26A1" },
       create: {
         id: "mision-saltos",
         title: "200 Saltos",
         description: "Realiza 200 saltos (cuerda, verticales o laterales). Ideal para mejorar la explosividad.",
         xpReward: 100,
         type: "WEEKLY",
-        icon: "âš¡",
+        icon: "\u26A1",
         isActive: true,
       },
     }),
     prisma.mission.upsert({
       where: { id: "mision-asistencia-semanal" },
-      update: {},
+      update: { icon: "\u{1F4C5}" },
       create: {
         id: "mision-asistencia-semanal",
         title: "Doble Presencia",
         description: "Asiste a los dos entrenamientos de la semana (miercoles y viernes). Se completa automaticamente cuando el entrenador toma asistencia.",
         xpReward: 200,
         type: "WEEKLY",
-        icon: "📅",
+        icon: "\u{1F4C5}",
         isActive: true,
       },
     }),
   ]);
-  console.log(`âœ… ${missions.length} misiones`);
+  console.log(`\u2705 ${missions.length} misiones`);
 
-  // â”€â”€ Rewards (static, safe to upsert) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+  // Rewards
   const rewards = await Promise.all([
-    prisma.reward.upsert({ where: { id: "reward-first-step" }, update: {}, create: { id: "reward-first-step", title: "Primer Paso", description: "Completaste tu primera misiÃ³n", icon: "â­", levelRequired: 1 } }),
-    prisma.reward.upsert({ where: { id: "reward-rising-star" }, update: {}, create: { id: "reward-rising-star", title: "Estrella en Ascenso", description: "Alcanzaste el nivel 2", icon: "ðŸŒŸ", levelRequired: 2 } }),
-    prisma.reward.upsert({ where: { id: "reward-dedicated" }, update: {}, create: { id: "reward-dedicated", title: "Atleta Dedicado", description: "Mantuvo una racha de 7 dÃ­as", icon: "ðŸ”¥", levelRequired: 3 } }),
-    prisma.reward.upsert({ where: { id: "reward-bronze" }, update: {}, create: { id: "reward-bronze", title: "Insignia Bronce", description: "Alcanzaste el nivel 5", icon: "ðŸ¥‰", levelRequired: 5 } }),
-    prisma.reward.upsert({ where: { id: "reward-silver" }, update: {}, create: { id: "reward-silver", title: "Insignia Plata", description: "Alcanzaste el nivel 8", icon: "ðŸ¥ˆ", levelRequired: 8 } }),
-    prisma.reward.upsert({ where: { id: "reward-gold" }, update: {}, create: { id: "reward-gold", title: "Insignia Oro", description: "Alcanzaste el nivel 12", icon: "ðŸ¥‡", levelRequired: 12 } }),
+    prisma.reward.upsert({ where: { id: "reward-first-step"    }, update: { icon: "\u2B50"      }, create: { id: "reward-first-step",    title: "Primer Paso",         description: "Completaste tu primera misi\u00F3n",                         icon: "\u2B50",       levelRequired: 1  } }),
+    prisma.reward.upsert({ where: { id: "reward-rising-star"   }, update: { icon: "\u{1F31F}"   }, create: { id: "reward-rising-star",   title: "Estrella en Ascenso", description: "Alcanzaste el nivel 2",                                      icon: "\u{1F31F}",    levelRequired: 2  } }),
+    prisma.reward.upsert({ where: { id: "reward-dedicated"     }, update: { icon: "\u{1F525}"   }, create: { id: "reward-dedicated",     title: "Atleta Dedicado",     description: "Mantuvo una racha de 7 d\u00EDas",                           icon: "\u{1F525}",    levelRequired: 3  } }),
+    prisma.reward.upsert({ where: { id: "reward-wing-headband" }, update: { icon: "\u{1F3C5}", title: "Cintillo WING", description: "Premio f\u00EDsico: cintillo deportivo de la marca WING" }, create: { id: "reward-wing-headband", title: "Cintillo WING", description: "Premio f\u00EDsico: cintillo deportivo de la marca WING", icon: "\u{1F3C5}", levelRequired: 4 } }),
+    prisma.reward.upsert({ where: { id: "reward-bronze"        }, update: { icon: "\u{1F949}"   }, create: { id: "reward-bronze",        title: "Insignia Bronce",     description: "Alcanzaste el nivel 5",                                      icon: "\u{1F949}",    levelRequired: 5  } }),
+    prisma.reward.upsert({ where: { id: "reward-wing-wristband"}, update: { icon: "\u231A",    title: "Brazalete WING", description: "Premio f\u00EDsico: brazalete deportivo de la marca WING" }, create: { id: "reward-wing-wristband", title: "Brazalete WING", description: "Premio f\u00EDsico: brazalete deportivo de la marca WING", icon: "\u231A", levelRequired: 7 } }),
+    prisma.reward.upsert({ where: { id: "reward-silver"        }, update: { icon: "\u{1F948}"   }, create: { id: "reward-silver",        title: "Insignia Plata",      description: "Alcanzaste el nivel 8",                                      icon: "\u{1F948}",    levelRequired: 8  } }),
+    prisma.reward.upsert({ where: { id: "reward-gold"          }, update: { icon: "\u{1F947}"   }, create: { id: "reward-gold",          title: "Insignia Oro",        description: "Alcanzaste el nivel 12",                                     icon: "\u{1F947}",    levelRequired: 12 } }),
   ]);
-  console.log(`âœ… ${rewards.length} logros`);
+  console.log(`\u2705 ${rewards.length} logros`);
 
-  console.log("\nðŸŽ‰ Seed completo. Base de datos de producciÃ³n lista.");
+  console.log("\n\u{1F389} Seed completo. Base de datos de producci\u00F3n lista.");
 }
 
 main()
   .catch(console.error)
   .finally(() => prisma.$disconnect());
-

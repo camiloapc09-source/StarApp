@@ -11,9 +11,10 @@ const patchSchema = z.object({
   phone: z.string().max(20).nullable().optional(),
   emergencyContact: z.string().max(100).nullable().optional(),
   eps: z.string().max(100).nullable().optional(),
-  branch: z.string().max(80).nullable().optional(),
+  branch: z.string().max(200).nullable().optional(),
   role: z.enum(["ADMIN", "COACH"]).optional(),
   coachCategoryId: z.string().nullable().optional(),
+  coachCategoryIds: z.string().optional(), // JSON array string
 });
 
 type Props = { params: Promise<{ id: string }> };
@@ -71,6 +72,7 @@ export async function PATCH(req: NextRequest, { params }: Props) {
   if (rest.branch !== undefined) data.branch = rest.branch;
   if (rest.role !== undefined) data.role = rest.role;
   if (rest.coachCategoryId !== undefined) data.coachCategoryId = rest.coachCategoryId;
+  if (rest.coachCategoryIds !== undefined) data.coachCategoryIds = rest.coachCategoryIds;
   if (password !== undefined) data.password = await hash(password, 12);
 
   const updated = await db.user.update({ where: { id }, data });

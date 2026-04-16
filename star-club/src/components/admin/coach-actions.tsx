@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, X, Check, Loader2, KeyRound } from "lucide-react";
 
+const BRANCHES = ["Sede Norte", "Sede Sur"];
+
 interface Coach {
   id: string;
   name: string;
@@ -17,10 +19,17 @@ export function CoachEditButton({ coach }: { coach: Coach }) {
   const [name, setName] = useState(coach.name);
   const [email, setEmail] = useState(coach.email);
   const [phone, setPhone] = useState(coach.phone ?? "");
-  const [branch, setBranch] = useState(coach.branch ?? "");
+  // branch stored as comma-separated, parse into array
+  const [branches, setBranches] = useState<string[]>(
+    coach.branch ? coach.branch.split(",").map((s) => s.trim()).filter(Boolean) : []
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+
+  function toggleBranch(b: string) {
+    setBranches((prev) => prev.includes(b) ? prev.filter((x) => x !== b) : [...prev, b]);
+  }
 
   async function save() {
     setLoading(true);
@@ -28,7 +37,7 @@ export function CoachEditButton({ coach }: { coach: Coach }) {
     const res = await fetch(`/api/admin/users/${coach.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, phone: phone || null, branch: branch || null }),
+      body: JSON.stringify({ name, email, phone: phone || null, branch: branches.join(",") || null }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -77,7 +86,6 @@ export function CoachEditButton({ coach }: { coach: Coach }) {
                 { label: "Nombre", value: name, onChange: setName },
                 { label: "Email", value: email, onChange: setEmail },
                 { label: "Teléfono", value: phone, onChange: setPhone },
-                { label: "Sede", value: branch, onChange: setBranch },
               ].map(({ label, value, onChange }) => (
                 <div key={label}>
                   <label className="text-xs font-medium mb-1 block" style={{ color: "var(--text-muted)" }}>{label}</label>
@@ -89,6 +97,32 @@ export function CoachEditButton({ coach }: { coach: Coach }) {
                   />
                 </div>
               ))}
+
+              {/* Multi-branch selection */}
+              <div>
+                <label className="text-xs font-medium mb-2 block" style={{ color: "var(--text-muted)" }}>Sede(s)</label>
+                <div className="flex gap-2 flex-wrap">
+                  {BRANCHES.map((b) => {
+                    const active = branches.includes(b);
+                    return (
+                      <button
+                        key={b}
+                        type="button"
+                        onClick={() => toggleBranch(b)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all"
+                        style={{
+                          background: active ? "var(--accent)" : "var(--bg-elevated)",
+                          color: active ? "#000" : "var(--text-secondary)",
+                          borderColor: active ? "var(--accent)" : "var(--border-primary)",
+                        }}
+                      >
+                        {active && <Check size={11} strokeWidth={3} />}
+                        {b}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             <button

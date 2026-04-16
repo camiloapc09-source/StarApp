@@ -22,8 +22,9 @@ model User {
   avatarPending  String?   // URL of pending avatar awaiting admin approval
   avatarStatus   String    @default("NONE") // NONE | PENDING | APPROVED | REJECTED
   // Coach: optional category assignment (admin sets which category this coach manages)
-  coachCategoryId String?
-  coachCategory   Category? @relation("CoachCategory", fields: [coachCategoryId], references: [id])
+  coachCategoryId  String?
+  coachCategory    Category? @relation("CoachCategory", fields: [coachCategoryId], references: [id])
+  coachCategoryIds String    @default("[]") // JSON array of category IDs for multi-category support
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 

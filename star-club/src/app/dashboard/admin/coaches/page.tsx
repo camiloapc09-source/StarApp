@@ -35,7 +35,6 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
     orderBy: { createdAt: "desc" },
     include: {
       _count: { select: { coachSessions: true } },
-      coachCategory: { select: { id: true, name: true } },
     },
   });
 
@@ -129,7 +128,6 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
             ) : (
               coaches.map((coach) => {
                 const sessions = countMap[coach.id] ?? 0;
-                const badge: BadgeVariant = branchBadge[coach.branch ?? ""] ?? "default";
                 return (
                   <div
                     key={coach.id}
@@ -144,7 +142,11 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
 
                     <div className="hidden md:flex items-center gap-6 text-sm">
                       {coach.branch && (
-                        <Badge variant={badge}>{coach.branch}</Badge>
+                        <div className="flex gap-1 flex-wrap">
+                          {coach.branch.split(",").map((b) => b.trim()).filter(Boolean).map((b) => (
+                            <Badge key={b} variant={branchBadge[b] ?? "default"}>{b}</Badge>
+                          ))}
+                        </div>
                       )}
                       <div className="text-center">
                         <div className="flex items-center gap-1 font-medium">
@@ -172,7 +174,7 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
                     )}
                     <CoachCategorySelect
                       coachId={coach.id}
-                      coachCategoryId={coach.coachCategoryId ?? null}
+                      coachCategoryIds={coach.coachCategoryIds ?? "[]"}
                       categories={categories}
                     />
                     <div className="flex items-center gap-1 ml-2">
