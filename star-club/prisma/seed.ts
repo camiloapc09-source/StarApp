@@ -28,6 +28,13 @@ const prisma = createPrismaClient();
 async function main() {
   console.log("\u{1F331} Seeding Star Club (production-safe)...\n");
 
+  // Apply schema migrations that may not exist in production yet
+  try {
+    await prisma.$executeRawUnsafe(`ALTER TABLE "User" ADD COLUMN "coachCategoryIds" TEXT NOT NULL DEFAULT '[]'`);
+    console.log("\u2705 Migration: added coachCategoryIds column");
+  } catch {
+    // Column already exists, ignore
+  }
   // Categories
   const categories = await Promise.all([
     prisma.category.upsert({
