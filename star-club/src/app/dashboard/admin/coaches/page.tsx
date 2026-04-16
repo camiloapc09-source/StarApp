@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { CalendarDays, Plus } from "lucide-react";
 import Link from "next/link";
 import NewInviteForm from "@/components/admin/new-invite-form";
-import { CoachEditButton, CoachDeleteButton } from "@/components/admin/coach-actions";
+import { CoachEditButton, CoachDeleteButton, CoachResetPasswordButton } from "@/components/admin/coach-actions";
 import { CoachCategorySelect } from "@/components/admin/coach-category-select";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -177,6 +177,7 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
                     />
                     <div className="flex items-center gap-1 ml-2">
                       <CoachEditButton coach={{ id: coach.id, name: coach.name, email: coach.email, phone: coach.phone, branch: coach.branch }} />
+                      <CoachResetPasswordButton coachId={coach.id} coachName={coach.name} />
                       <CoachDeleteButton coachId={coach.id} coachName={coach.name} />
                     </div>
                   </div>

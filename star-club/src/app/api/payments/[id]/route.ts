@@ -21,6 +21,7 @@ export async function PATCH(
     data: {
       status: "COMPLETED",
       paidAt: new Date(),
+      proofUrl: null, // clear proof image to free DB space
       ...(paymentMethod ? { paymentMethod } : {}),
     },
     include: {
