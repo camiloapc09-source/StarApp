@@ -53,11 +53,11 @@ async function main() {
   ]);
   console.log(`\u2705 ${categories.length} categor\u00EDas`);
 
-  // Admin account
+  // Admin account — update password every seed run so it stays in sync
   const adminPassword = await hash("admin123", 12);
   await prisma.user.upsert({
     where: { email: "admin@starclub.com" },
-    update: {},
+    update: { password: adminPassword },
     create: {
       name: "Camilo Ponton",
       email: "admin@starclub.com",
@@ -65,7 +65,7 @@ async function main() {
       role: "ADMIN",
     },
   });
-  console.log("\u2705 Admin: admin@starclub.com");
+  console.log("\u2705 Admin: admin@starclub.com / admin123");
 
   // Real missions
   const missions = await Promise.all([
