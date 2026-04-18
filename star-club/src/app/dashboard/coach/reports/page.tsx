@@ -15,6 +15,7 @@ import { es } from "date-fns/locale";
 export default async function CoachReportsPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "COACH") redirect("/login");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const now = new Date();
   const sixMonthsAgo = subMonths(now, 6);
@@ -26,10 +27,10 @@ export default async function CoachReportsPage() {
     attendanceData,
     topPlayers,
   ] = await Promise.all([
-    db.session.count({ where: { coachId: session.user.id } }),
-    db.player.count({ where: { status: "ACTIVE" } }),
+    db.session.count({ where: { clubId, coachId: session.user.id } }),
+    db.player.count({ where: { clubId, status: "ACTIVE" } }),
     db.session.findMany({
-      where: { coachId: session.user.id, date: { gte: sixMonthsAgo } },
+      where: { clubId, coachId: session.user.id, date: { gte: sixMonthsAgo } },
       orderBy: { date: "desc" },
       take: 10,
       include: {
@@ -39,12 +40,12 @@ export default async function CoachReportsPage() {
     }),
     db.attendance.findMany({
       where: {
-        session: { coachId: session.user.id, date: { gte: sixMonthsAgo } },
+        session: { clubId, coachId: session.user.id, date: { gte: sixMonthsAgo } },
       },
       select: { status: true },
     }),
     db.player.findMany({
-      where: { status: "ACTIVE" },
+      where: { clubId, status: "ACTIVE" },
       orderBy: { xp: "desc" },
       take: 8,
       include: { user: { select: { name: true, avatar: true } }, category: true },

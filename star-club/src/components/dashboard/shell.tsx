@@ -8,6 +8,8 @@ interface DashboardShellProps {
   userName: string;
   userAvatar?: string | null;
   notificationCount?: number;
+  clubName?: string;
+  clubLogo?: string | null;
   children: React.ReactNode;
 }
 
@@ -16,6 +18,8 @@ export function DashboardShell({
   userName,
   userAvatar,
   notificationCount,
+  clubName = "StarApp",
+  clubLogo,
   children,
 }: DashboardShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -35,6 +39,8 @@ export function DashboardShell({
         userName={userName}
         userAvatar={userAvatar}
         notificationCount={notificationCount}
+        clubName={clubName}
+        clubLogo={clubLogo}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
@@ -55,10 +61,13 @@ export function DashboardShell({
             </svg>
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full overflow-hidden border border-[var(--accent)]" style={{ boxShadow: "0 0 8px rgba(139,92,246,0.4)" }}>
-              <img src="/logo.jpeg" alt="Star Club" className="w-full h-full object-cover" />
+            <div className="w-7 h-7 rounded-full overflow-hidden border border-[var(--accent)] flex-shrink-0" style={{ boxShadow: "0 0 8px rgba(139,92,246,0.4)" }}>
+              {clubLogo
+                ? <img src={clubLogo} alt={clubName} className="w-full h-full object-cover" />
+                : <span className="w-full h-full flex items-center justify-center text-xs font-bold text-[var(--accent)] bg-[var(--bg-elevated)]">{clubName.charAt(0).toUpperCase()}</span>
+              }
             </div>
-            <span className="font-bold text-sm tracking-tight">STAR CLUB</span>
+            <span className="font-bold text-sm tracking-tight">{clubName.toUpperCase()}</span>
           </div>
         </div>
 

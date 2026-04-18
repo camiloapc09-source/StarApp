@@ -18,11 +18,12 @@ import ProofViewer from "@/components/admin/proof-viewer";
 export default async function AdminPaymentsPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   // Auto-mark overdue on every page visit so the admin always sees current state
   const now = new Date();
   const overdueToMark = await db.payment.findMany({
-    where: { status: "PENDING", dueDate: { lt: now } },
+    where: { clubId, status: "PENDING", dueDate: { lt: now } },
     select: { id: true, playerId: true, concept: true, amount: true },
   });
   if (overdueToMark.length > 0) {
@@ -33,7 +34,7 @@ export default async function AdminPaymentsPage() {
     // Notify players (fire-and-forget, don't block render)
     const playerIds = [...new Set(overdueToMark.map((p) => p.playerId))];
     const affectedPlayers = await db.player.findMany({
-      where: { id: { in: playerIds } }, select: { id: true, userId: true },
+      where: { clubId, id: { in: playerIds } }, select: { id: true, userId: true },
     });
     const userIdMap = Object.fromEntries(affectedPlayers.map((p) => [p.id, p.userId]));
     for (const payment of overdueToMark) {
@@ -56,6 +57,7 @@ export default async function AdminPaymentsPage() {
   }
 
   const payments = await db.payment.findMany({
+    where: { clubId },
     orderBy: { dueDate: "asc" },
     select: {
       id: true, playerId: true, amount: true, concept: true,

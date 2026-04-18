@@ -18,10 +18,12 @@ export default async function CoachPlayersPage({ searchParams }: Props) {
 
   const { categoryId: selectedCategory } = await searchParams;
   const dict = await getDictionary();
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const [players, categories] = await Promise.all([
     db.player.findMany({
       where: {
+        clubId,
         status: "ACTIVE",
         ...(selectedCategory ? { categoryId: selectedCategory } : {}),
       },
@@ -32,7 +34,7 @@ export default async function CoachPlayersPage({ searchParams }: Props) {
         attendances: { select: { status: true } },
       },
     }),
-    db.category.findMany({ orderBy: { name: "asc" } }),
+    db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } }),
   ]);
 
   return (

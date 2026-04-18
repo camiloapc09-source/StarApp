@@ -22,6 +22,7 @@ const BRANCHES = ["Sede Norte", "Sede Sur"];
 export default async function AdminCoachesPage({ searchParams }: Props) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const { branch: selectedBranch } = await searchParams;
   const dict = await getDictionary();
@@ -31,6 +32,7 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
     db.user.findMany({
       where: {
         role: "COACH",
+        clubId,
         ...(selectedBranch ? { branch: selectedBranch } : {}),
       },
       orderBy: { createdAt: "desc" },
@@ -38,11 +40,11 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
         _count: { select: { coachSessions: true } },
       },
     }),
-    db.category.findMany({ orderBy: { name: "asc" } }),
+    db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } }),
     db.session.groupBy({
       by: ["coachId"],
       _count: { _all: true },
-      where: { coachId: { not: null } },
+      where: { clubId, coachId: { not: null } },
     }),
   ]);
   const countMap = Object.fromEntries(

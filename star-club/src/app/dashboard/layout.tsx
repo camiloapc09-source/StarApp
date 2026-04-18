@@ -15,10 +15,15 @@ export default async function DashboardLayout({
   }
 
   let unreadCount = 0;
+  let clubName = "StarApp";
+  let clubLogo: string | null = null;
   try {
-    unreadCount = await db.notification.count({
-      where: { userId: session.user.id, isRead: false },
-    });
+    const [count, club] = await Promise.all([
+      db.notification.count({ where: { userId: session.user.id, isRead: false } }),
+      db.club.findUnique({ where: { id: session.user.clubId }, select: { name: true, logo: true } }),
+    ]);
+    unreadCount = count;
+    if (club) { clubName = club.name; clubLogo = club.logo; }
   } catch {
     // DB unavailable — continue without notification count
   }
@@ -28,6 +33,8 @@ export default async function DashboardLayout({
       role={session.user.role}
       userName={session.user.name || "User"}
       notificationCount={unreadCount}
+      clubName={clubName}
+      clubLogo={clubLogo}
     >
       {children}
     </DashboardShell>

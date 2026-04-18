@@ -20,10 +20,11 @@ export default async function PlayerProfilePage({ params }: Props) {
 
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const [player, categories] = await Promise.all([
-    db.player.findUnique({
-      where: { id },
+    db.player.findFirst({
+      where: { id, clubId },
       include: {
         user: true,
         category: true,
@@ -37,7 +38,7 @@ export default async function PlayerProfilePage({ params }: Props) {
         playerMissions: { where: { status: "COMPLETED" }, select: { id: true } },
       },
     }),
-    db.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.category.findMany({ where: { clubId }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
   ]);
 
   if (!player) redirect("/dashboard/admin/players");

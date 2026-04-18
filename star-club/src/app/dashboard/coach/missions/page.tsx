@@ -12,20 +12,21 @@ import GamificationActions from "@/components/admin/gamification-actions";
 export default async function CoachMissionsPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "COACH") redirect("/login");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const [missions, players, leaderboard] = await Promise.all([
     db.mission.findMany({
-      where: { isActive: true },
+      where: { clubId, isActive: true },
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { playerMissions: true } } },
     }),
     db.player.findMany({
-      where: { status: "ACTIVE" },
+      where: { clubId, status: "ACTIVE" },
       orderBy: { user: { name: "asc" } },
       select: { id: true, xp: true, user: { select: { name: true } } },
     }),
     db.player.findMany({
-      where: { status: "ACTIVE" },
+      where: { clubId, status: "ACTIVE" },
       orderBy: { xp: "desc" },
       take: 8,
       include: { user: { select: { name: true, avatar: true } } },

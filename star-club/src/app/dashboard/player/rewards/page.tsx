@@ -32,8 +32,8 @@ export default async function PlayerRewardsPage() {
     );
   }
 
-  // All rewards in the system
-  const allRewards = await db.reward.findMany({ orderBy: { levelRequired: "asc" } });
+  // All rewards in the system for this club
+  const allRewards = await db.reward.findMany({ where: { clubId: player.clubId }, orderBy: { levelRequired: "asc" } });
 
   const level = calculateLevel(player.xp);
   const earnedIds = new Set(player.rewards.map((r) => r.rewardId));

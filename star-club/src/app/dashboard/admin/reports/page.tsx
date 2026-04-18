@@ -16,6 +16,7 @@ export default async function AdminReportsPage() {
   const t = await getDictionary();
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
@@ -30,28 +31,29 @@ export default async function AdminReportsPage() {
     recentAttendances,
     recentPayments,
   ] = await Promise.all([
-    db.player.count({ where: { status: "ACTIVE" } }),
+    db.player.count({ where: { clubId, status: "ACTIVE" } }),
     db.payment.aggregate({
-      where: { status: "COMPLETED" },
+      where: { clubId, status: "COMPLETED" },
       _sum: { amount: true },
     }),
     db.payment.aggregate({
-      where: { status: "PENDING" },
+      where: { clubId, status: "PENDING" },
       _sum: { amount: true },
     }),
-    db.attendance.groupBy({ by: ["status"], _count: true }),
+    db.attendance.groupBy({ by: ["status"], _count: true, where: { session: { clubId } } }),
     db.player.findMany({
+      where: { clubId },
       orderBy: { xp: "desc" },
       take: 10,
       include: { user: { select: { name: true, avatar: true } }, category: true },
     }),
-    db.payment.groupBy({ by: ["status"], _count: true, _sum: { amount: true } }),
+    db.payment.groupBy({ by: ["status"], _count: true, _sum: { amount: true }, where: { clubId } }),
     db.attendance.findMany({
-      where: { session: { date: { gte: sixMonthsAgo } } },
+      where: { session: { clubId, date: { gte: sixMonthsAgo } } },
       select: { status: true, session: { select: { date: true } } },
     }),
     db.payment.findMany({
-      where: { createdAt: { gte: sixMonthsAgo } },
+      where: { clubId, createdAt: { gte: sixMonthsAgo } },
       select: { status: true, amount: true, createdAt: true },
     }),
   ]);

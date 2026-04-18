@@ -16,6 +16,7 @@ import EditSessionButton from "@/components/coach/edit-session-button";
 export default async function CoachSessionsPage() {
   const userSession = await auth();
   if (!userSession?.user || userSession.user.role !== "COACH") redirect("/login");
+  const clubId = (userSession.user as { clubId?: string }).clubId ?? "club-star";
 
   const [sessions, categories] = await Promise.all([
     db.session.findMany({
@@ -23,7 +24,7 @@ export default async function CoachSessionsPage() {
       orderBy: { date: "desc" },
       include: { category: true, _count: { select: { attendances: true } } },
     }),
-    db.category.findMany({ orderBy: { name: "asc" } }),
+    db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } }),
   ]);
 
   const dict = await getDictionary();

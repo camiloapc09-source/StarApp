@@ -12,10 +12,11 @@ type PlayerWithUser = Prisma.PlayerGetPayload<{ include: { user: true } }>;
 export default async function SessionAttendancePage({ params }: { params: Promise<{ id: string }> }) {
   const userSession = await auth();
   if (!userSession?.user || !["ADMIN", "COACH"].includes(userSession.user.role)) redirect("/login");
+  const clubId = (userSession.user as { clubId?: string }).clubId ?? "club-star";
 
   const { id } = await params;
-  const sess = await db.session.findUnique({
-    where: { id },
+  const sess = await db.session.findFirst({
+    where: { id, clubId },
     include: { category: true, attendances: { include: { player: { include: { user: true } } } } },
   });
 
@@ -25,10 +26,10 @@ export default async function SessionAttendancePage({ params }: { params: Promis
 
   let players: PlayerWithUser[] = [];
   if (sess.categoryId) {
-    players = await db.player.findMany({ where: { categoryId: sess.categoryId, status: "ACTIVE" }, include: { user: true } });
+    players = await db.player.findMany({ where: { clubId, categoryId: sess.categoryId, status: "ACTIVE" }, include: { user: true } });
   }
   if (!players || players.length === 0) {
-    players = await db.player.findMany({ where: { status: "ACTIVE" }, include: { user: true }, take: 100 });
+    players = await db.player.findMany({ where: { clubId, status: "ACTIVE" }, include: { user: true }, take: 100 });
   }
 
   const initialAttendances = (sess.attendances || []).map((a) => ({ playerId: a.playerId, status: a.status }));

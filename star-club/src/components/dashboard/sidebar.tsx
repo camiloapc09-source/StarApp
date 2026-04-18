@@ -75,11 +75,13 @@ interface SidebarProps {
   userName: string;
   userAvatar?: string | null;
   notificationCount?: number;
+  clubName?: string;
+  clubLogo?: string | null;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-export function Sidebar({ role, userName, userAvatar, notificationCount = 0, isOpen = false, onClose }: SidebarProps) {
+export function Sidebar({ role, userName, userAvatar, notificationCount = 0, clubName = "StarApp", clubLogo, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname();
   const dict = getClientDictionary();
   const links = roleNavigationIds[(role ?? "").toLowerCase()] || [];
@@ -101,10 +103,13 @@ export function Sidebar({ role, userName, userAvatar, notificationCount = 0, isO
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6 border-b border-[var(--border-primary)]">
         <div className="w-9 h-9 rounded-full overflow-hidden border border-[var(--accent)] flex-shrink-0" style={{ boxShadow: "0 0 10px rgba(139,92,246,0.4)" }}>
-          <img src="/logo.jpeg" alt="Star Club" className="w-full h-full object-cover" />
+          {clubLogo
+            ? <img src={clubLogo} alt={clubName} className="w-full h-full object-cover" />
+            : <span className="w-full h-full flex items-center justify-center text-sm font-bold text-[var(--accent)] bg-[var(--bg-elevated)]">{clubName.charAt(0).toUpperCase()}</span>
+          }
         </div>
         <div>
-          <h1 className="font-bold text-base tracking-tight">STAR CLUB</h1>
+          <h1 className="font-bold text-base tracking-tight">{clubName.toUpperCase()}</h1>
           <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-widest">
             {dict.common.platformSubtitle}
           </p>

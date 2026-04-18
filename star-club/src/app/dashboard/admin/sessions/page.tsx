@@ -15,9 +15,11 @@ import EditSessionButton from "@/components/coach/edit-session-button";
 export default async function AdminSessionsPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const [sessions, categories, coaches] = await Promise.all([
     db.session.findMany({
+      where: { clubId },
       orderBy: { date: "desc" },
       take: 100,
       include: {
@@ -26,8 +28,8 @@ export default async function AdminSessionsPage() {
         coach: { select: { name: true } },
       },
     }),
-    db.category.findMany({ orderBy: { name: "asc" } }),
-    db.user.findMany({ where: { role: "COACH" }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } }),
+    db.user.findMany({ where: { role: "COACH", clubId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
   ]);
 
   const typeLabel: Record<string, string> = { TRAINING: "Entrenamiento", MATCH: "Partido", EVENT: "Evento" };

@@ -16,23 +16,27 @@ export default async function AdminGamificationPage() {
   const t = await getDictionary();
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const [missions, players, allPlayers, rewards] = await Promise.all([
     db.mission.findMany({
+      where: { clubId },
       orderBy: { createdAt: "desc" },
       include: { _count: { select: { playerMissions: true } } },
     }),
     db.player.findMany({
+      where: { clubId },
       orderBy: { xp: "desc" },
       take: 10,
       include: { user: { select: { name: true, avatar: true } } },
     }),
     db.player.findMany({
-      where: { status: "ACTIVE" },
+      where: { clubId, status: "ACTIVE" },
       orderBy: { user: { name: "asc" } },
       select: { id: true, xp: true, user: { select: { name: true } } },
     }),
     db.reward.findMany({
+      where: { clubId },
       orderBy: { levelRequired: "asc" },
       include: { _count: { select: { playerRewards: true } } },
     }),

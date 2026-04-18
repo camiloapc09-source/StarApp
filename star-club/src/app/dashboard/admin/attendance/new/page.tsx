@@ -10,8 +10,9 @@ import Link from "next/link";
 export default async function AdminNewSessionPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
-  const categories = await db.category.findMany({ orderBy: { name: "asc" } });
+  const categories = await db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } });
 
   return (
     <div>

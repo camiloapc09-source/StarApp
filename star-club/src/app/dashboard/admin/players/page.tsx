@@ -20,12 +20,13 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
   if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
 
   const { categoryId: selectedCategory } = await searchParams;
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const t = await getDictionary();
 
   const [players, categories, pendingAvatars] = await Promise.all([
     db.player.findMany({
-      where: selectedCategory ? { categoryId: selectedCategory } : undefined,
+      where: selectedCategory ? { clubId, categoryId: selectedCategory } : { clubId },
       orderBy: { createdAt: "desc" },
       include: {
         user: true,
@@ -33,9 +34,9 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
         attendances: { select: { status: true } },
       },
     }),
-    db.category.findMany({ orderBy: { name: "asc" } }),
+    db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } }),
     db.user.findMany({
-      where: { avatarStatus: "PENDING", avatarPending: { not: null } },
+      where: { clubId, avatarStatus: "PENDING", avatarPending: { not: null } },
       select: { id: true, name: true, avatarPending: true },
     }),
   ]);

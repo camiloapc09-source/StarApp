@@ -15,11 +15,12 @@ type PlayerWithUser = Prisma.PlayerGetPayload<{ include: { user: true } }>;
 export default async function AdminSessionAttendancePage({ params }: { params: Promise<{ id: string }> }) {
   const userSession = await auth();
   if (!userSession?.user || userSession.user.role !== "ADMIN") redirect("/login");
+  const clubId = (userSession.user as { clubId?: string }).clubId ?? "club-star";
 
   const { id } = await params;
 
-  const sess = await db.session.findUnique({
-    where: { id },
+  const sess = await db.session.findFirst({
+    where: { id, clubId },
     include: {
       category: true,
       coach: { select: { name: true } },
@@ -32,14 +33,14 @@ export default async function AdminSessionAttendancePage({ params }: { params: P
   let players: PlayerWithUser[] = [];
   if (sess.categoryId) {
     players = await db.player.findMany({
-      where: { categoryId: sess.categoryId, status: "ACTIVE" },
+      where: { clubId, categoryId: sess.categoryId, status: "ACTIVE" },
       include: { user: true },
       orderBy: { user: { name: "asc" } },
     });
   }
   if (!players || players.length === 0) {
     players = await db.player.findMany({
-      where: { status: "ACTIVE" },
+      where: { clubId, status: "ACTIVE" },
       include: { user: true },
       orderBy: { user: { name: "asc" } },
       take: 100,
