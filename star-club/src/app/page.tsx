@@ -1,7 +1,16 @@
 import Link from "next/link";
-import getDictionary from "@/lib/dict";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { db } from "@/lib/db";
+
+const SPORT_EMOJI: Record<string, string> = {
+  BASKETBALL: "🏀",
+  VOLLEYBALL: "🏐",
+  FOOTBALL: "⚽",
+  BASEBALL: "⚾",
+  TENNIS: "🎾",
+  SWIMMING: "🏊",
+};
 
 export default async function Home() {
   const session = await auth();
@@ -10,69 +19,74 @@ export default async function Home() {
     redirect(`/dashboard/${role}`);
   }
 
-  const t = await getDictionary();
-  return (
-    <main className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
-      {/* Hero */}
-      <section className="flex-1 flex flex-col items-center justify-center px-4 text-center relative overflow-hidden">
-        {/* Background accent glow */}
-        <div
-          style={{
-            position: "absolute",
-            width: 800,
-            height: 800,
-            borderRadius: "50%",
-            background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            pointerEvents: "none",
-          }}
-        />
+  const clubs = await db.club.findMany({
+    select: { name: true, slug: true, sport: true, logo: true, city: true },
+    orderBy: { name: "asc" },
+  });
 
-        {/* Logo badge */}
+  return (
+    <main className="min-h-screen bg-[var(--bg-primary)] flex flex-col items-center justify-center px-4 relative overflow-hidden">
+      {/* Background glow */}
+      <div style={{
+        position: "absolute", width: 800, height: 800, borderRadius: "50%",
+        background: "radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)",
+        top: "50%", left: "50%", transform: "translate(-50%, -50%)", pointerEvents: "none",
+      }} />
+
+      <div className="relative z-10 text-center w-full max-w-2xl">
+        {/* Platform brand */}
+        <div className="mb-10">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+            style={{ background: "linear-gradient(135deg, #6D28D9 0%, #8B5CF6 100%)", boxShadow: "0 0 32px rgba(139,92,246,0.40)" }}>
+            <span className="text-white font-black text-2xl tracking-tighter">S</span>
+          </div>
+          <h1 className="text-4xl font-black tracking-tighter text-[var(--text-primary)]">StarApp</h1>
+          <p className="text-[var(--accent)] text-xs font-bold tracking-widest uppercase mt-1">Plataforma Deportiva</p>
+          <p className="text-[var(--text-secondary)] mt-3 text-sm max-w-sm mx-auto">
+            La plataforma premium para clubes deportivos. Gestiona, registra y potencia a tus deportistas.
+          </p>
+        </div>
+
+        {/* Club selector */}
         <div className="mb-8">
-          <div className="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-[var(--bg-card)] border border-[var(--border-primary)] mb-8">
-            <div className="w-8 h-8 rounded-full overflow-hidden border border-[var(--accent)]" style={{ boxShadow: "0 0 8px rgba(139,92,246,0.5)" }}>
-              <img src="/logo.jpeg" alt="Star Club" className="w-full h-full object-cover" />
-            </div>
-            <span className="font-bold tracking-widest text-sm uppercase text-[var(--text-primary)]">Star Club</span>
+          <p className="text-xs font-semibold tracking-widest uppercase mb-4" style={{ color: "var(--text-muted)" }}>
+            Selecciona tu club
+          </p>
+          <div className="grid gap-3">
+            {clubs.map((club) => (
+              <Link
+                key={club.slug}
+                href={`/${club.slug}`}
+                className="flex items-center gap-4 p-4 rounded-2xl border transition-all hover:border-[var(--accent)] hover:bg-[var(--bg-hover)] group"
+                style={{ background: "var(--bg-card)", borderColor: "var(--border-primary)" }}
+              >
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                  style={{ background: "var(--bg-elevated)" }}>
+                  {club.logo
+                    ? <img src={club.logo} alt={club.name} className="w-full h-full object-cover rounded-xl" />
+                    : SPORT_EMOJI[club.sport] ?? "🏆"
+                  }
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                    {club.name}
+                  </p>
+                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    {club.sport}{club.city ? ` · ${club.city}` : ""}
+                  </p>
+                </div>
+                <span className="text-[var(--text-muted)] group-hover:text-[var(--accent)] transition-colors text-lg">→</span>
+              </Link>
+            ))}
           </div>
         </div>
 
-        {/* Headline */}
-        <h1 className="text-5xl md:text-7xl font-black tracking-tighter mb-6 max-w-4xl leading-none text-[var(--text-primary)]">
-          {t.home.headlinePrimary} {" "}
-          <span style={{ color: "var(--accent)" }}>{t.home.headlineAccent}</span>
-        </h1>
-
-        <p className="text-lg md:text-xl max-w-xl mb-12 leading-relaxed" style={{ color: "var(--text-secondary)" }}>
-          {t.home.heroDescription}
+        {/* Footer */}
+        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+          ¿Eres administrador?{" "}
+          <Link href="/login" className="text-[var(--accent)] hover:underline">Acceso directo</Link>
         </p>
-        <div className="flex items-center gap-4">
-          <Link href="/register" className="px-8 py-3 rounded-xl text-base font-bold transition-all" style={{ background: "var(--accent)", color: "#000" }}>
-            {t.home.register}
-          </Link>
-          <Link href="/login" className="px-8 py-3 rounded-xl text-base font-medium border transition-all" style={{ background: "var(--bg-card)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }}>
-            {t.home.signIn}
-          </Link>
-        </div>
-
-        {/* Feature strip */}
-        <div className="flex flex-wrap items-center justify-center gap-8 mt-20 text-sm" style={{ color: "var(--text-muted)" }}>
-          {["XP y niveles", "Seguimiento de asistencia", "Pagos integrados", "Reportes de rendimiento", "Notificaciones en tiempo real"].map(
-            (f) => (
-              <span key={f} className="flex items-center gap-2">
-                <span
-                  className="w-1.5 h-1.5 rounded-full inline-block"
-                  style={{ background: "var(--accent)" }}
-                />
-                {f}
-              </span>
-            )
-          )}
-        </div>
-      </section>
+      </div>
     </main>
   );
 }
