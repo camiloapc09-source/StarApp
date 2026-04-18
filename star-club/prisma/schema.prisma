@@ -17,6 +17,11 @@ model Club {
   sport     String   @default("BASKETBALL")
   country   String   @default("CO")
   city      String?
+  // Billing cycle config
+  billingCycleDay      Int   @default(1)   // day of month the period starts
+  earlyPaymentDays     Int   @default(0)   // days after cycle start to get discount
+  earlyPaymentDiscount Float @default(0)   // discount amount in COP
+  zonePrices           Json?               // { "SUR": 80000, "CENTRO": 90000, "NORTE": 100000 }
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -91,6 +96,7 @@ model Player {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   categoryId  String?
   category    Category? @relation(fields: [categoryId], references: [id])
+  zone        String?   // SUR | CENTRO | NORTE (used by clubs with zone-based pricing)
   dateOfBirth DateTime?
   documentNumber String?
   address       String?

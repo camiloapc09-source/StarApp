@@ -6,6 +6,7 @@ import { requireAuth, requireAdmin, getClubId, isResponse, apiError, apiOk } fro
 const updateSchema = z.object({
   status: z.enum(["ACTIVE", "PENDING", "INACTIVE"]).optional(),
   categoryId: z.string().optional().nullable(),
+  zone: z.enum(["SUR", "CENTRO", "NORTE"]).optional().nullable(),
   jerseyNumber: z.number().optional().nullable(),
   position: z.string().optional().nullable(),
   xp: z.number().optional(),

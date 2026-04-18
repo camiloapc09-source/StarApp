@@ -13,11 +13,15 @@ import { getClientDictionary } from "@/lib/client-dict";
 
 interface NewPlayerFormProps {
   categories: { id: string; name: string }[];
+  zonePrices: Record<string, number> | null;
 }
 
-export function NewPlayerForm({ categories }: NewPlayerFormProps) {
+const ZONES = ["SUR", "CENTRO", "NORTE"] as const;
+
+export function NewPlayerForm({ categories, zonePrices }: NewPlayerFormProps) {
   const dict = getClientDictionary();
   const router = useRouter();
+  const hasZones = !!zonePrices && Object.keys(zonePrices).length > 0;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [form, setForm] = useState({
@@ -25,6 +29,7 @@ export function NewPlayerForm({ categories }: NewPlayerFormProps) {
     email: "",
     password: "",
     categoryId: "",
+    zone: "",
     dateOfBirth: "",
     documentNumber: "",
     address: "",
@@ -38,7 +43,14 @@ export function NewPlayerForm({ categories }: NewPlayerFormProps) {
   });
 
   function update(field: string, value: string) {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      // Auto-fill monthly fee when zone changes and club has zone prices
+      if (field === "zone" && zonePrices && value) {
+        next.monthlyFee = String(zonePrices[value] ?? "");
+      }
+      return next;
+    });
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -46,11 +58,12 @@ export function NewPlayerForm({ categories }: NewPlayerFormProps) {
     setError("");
     setLoading(true);
 
-    const payload: any = {
+    const payload: Record<string, unknown> = {
       name: form.name,
       email: form.email,
       password: form.password,
       categoryId: form.categoryId || undefined,
+      zone: form.zone || undefined,
       dateOfBirth: form.dateOfBirth || undefined,
       documentNumber: form.documentNumber || undefined,
       address: form.address || undefined,
@@ -127,6 +140,21 @@ export function NewPlayerForm({ categories }: NewPlayerFormProps) {
                   ...categories.map((c) => ({ value: c.id, label: c.name })),
                 ]}
               />
+              {hasZones && (
+                <Select
+                  id="zone"
+                  label="Sede / Zona"
+                  value={form.zone}
+                  onChange={(e) => update("zone", e.target.value)}
+                  options={[
+                    { value: "", label: "Seleccionar sede..." },
+                    ...ZONES.map((z) => ({
+                      value: z,
+                      label: `${z} — $${(zonePrices![z] ?? 0).toLocaleString("es-CO")}`,
+                    })),
+                  ]}
+                />
+              )}
               <Input
                 id="dob"
                 type="date"

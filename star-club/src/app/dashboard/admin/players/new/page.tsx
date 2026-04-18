@@ -6,8 +6,14 @@ import { NewPlayerForm } from "./new-player-form";
 export default async function NewPlayerPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
-  const categories = await db.category.findMany({ orderBy: { name: "asc" } });
+  const [categories, club] = await Promise.all([
+    db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } }),
+    db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true } }),
+  ]);
 
-  return <NewPlayerForm categories={categories} />;
+  const zonePrices = club?.zonePrices as Record<string, number> | null;
+
+  return <NewPlayerForm categories={categories} zonePrices={zonePrices} />;
 }

@@ -10,6 +10,7 @@ const createPlayerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   categoryId: z.string().optional(),
+  zone: z.enum(["SUR", "CENTRO", "NORTE"]).optional(),
   dateOfBirth: z.string().optional(),
   documentNumber: z.string().optional(),
   address: z.string().optional(),
@@ -62,13 +63,18 @@ export async function POST(req: NextRequest) {
   }
 
   const {
-    name, email, password, categoryId, dateOfBirth, documentNumber,
+    name, email, password, categoryId, zone, dateOfBirth, documentNumber,
     address, phone, joinDate, monthlyFee, parentName, parentEmail,
     parentPhone, parentRelation,
   } = parsed.data;
 
   const existing = await db.user.findFirst({ where: { email, clubId } });
   if (existing) return apiError("Email already in use", 400);
+
+  // Resolve monthlyAmount: prefer explicit fee, else derive from club zone prices
+  const club = await db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true, billingCycleDay: true } });
+  const zonePrices = club?.zonePrices as Record<string, number> | null;
+  const resolvedMonthlyFee = monthlyFee ?? (zone && zonePrices ? zonePrices[zone] : undefined);
 
   const hashedPassword = await hash(password, 12);
 
@@ -79,12 +85,14 @@ export async function POST(req: NextRequest) {
         create: {
           clubId,
           categoryId: categoryId || null,
+          zone: zone || null,
+          monthlyAmount: resolvedMonthlyFee ?? null,
           dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
           documentNumber: documentNumber || null,
           address: address || null,
           phone: phone || null,
           joinDate: joinDate ? new Date(joinDate) : null,
-          paymentDay: joinDate ? new Date(joinDate).getDate() : null,
+          paymentDay: club?.billingCycleDay ?? (joinDate ? new Date(joinDate).getDate() : null),
           status: "PENDING",
         },
       },
@@ -115,22 +123,29 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    if (typeof monthlyFee === "number" && joinDate && playerProfile) {
-      const base = new Date(joinDate);
-      const day = base.getDate();
+    if (typeof resolvedMonthlyFee === "number" && playerProfile) {
+      const cycleDay = club?.billingCycleDay ?? (joinDate ? new Date(joinDate).getDate() : 1);
+      const base = joinDate ? new Date(joinDate) : new Date();
+      // Start billing from the current or next cycle period
+      let startMonth = base.getMonth();
+      let startYear = base.getFullYear();
+      if (base.getDate() > cycleDay) { startMonth += 1; }
+      if (startMonth > 11) { startMonth = 0; startYear += 1; }
 
       for (let i = 0; i < 3; i++) {
-        const year = base.getFullYear();
-        const month = base.getMonth() + i;
+        const month = (startMonth + i) % 12;
+        const year = startYear + Math.floor((startMonth + i) / 12);
         const lastDay = new Date(year, month + 1, 0).getDate();
-        const dueDate = new Date(year, month, Math.min(day, lastDay));
+        const dueDate = new Date(year, month, Math.min(cycleDay, lastDay));
 
-        const periodStart = new Date(year, month, Math.min(day, lastDay));
-        const periodEnd = new Date(year, month + 1, Math.min(day, lastDay) - 1);
-        const periodLabel = `${periodStart.toLocaleDateString("es-CO", { day: "numeric", month: "short" })} – ${periodEnd.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })}`;
+        const endMonth = (month + 1) % 12;
+        const endYear = year + Math.floor((month + 1) / 12);
+        const endLastDay = new Date(endYear, endMonth + 1, 0).getDate();
+        const periodEnd = new Date(endYear, endMonth, Math.min(cycleDay - 1, endLastDay));
+        const periodLabel = `${dueDate.toLocaleDateString("es-CO", { day: "numeric", month: "short" })} – ${periodEnd.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })}`;
 
         await db.payment.create({
-          data: { clubId, playerId: playerProfile.id, amount: monthlyFee, concept: `Mensualidad ${periodLabel}`, status: "PENDING", dueDate },
+          data: { clubId, playerId: playerProfile.id, amount: resolvedMonthlyFee, concept: `Mensualidad ${periodLabel}`, status: "PENDING", dueDate },
         });
       }
     }
