@@ -103,6 +103,13 @@ export function ClubLoginForm({ club }: { club: Club }) {
           <p className="text-[var(--text-secondary)] text-sm mt-8">
             Plataforma deportiva · Powered by StarApp
           </p>
+          <a
+            href="/"
+            className="text-xs mt-4 hover:underline inline-block"
+            style={{ color: "var(--text-muted)" }}
+          >
+            ← Cambiar de club
+          </a>
         </motion.div>
       </div>
 
@@ -170,13 +177,13 @@ export function ClubLoginForm({ club }: { club: Club }) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
               id="email"
-              type="email"
-              label="Correo electrónico"
-              placeholder="tu@email.com"
+              type="text"
+              label="Correo electrónico o documento"
+              placeholder="tu@email.com o número de documento"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              autoComplete="email"
+              autoComplete="username"
             />
 
             <div className="relative">

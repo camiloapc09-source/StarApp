@@ -66,12 +66,14 @@ export async function POST(req: NextRequest) {
       include: { playerProfile: true },
     });
 
-    if (parentName && parentEmail) {
-      let parentUser = await db.user.findFirst({ where: { email: parentEmail, clubId } });
+    if (parentName) {
+      // Parent login: email = player's documentNumber, password = player's documentNumber
+      const parentLoginId = documentNumber;
+      let parentUser = await db.user.findFirst({ where: { email: parentLoginId, clubId } });
       if (!parentUser) {
         const parentHashed = await hash(documentNumber, 12);
         parentUser = await db.user.create({
-          data: { clubId, name: parentName, email: parentEmail, password: parentHashed, role: "PARENT" },
+          data: { clubId, name: parentName, email: parentLoginId, password: parentHashed, role: "PARENT" },
         });
       }
 

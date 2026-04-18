@@ -101,13 +101,14 @@ export async function POST(req: NextRequest) {
 
   const playerProfile = await db.player.findFirst({ where: { userId: user.id } });
 
-  if (parentName && parentEmail) {
-    let parentUser = await db.user.findFirst({ where: { email: parentEmail, clubId } });
+  if (parentName && documentNumber) {
+    // Parent login: email = player's documentNumber, password = player's documentNumber
+    const parentLoginId = documentNumber;
+    let parentUser = await db.user.findFirst({ where: { email: parentLoginId, clubId } });
     if (!parentUser) {
-      const rand = Math.random().toString(36).slice(2, 10);
-      const parentHashed = await hash(rand, 12);
+      const parentHashed = await hash(documentNumber, 12);
       parentUser = await db.user.create({
-        data: { name: parentName, email: parentEmail, password: parentHashed, role: "PARENT", clubId },
+        data: { name: parentName, email: parentLoginId, password: parentHashed, role: "PARENT", clubId },
       });
     }
 

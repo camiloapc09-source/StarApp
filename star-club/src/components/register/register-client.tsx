@@ -88,7 +88,6 @@ export default function RegisterClient() {
       if (modalRole === "PLAYER") {
         payload.address = form.address || undefined;
         payload.parentName = form.parentName || undefined;
-        payload.parentEmail = form.parentEmail || undefined;
         payload.parentPhone = form.parentPhone || undefined;
         payload.parentRelation = form.parentRelation || undefined;
       }
@@ -189,7 +188,6 @@ export default function RegisterClient() {
               Datos del acudiente {isMinor ? <span style={{ color: 'var(--accent-danger, #ef4444)' }}>(obligatorio)</span> : '(opcional)'}
             </h3>
             <Input value={form.parentName} onChange={(e) => setForm({ ...form, parentName: e.target.value })} placeholder={isMinor ? 'Nombre del acudiente *' : 'Nombre del acudiente'} required={isMinor} />
-            <Input type="email" value={form.parentEmail} onChange={(e) => setForm({ ...form, parentEmail: e.target.value })} placeholder="Correo del acudiente" />
             <Input value={form.parentPhone} onChange={(e) => setForm({ ...form, parentPhone: e.target.value })} placeholder={isMinor ? 'WhatsApp del acudiente *' : 'WhatsApp del acudiente'} required={isMinor} />
             <select
               value={form.parentRelation}
@@ -206,7 +204,7 @@ export default function RegisterClient() {
               <option>Hermano/a</option>
               <option>Acudiente</option>
             </select>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>La contraseña del deportista y del acudiente será el número de documento.</p>
+            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>La contraseña del deportista y del acudiente será el número de documento. El acudiente inicia sesión con el número de documento como usuario y contraseña.</p>
           </>
         )}
 
