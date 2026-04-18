@@ -27,8 +27,10 @@ const ORDER_STATUS: Record<string, { label: string; variant: "success" | "warnin
 export default async function AdminUniformsPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const orders = await db.uniformOrder.findMany({
+    where: { player: { clubId } },
     orderBy: { createdAt: "desc" },
     include: {
       player: { include: { user: { select: { name: true, avatar: true } } } },

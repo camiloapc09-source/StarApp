@@ -9,10 +9,11 @@ import AdminEvidencePanel from "@/components/admin/admin-evidence-panel";
 export default async function AdminEvidencePage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
+  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const [pending, recent] = await Promise.all([
     db.evidence.findMany({
-      where: { status: "PENDING" },
+      where: { status: "PENDING", player: { clubId } },
       include: {
         player: { include: { user: { select: { name: true, avatar: true } } } },
         playerMission: { include: { mission: { select: { title: true, xpReward: true } } } },
@@ -20,7 +21,7 @@ export default async function AdminEvidencePage() {
       orderBy: { submittedAt: "desc" },
     }),
     db.evidence.findMany({
-      where: { status: { in: ["ACCEPTED", "REJECTED"] } },
+      where: { status: { in: ["ACCEPTED", "REJECTED"] }, player: { clubId } },
       include: {
         player: { include: { user: { select: { name: true, avatar: true } } } },
         playerMission: { include: { mission: { select: { title: true, xpReward: true } } } },

@@ -17,7 +17,7 @@ import { es } from "date-fns/locale";
 
 type Props = { searchParams: Promise<{ branch?: string }> };
 
-const BRANCHES = ["Sede Norte", "Sede Sur"];
+// Branches are fetched dynamically from DB per club
 
 export default async function AdminCoachesPage({ searchParams }: Props) {
   const session = await auth();
@@ -27,8 +27,8 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
   const { branch: selectedBranch } = await searchParams;
   const dict = await getDictionary();
 
-  // Get all coaches, categories, and session counts in parallel
-  const [coaches, categories, sessionCounts] = await Promise.all([
+  // Get all coaches, categories, session counts, and distinct branches in parallel
+  const [coaches, categories, sessionCounts, allCoachBranches] = await Promise.all([
     db.user.findMany({
       where: {
         role: "COACH",
@@ -46,16 +46,27 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
       _count: { _all: true },
       where: { clubId, coachId: { not: null } },
     }),
+    db.user.findMany({ where: { role: "COACH", clubId }, select: { branch: true } }),
   ]);
+
+  // Build sorted list of unique branches from all coaches in this club
+  const allBranches = Array.from(
+    new Set(
+      allCoachBranches
+        .flatMap((c) => (c.branch ? c.branch.split(",").map((b) => b.trim()) : []))
+        .filter(Boolean)
+    )
+  ).sort();
+
   const countMap = Object.fromEntries(
     sessionCounts.filter((s) => s.coachId).map((s) => [s.coachId!, s._count._all])
   );
 
   type BadgeVariant = "default" | "success" | "warning" | "error" | "info" | "accent";
-  const branchBadge: Record<string, BadgeVariant> = {
-    "Sede Norte": "success",
-    "Sede Sur":   "default",
-  };
+  const branchColors: BadgeVariant[] = ["success", "info", "accent", "warning", "default"];
+  const branchBadge: Record<string, BadgeVariant> = Object.fromEntries(
+    allBranches.map((b, i) => [b, branchColors[i % branchColors.length]])
+  );
 
   return (
     <div>
@@ -84,7 +95,7 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
                 Todas las sedes
               </span>
             </Link>
-            {BRANCHES.map((branch) => (
+            {allBranches.map((branch) => (
               <Link key={branch} href={`/dashboard/admin/coaches?branch=${encodeURIComponent(branch)}`}>
                 <span
                   className="px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer border transition-all"
@@ -164,7 +175,7 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
 
                     {coach.phone && (
                       <a
-                        href={`https://wa.me/${coach.phone.replace(/[^0-9]/g, "")}?text=${encodeURIComponent("Hola, te contactamos desde Star Club.")}`}
+                        href={`https://wa.me/${coach.phone.replace(/[^0-9]/g, "")}`}
                         target="_blank"
                         rel="noreferrer"
                         className="text-xs px-2 py-1 rounded-xl font-medium hidden xl:flex items-center gap-1 transition-all hover:opacity-80 flex-shrink-0"
