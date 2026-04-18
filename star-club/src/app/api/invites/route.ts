@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   if (code) {
     const invite = await db.invite.findUnique({
       where: { code },
-      select: { id: true, code: true, role: true, used: true, expiresAt: true },
+      select: { id: true, code: true, role: true, used: true, expiresAt: true, club: { select: { name: true, slug: true, logo: true } } },
     });
     return apiOk(invite);
   }

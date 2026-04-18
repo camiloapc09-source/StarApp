@@ -221,6 +221,17 @@ export function ClubLoginForm({ club }: { club: Club }) {
               )}
             </Button>
           </form>
+
+          <p className="text-center text-sm mt-6" style={{ color: "var(--text-muted)" }}>
+            ¿No tienes cuenta?{" "}
+            <a
+              href={`/register?club=${club.slug}`}
+              className="font-medium hover:underline"
+              style={{ color: "var(--accent)" }}
+            >
+              Regístrate
+            </a>
+          </p>
         </motion.div>
       </div>
     </div>

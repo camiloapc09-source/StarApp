@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -9,6 +9,8 @@ import { Modal } from "@/components/ui/modal";
 export default function RegisterClient() {
   const search = useSearchParams();
   const codeParam = search.get("code") || "";
+  // Club slug passed from the login page (/register?club=ballbreakers)
+  const clubSlug = search.get("club") || "";
   const router = useRouter();
 
   const [isModalOpen, setModalOpen] = useState(!codeParam);
@@ -16,9 +18,12 @@ export default function RegisterClient() {
   const [modalCode, setModalCode] = useState(codeParam);
 
   const [code, setCode] = useState(codeParam);
-  const [invite, setInvite] = useState<any>(null);
+  const [invite, setInvite] = useState<{ role: string; club?: { name: string; slug: string; logo: string | null } } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "", dateOfBirth: "", documentNumber: "", phone: "", address: "", parentName: "", parentEmail: "", parentPhone: "", parentRelation: "", emergencyContact: "", eps: "", branch: "Sede Norte" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", dateOfBirth: "", documentNumber: "", phone: "", address: "", parentName: "", parentEmail: "", parentPhone: "", parentRelation: "", emergencyContact: "", eps: "", branch: "" });
+
+  // Derive redirect target: prefer slug from the verified invite, fallback to URL param, fallback to "/"
+  const redirectSlug = invite?.club?.slug || clubSlug || null;
 
   useEffect(() => {
     async function fetchInvite() {
@@ -45,6 +50,7 @@ export default function RegisterClient() {
       const invRole = (inv?.role || "PLAYER").toUpperCase();
       if (invRole !== modalRole) return alert("El código no corresponde al tipo seleccionado.");
 
+      setInvite(inv);
       setCode(modalCode);
       setModalOpen(false);
     } catch (e) {
@@ -71,8 +77,7 @@ export default function RegisterClient() {
     }
     setLoading(true);
     try {
-      const payload: any = { code, name: form.name, email: form.email, dateOfBirth: form.dateOfBirth, documentNumber: form.documentNumber, phone: form.phone };
-      // include password only for coach (or if provided)
+      const payload: Record<string, unknown> = { code, name: form.name, email: form.email, dateOfBirth: form.dateOfBirth, documentNumber: form.documentNumber, phone: form.phone };
       if (modalRole === "COACH") {
         payload.password = form.password;
         payload.phone = form.phone || undefined;
@@ -80,7 +85,6 @@ export default function RegisterClient() {
         payload.eps = form.eps || undefined;
         payload.branch = form.branch || undefined;
       }
-      // include player-specific info
       if (modalRole === "PLAYER") {
         payload.address = form.address || undefined;
         payload.parentName = form.parentName || undefined;
@@ -92,8 +96,8 @@ export default function RegisterClient() {
       const res = await fetch('/api/invites/redeem', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
       const data = await res.json();
       if (res.ok) {
-        alert('Registro exitoso');
-        router.push('/login');
+        alert('¡Registro exitoso! Ya puedes iniciar sesión.');
+        router.push(redirectSlug ? `/${redirectSlug}` : '/');
       } else {
         alert(data.error || 'Error al registrar');
       }
@@ -103,17 +107,40 @@ export default function RegisterClient() {
     } finally { setLoading(false); }
   }
 
+  // Club info to show in header (from invite or just from URL param)
+  const clubName = invite?.club?.name;
+  const clubLogo = invite?.club?.logo;
+
   return (
-    <div className="p-8 max-w-lg mx-auto">
-      <div className="mb-6">
-        <a
-          href="/"
-          className="inline-flex items-center gap-2 text-sm hover:underline"
-          style={{ color: "var(--text-muted)" }}
-        >
-          ← Volver al inicio
-        </a>
-      </div>
+    <div className="min-h-screen bg-[var(--bg-primary)] flex items-start justify-center py-12 px-4">
+      <div className="w-full max-w-lg">
+        {/* Back link */}
+        <div className="mb-6">
+          <a
+            href={redirectSlug ? `/${redirectSlug}` : '/'}
+            className="inline-flex items-center gap-2 text-sm hover:underline"
+            style={{ color: "var(--text-muted)" }}
+          >
+            ← Volver al inicio de sesión
+          </a>
+        </div>
+
+        {/* Club header */}
+        {(clubLogo || clubName) && (
+          <div className="flex items-center gap-3 mb-6 p-4 rounded-2xl" style={{ background: "var(--bg-secondary)", border: "1px solid var(--border-primary)" }}>
+            {clubLogo && (
+              <img
+                src={clubLogo}
+                alt={clubName ?? "Club"}
+                style={{ width: 40, height: 40, borderRadius: "50%", objectFit: "cover", border: "2px solid var(--accent)" }}
+              />
+            )}
+            <div>
+              <p className="font-bold text-sm">{clubName}</p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>Registro de miembro</p>
+            </div>
+          </div>
+        )}
 
       <Modal isOpen={isModalOpen} onClose={() => setModalOpen(false)} title="Registrarse">
         <p className="mb-4">Seleccione el tipo de registro y luego ingrese el código:</p>
@@ -140,10 +167,7 @@ export default function RegisterClient() {
             <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="Teléfono (WhatsApp)" />
             <Input value={form.emergencyContact} onChange={(e) => setForm({ ...form, emergencyContact: e.target.value })} placeholder="Contacto de emergencia" />
             <Input value={form.eps} onChange={(e) => setForm({ ...form, eps: e.target.value })} placeholder="EPS / Seguro" />
-            <select value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} className="w-full rounded-lg border px-3 py-2">
-              <option>Sede Norte</option>
-              <option>Sede Sur</option>
-            </select>
+            <Input value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} placeholder="Sede / Zona (ej: NORTE, SUR, CENTRO)" />
           </>
         )}
 
@@ -187,9 +211,10 @@ export default function RegisterClient() {
         )}
 
         <div className="pt-2">
-          <Button type="submit" disabled={loading}>{loading ? 'Registrando...' : 'Registrarse'}</Button>
+          <Button type="submit" className="w-full" disabled={loading}>{loading ? 'Registrando...' : 'Registrarse'}</Button>
         </div>
       </form>
+      </div>
     </div>
   );
 }
