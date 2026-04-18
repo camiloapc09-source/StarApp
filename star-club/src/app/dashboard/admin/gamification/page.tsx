@@ -1,4 +1,4 @@
-﻿import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { Header } from "@/components/dashboard/header";
@@ -15,7 +15,7 @@ import RewardsManager from "@/components/admin/rewards-manager";
 export default async function AdminGamificationPage() {
   const t = await getDictionary();
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const [missions, players, allPlayers, rewards] = await Promise.all([

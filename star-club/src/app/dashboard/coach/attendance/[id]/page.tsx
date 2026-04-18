@@ -11,7 +11,7 @@ type PlayerWithUser = Prisma.PlayerGetPayload<{ include: { user: true } }>;
 
 export default async function SessionAttendancePage({ params }: { params: Promise<{ id: string }> }) {
   const userSession = await auth();
-  if (!userSession?.user || !["ADMIN", "COACH"].includes(userSession.user.role)) redirect("/login");
+  if (!userSession?.user || !["ADMIN", "COACH"].includes(userSession.user.role)) redirect("/");
   const clubId = (userSession.user as { clubId?: string }).clubId ?? "club-star";
 
   const { id } = await params;

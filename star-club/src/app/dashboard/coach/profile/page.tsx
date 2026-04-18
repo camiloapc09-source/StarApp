@@ -12,7 +12,7 @@ import { es } from "date-fns/locale";
 
 export default async function CoachProfilePage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "COACH") redirect("/login");
+  if (!session?.user || session.user.role !== "COACH") redirect("/");
 
   const [user, sessionCount, playerCount] = await Promise.all([
     db.user.findUnique({
@@ -33,7 +33,7 @@ export default async function CoachProfilePage() {
     }),
   ]);
 
-  if (!user) redirect("/login");
+  if (!user) redirect("/");
 
   return (
     <div>

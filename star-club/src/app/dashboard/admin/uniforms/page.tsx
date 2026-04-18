@@ -26,7 +26,7 @@ const ORDER_STATUS: Record<string, { label: string; variant: "success" | "warnin
 
 export default async function AdminUniformsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
   const orders = await db.uniformOrder.findMany({
     orderBy: { createdAt: "desc" },

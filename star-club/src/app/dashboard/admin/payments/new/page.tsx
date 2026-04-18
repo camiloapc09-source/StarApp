@@ -7,7 +7,7 @@ import NewPaymentForm from "@/components/admin/new-payment-form";
 
 export default async function NewPaymentPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
   const players = await db.player.findMany({
     where: { status: "ACTIVE" },

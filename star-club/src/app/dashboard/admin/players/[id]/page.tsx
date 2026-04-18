@@ -19,7 +19,7 @@ export default async function PlayerProfilePage({ params }: Props) {
   const { id } = await params;
 
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const [player, categories] = await Promise.all([

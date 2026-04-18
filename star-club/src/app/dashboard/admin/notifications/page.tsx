@@ -9,7 +9,7 @@ import SendNotificationForm from "@/components/admin/send-notification-form";
 
 export default async function NotificationsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
   const notifications = await db.notification.findMany({
     where: { userId: session.user.id },

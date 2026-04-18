@@ -17,7 +17,7 @@ type Props = { searchParams: Promise<{ categoryId?: string }> };
 
 export default async function AdminPlayersPage({ searchParams }: Props) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
   const { categoryId: selectedCategory } = await searchParams;
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";

@@ -15,7 +15,7 @@ import EditSessionButton from "@/components/coach/edit-session-button";
 
 export default async function CoachSessionsPage() {
   const userSession = await auth();
-  if (!userSession?.user || userSession.user.role !== "COACH") redirect("/login");
+  if (!userSession?.user || userSession.user.role !== "COACH") redirect("/");
   const clubId = (userSession.user as { clubId?: string }).clubId ?? "club-star";
 
   const [sessions, categories] = await Promise.all([

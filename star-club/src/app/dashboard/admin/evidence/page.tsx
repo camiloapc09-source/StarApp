@@ -8,7 +8,7 @@ import AdminEvidencePanel from "@/components/admin/admin-evidence-panel";
 
 export default async function AdminEvidencePage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
   const [pending, recent] = await Promise.all([
     db.evidence.findMany({

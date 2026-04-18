@@ -8,7 +8,7 @@ import PlayerMissionsClient from "@/components/gamification/player-missions-clie
 
 export default async function PlayerMissionsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PLAYER") redirect("/login");
+  if (!session?.user || session.user.role !== "PLAYER") redirect("/");
 
   const player = await db.player.findUnique({
     where: { userId: session.user.id },

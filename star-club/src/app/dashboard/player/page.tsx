@@ -13,7 +13,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 
 export default async function PlayerDashboard() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PLAYER") redirect("/login");
+  if (!session?.user || session.user.role !== "PLAYER") redirect("/");
 
   const dict = await getDictionary();
 

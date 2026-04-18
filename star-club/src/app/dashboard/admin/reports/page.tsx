@@ -15,7 +15,7 @@ import { AttendanceChart, RevenueChart, PaymentPieChart } from "@/components/adm
 export default async function AdminReportsPage() {
   const t = await getDictionary();
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const sixMonthsAgo = new Date();

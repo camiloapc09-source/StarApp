@@ -60,10 +60,14 @@ export default async function Home() {
                 className="flex items-center gap-4 p-4 rounded-2xl border transition-all hover:border-[var(--accent)] hover:bg-[var(--bg-hover)] group"
                 style={{ background: "var(--bg-card)", borderColor: "var(--border-primary)" }}
               >
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                  style={{ background: "var(--bg-elevated)" }}>
+                <div className="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center text-2xl flex-shrink-0"
+                  style={{
+                    background: "var(--bg-elevated)",
+                    border: "2px solid var(--accent)",
+                    boxShadow: "0 0 12px rgba(139,92,246,0.35), 0 0 24px rgba(139,92,246,0.15)",
+                  }}>
                   {club.logo
-                    ? <img src={club.logo} alt={club.name} className="w-full h-full object-cover rounded-xl" />
+                    ? <img src={club.logo} alt={club.name} style={{ width: "48px", height: "48px", objectFit: "cover", display: "block", borderRadius: "50%" }} />
                     : SPORT_EMOJI[club.sport] ?? "🏆"
                   }
                 </div>
@@ -82,9 +86,8 @@ export default async function Home() {
         </div>
 
         {/* Footer */}
-        <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-          ¿Eres administrador?{" "}
-          <Link href="/login" className="text-[var(--accent)] hover:underline">Acceso directo</Link>
+        <p className="text-xs mt-4" style={{ color: "var(--text-muted)" }}>
+          Powered by StarApp
         </p>
       </div>
     </main>

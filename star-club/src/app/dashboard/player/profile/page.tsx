@@ -12,7 +12,7 @@ import { Zap, Shield } from "lucide-react";
 
 export default async function PlayerProfilePage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PLAYER") redirect("/login");
+  if (!session?.user || session.user.role !== "PLAYER") redirect("/");
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
@@ -31,7 +31,7 @@ export default async function PlayerProfilePage() {
     },
   });
 
-  if (!user) redirect("/login");
+  if (!user) redirect("/");
 
   // Fetch jersey numbers already taken by other players
   const takenJerseys = await db.player.findMany({

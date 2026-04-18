@@ -5,7 +5,7 @@ import { NewPlayerForm } from "./new-player-form";
 
 export default async function NewPlayerPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const [categories, club] = await Promise.all([

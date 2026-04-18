@@ -76,7 +76,24 @@ export function ClubLoginForm({ club }: { club: Club }) {
           transition={{ duration: 0.6 }}
           className="relative z-10 text-center"
         >
-          <div className="text-7xl mb-6">{emoji}</div>
+          {club.logo ? (
+            <motion.div
+              className="w-32 h-32 rounded-full overflow-hidden mx-auto mb-6"
+              style={{ border: "2px solid var(--accent)" }}
+              animate={{
+                boxShadow: [
+                  "0 0 20px rgba(139,92,246,0.3)",
+                  "0 0 50px rgba(139,92,246,0.55)",
+                  "0 0 20px rgba(139,92,246,0.3)",
+                ],
+              }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <img src={club.logo} alt={club.name} style={{ width: "128px", height: "128px", objectFit: "cover", display: "block", borderRadius: "50%" }} />
+            </motion.div>
+          ) : (
+            <div className="text-7xl mb-6">{emoji}</div>
+          )}
           <h2 className="text-4xl font-black tracking-tighter mb-2 text-[var(--text-primary)]">
             {club.name}
           </h2>
@@ -117,7 +134,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
                 }}
                 transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
               >
-                <img src={club.logo} alt={club.name} className="w-full h-full object-cover" />
+                <img src={club.logo} alt={club.name} style={{ width: "96px", height: "96px", objectFit: "cover", display: "block", borderRadius: "50%" }} />
               </motion.div>
             ) : (
               <motion.div

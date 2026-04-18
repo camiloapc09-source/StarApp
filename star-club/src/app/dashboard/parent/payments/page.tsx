@@ -11,7 +11,7 @@ import PaymentSubmitForm from "@/components/parent/payment-submit-form";
 
 export default async function ParentPaymentsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") redirect("/login");
+  if (!session?.user || session.user.role !== "PARENT") redirect("/");
 
   const parent = await db.parent.findUnique({
     where: { userId: session.user.id },

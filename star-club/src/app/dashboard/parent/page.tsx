@@ -1,4 +1,4 @@
-﻿import { auth } from "@/lib/auth";
+import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { Header } from "@/components/dashboard/header";
@@ -14,7 +14,7 @@ import { UpcomingSessionsCard } from "@/components/shared/upcoming-sessions-card
 
 export default async function ParentDashboard() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") redirect("/login");
+  if (!session?.user || session.user.role !== "PARENT") redirect("/");
 
   const parent = await db.parent.findUnique({
     where: { userId: session.user.id },

@@ -1,11 +1,12 @@
 import "dotenv/config";
-import { PrismaNeonHttp } from "@prisma/adapter-neon";
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { hash } from "bcryptjs";
 
 function createPrismaClient() {
-  const adapter = new PrismaNeonHttp(process.env.DATABASE_URL!, {});
-  return new PrismaClient({ adapter } as never);
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  return new PrismaClient({ adapter: new PrismaPg(pool) } as never);
 }
 
 const prisma = createPrismaClient();
@@ -22,12 +23,13 @@ async function main() {
   // ── Star Club ──────────────────────────────────────────────────────────────
   await prisma.club.upsert({
     where: { id: STAR_CLUB_ID },
-    update: {},
+    update: { logo: "/logo.jpeg" },
     create: {
       id: STAR_CLUB_ID,
       name: "Star Club",
       slug: "star-club",
       email: "admin@starclub.com",
+      logo: "/logo.jpeg",
       sport: "BASKETBALL",
       country: "CO",
       city: "Colombia",

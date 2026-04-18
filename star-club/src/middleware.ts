@@ -22,7 +22,7 @@ export default auth((req) => {
   // Protect dashboard routes
   if (pathname.startsWith("/dashboard")) {
     if (!isLoggedIn) {
-      return NextResponse.redirect(new URL("/login", req.nextUrl));
+      return NextResponse.redirect(new URL("/", req.nextUrl));
     }
 
     const role = req.auth?.user?.role?.toLowerCase() || "player";

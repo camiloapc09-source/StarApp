@@ -14,7 +14,7 @@ type Props = { searchParams: Promise<{ categoryId?: string }> };
 
 export default async function CoachPlayersPage({ searchParams }: Props) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "COACH") redirect("/login");
+  if (!session?.user || session.user.role !== "COACH") redirect("/");
 
   const { categoryId: selectedCategory } = await searchParams;
   const dict = await getDictionary();

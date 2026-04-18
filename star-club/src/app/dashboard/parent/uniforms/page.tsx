@@ -43,7 +43,7 @@ const ORDER_STATUS: Record<string, { label: string; variant: "success" | "warnin
 
 export default async function ParentUniformsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") redirect("/login");
+  if (!session?.user || session.user.role !== "PARENT") redirect("/");
 
   const parent = await db.parent.findUnique({
     where: { userId: session.user.id },

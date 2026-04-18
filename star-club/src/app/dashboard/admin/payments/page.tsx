@@ -17,7 +17,7 @@ import ProofViewer from "@/components/admin/proof-viewer";
 
 export default async function AdminPaymentsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   // Auto-mark overdue on every page visit so the admin always sees current state

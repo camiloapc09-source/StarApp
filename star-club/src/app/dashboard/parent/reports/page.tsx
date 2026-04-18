@@ -14,7 +14,7 @@ import Link from "next/link";
 
 export default async function ParentReportsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") redirect("/login");
+  if (!session?.user || session.user.role !== "PARENT") redirect("/");
 
   const dict = await getDictionary();
 

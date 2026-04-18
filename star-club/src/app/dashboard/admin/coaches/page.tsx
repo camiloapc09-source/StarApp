@@ -21,7 +21,7 @@ const BRANCHES = ["Sede Norte", "Sede Sur"];
 
 export default async function AdminCoachesPage({ searchParams }: Props) {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const { branch: selectedBranch } = await searchParams;

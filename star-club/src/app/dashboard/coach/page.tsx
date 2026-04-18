@@ -14,7 +14,7 @@ import { format } from "date-fns";
 
 export default async function CoachDashboard() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "COACH") redirect("/login");
+  if (!session?.user || session.user.role !== "COACH") redirect("/");
   const dict = await getDictionary();
 
   const [sessionsCount, playersCount, recentSessions, upcomingSessions, pendingEvidences, unreadNotifications] =

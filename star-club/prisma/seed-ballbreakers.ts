@@ -24,6 +24,7 @@ async function main() {
   await db.club.upsert({
     where: { id: CLUB_ID },
     update: {
+      logo: "/logo_ballbreakers.jpeg",
       billingCycleDay: 15,
       earlyPaymentDays: 5,
       earlyPaymentDiscount: 10000,
@@ -34,6 +35,7 @@ async function main() {
       name: "Ballbreakers",
       slug: "ballbreakers",
       email: "admin@ballbreakers.com",
+      logo: "/logo_ballbreakers.jpeg",
       sport: "VOLLEYBALL",
       country: "CO",
       city: "Colombia",

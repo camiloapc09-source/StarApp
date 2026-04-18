@@ -12,7 +12,7 @@ import { getDictionary } from "@/lib/dict";
 
 export default async function AdminAttendancePage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const sessions = await db.session.findMany({

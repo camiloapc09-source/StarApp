@@ -12,7 +12,7 @@ import { es } from "date-fns/locale";
 
 export default async function InvitesPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
   const invites = await db.invite.findMany({ orderBy: { createdAt: "desc" }, take: 200 });
   const dict = await getDictionary();

@@ -8,7 +8,7 @@ import CategoriesManager from "@/components/admin/categories-manager";
 
 export default async function AdminCategoriesPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const categories = await db.category.findMany({

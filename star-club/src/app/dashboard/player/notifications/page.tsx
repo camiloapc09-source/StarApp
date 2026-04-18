@@ -7,7 +7,7 @@ import NotificationsClient from "@/components/notifications-client";
 
 export default async function PlayerNotificationsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PLAYER") redirect("/login");
+  if (!session?.user || session.user.role !== "PLAYER") redirect("/");
 
   const notifications = await db.notification.findMany({
     where: { userId: session.user.id },

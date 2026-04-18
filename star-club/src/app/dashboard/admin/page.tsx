@@ -13,7 +13,7 @@ import Link from "next/link";
 export default async function AdminDashboard() {
   const t = await getDictionary();
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const [

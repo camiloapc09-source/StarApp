@@ -6,7 +6,7 @@ import { getDictionary } from "@/lib/dict";
 
 export default async function NewCoachPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
+  if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const dict = await getDictionary();
 
   return (

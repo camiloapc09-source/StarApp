@@ -11,7 +11,7 @@ import GamificationActions from "@/components/admin/gamification-actions";
 
 export default async function CoachMissionsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "COACH") redirect("/login");
+  if (!session?.user || session.user.role !== "COACH") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const [missions, players, leaderboard] = await Promise.all([

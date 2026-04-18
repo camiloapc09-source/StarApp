@@ -7,7 +7,7 @@ import NotificationsClient from "@/components/notifications-client";
 
 export default async function ParentNotificationsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") redirect("/login");
+  if (!session?.user || session.user.role !== "PARENT") redirect("/");
 
   const notifications = await db.notification.findMany({
     where: { userId: session.user.id },

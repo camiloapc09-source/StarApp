@@ -9,7 +9,7 @@ import ChangePasswordForm from "@/components/profile/change-password-form";
 
 export default async function ParentProfilePage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") redirect("/login");
+  if (!session?.user || session.user.role !== "PARENT") redirect("/");
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
@@ -20,7 +20,7 @@ export default async function ParentProfilePage() {
     },
   });
 
-  if (!user) redirect("/login");
+  if (!user) redirect("/");
 
   return (
     <div>
