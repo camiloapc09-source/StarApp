@@ -1,18 +1,20 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { requireAdmin, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
 
 // POST /api/payments/[id]/reject - admin rejects proof, resets to PENDING
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireAdmin();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const { id } = await params;
+
+  const existing = await db.payment.findUnique({ where: { id }, select: { clubId: true } });
+  if (!existing || existing.clubId !== clubId) return apiError("Not found", 404);
 
   const payment = await db.payment.update({
     where: { id },
@@ -30,5 +32,5 @@ export async function POST(
     },
   });
 
-  return NextResponse.json(payment);
+  return apiOk(payment);
 }

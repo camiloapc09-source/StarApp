@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { hash } from "bcryptjs";
 import { z } from "zod";
 import { calculateLevel } from "@/lib/utils";
+import { requireAuth, requireAdmin, getClubId, isResponse, apiError, apiOk, getCoachCategoryFilter } from "@/lib/api";
 
 const createPlayerSchema = z.object({
   name: z.string().min(2),
@@ -23,16 +23,20 @@ const createPlayerSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireAuth();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const { searchParams } = new URL(req.url);
   const categoryId = searchParams.get("categoryId");
   const status = searchParams.get("status");
 
+  const categoryFilter = await getCoachCategoryFilter(session);
+
   const players = await db.player.findMany({
     where: {
-      ...(categoryId ? { categoryId } : {}),
+      clubId,
+      ...(categoryId ? { categoryId } : categoryFilter ? { categoryId: { in: categoryFilter } } : {}),
       ...(status ? { status } : {}),
     },
     include: {
@@ -42,57 +46,38 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(players);
+  return apiOk(players);
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireAdmin();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const body = await req.json();
   const parsed = createPlayerSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.issues[0].message },
-      { status: 400 }
-    );
+    return apiError(parsed.error.issues[0].message, 400);
   }
 
   const {
-    name,
-    email,
-    password,
-    categoryId,
-    dateOfBirth,
-    documentNumber,
-    address,
-    phone,
-    joinDate,
-    monthlyFee,
-    parentName,
-    parentEmail,
-    parentPhone,
-    parentRelation,
+    name, email, password, categoryId, dateOfBirth, documentNumber,
+    address, phone, joinDate, monthlyFee, parentName, parentEmail,
+    parentPhone, parentRelation,
   } = parsed.data;
 
-  const existing = await db.user.findUnique({ where: { email } });
-  if (existing) {
-    return NextResponse.json({ error: "Email already in use" }, { status: 400 });
-  }
+  const existing = await db.user.findFirst({ where: { email, clubId } });
+  if (existing) return apiError("Email already in use", 400);
 
   const hashedPassword = await hash(password, 12);
 
   const user = await db.user.create({
     data: {
-      name,
-      email,
-      password: hashedPassword,
-      role: "PLAYER",
+      name, email, password: hashedPassword, role: "PLAYER", clubId,
       playerProfile: {
         create: {
+          clubId,
           categoryId: categoryId || null,
           dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
           documentNumber: documentNumber || null,
@@ -104,21 +89,17 @@ export async function POST(req: NextRequest) {
         },
       },
     },
-    // not including nested playerProfile here to avoid strict client types; we'll query it below
   });
 
-  // fetch the created player profile
   const playerProfile = await db.player.findFirst({ where: { userId: user.id } });
 
-  // If parent info provided, create parent user and link
   if (parentName && parentEmail) {
-    // create or reuse parent user
-    let parentUser = await db.user.findUnique({ where: { email: parentEmail } });
+    let parentUser = await db.user.findFirst({ where: { email: parentEmail, clubId } });
     if (!parentUser) {
       const rand = Math.random().toString(36).slice(2, 10);
       const parentHashed = await hash(rand, 12);
       parentUser = await db.user.create({
-        data: { name: parentName, email: parentEmail, password: parentHashed, role: "PARENT" },
+        data: { name: parentName, email: parentEmail, password: parentHashed, role: "PARENT", clubId },
       });
     }
 
@@ -128,23 +109,19 @@ export async function POST(req: NextRequest) {
       update: { phone: parentPhone || null, relation: parentRelation || null },
     });
 
-    // link parent to player
     if (playerProfile) {
       await db.parentPlayer.create({ data: { parentId: parent.id, playerId: playerProfile.id } });
     }
   }
 
-  // Create payment schedule: 3 months from joinDate, one per cycle
   try {
     if (typeof monthlyFee === "number" && joinDate && playerProfile) {
       const base = new Date(joinDate);
       const day = base.getDate();
 
-      // Generate 3 monthly payments starting from the join month
       for (let i = 0; i < 3; i++) {
         const year = base.getFullYear();
         const month = base.getMonth() + i;
-        // Clamp day to last day of month
         const lastDay = new Date(year, month + 1, 0).getDate();
         const dueDate = new Date(year, month, Math.min(day, lastDay));
 
@@ -153,13 +130,7 @@ export async function POST(req: NextRequest) {
         const periodLabel = `${periodStart.toLocaleDateString("es-CO", { day: "numeric", month: "short" })} – ${periodEnd.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })}`;
 
         await db.payment.create({
-          data: {
-            playerId: playerProfile.id,
-            amount: monthlyFee,
-            concept: `Mensualidad ${periodLabel}`,
-            status: "PENDING",
-            dueDate,
-          },
+          data: { clubId, playerId: playerProfile.id, amount: monthlyFee, concept: `Mensualidad ${periodLabel}`, status: "PENDING", dueDate },
         });
       }
     }
@@ -167,15 +138,14 @@ export async function POST(req: NextRequest) {
     console.error("Failed to create payment schedule", e);
   }
 
-  // Welcome notification
   await db.notification.create({
     data: {
       userId: user.id,
-      title: "Welcome to Star Club! 🎉",
-      message: "Your account has been created. Start completing missions to earn XP and level up!",
+      title: "Bienvenido al club 🎉",
+      message: "Tu cuenta ha sido creada. Completa misiones para ganar XP y subir de nivel.",
       type: "INFO",
     },
   });
 
-  return NextResponse.json(user, { status: 201 });
+  return apiOk(user, 201);
 }

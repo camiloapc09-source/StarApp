@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { calculateLevel } from "@/lib/utils";
+import { requireAuth, requireRole, getClubId, isResponse, apiError, apiOk, getCoachCategoryFilter } from "@/lib/api";
 
 const ATTENDANCE_MISSION_ID = "mision-asistencia-semanal";
 
@@ -17,15 +17,22 @@ const attendanceSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireAuth();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const { searchParams } = new URL(req.url);
   const sessionId = searchParams.get("sessionId");
   const playerId = searchParams.get("playerId");
 
+  const categoryFilter = await getCoachCategoryFilter(session);
+
   const attendances = await db.attendance.findMany({
     where: {
+      player: {
+        clubId,
+        ...(categoryFilter ? { categoryId: { in: categoryFilter } } : {}),
+      },
       ...(sessionId ? { sessionId } : {}),
       ...(playerId ? { playerId } : {}),
     },
@@ -36,25 +43,20 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(attendances);
+  return apiOk(attendances);
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || !["ADMIN", "COACH"].includes(session.user.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireRole(["ADMIN", "COACH"]);
+  if (isResponse(session)) return session;
 
   const body = await req.json();
   const parsed = attendanceSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
-  }
+  if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
   const { sessionId, attendances } = parsed.data;
 
-  // Upsert each attendance record
   const results = await Promise.all(
     attendances.map((att) =>
       db.attendance.upsert({
@@ -65,7 +67,6 @@ export async function POST(req: NextRequest) {
     )
   );
 
-  // Award XP to present players
   const presentPlayers = attendances.filter((a) => a.status === "PRESENT");
   for (const att of presentPlayers) {
     await db.player.update({
@@ -74,9 +75,8 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Auto-complete weekly attendance mission ("Doble Presencia")
   const now = new Date();
-  const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon ... 6=Sat
+  const dayOfWeek = now.getDay();
   const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
   const weekStart = new Date(now);
   weekStart.setDate(now.getDate() + diffToMonday);
@@ -86,7 +86,6 @@ export async function POST(req: NextRequest) {
   weekEnd.setHours(23, 59, 59, 999);
 
   for (const att of presentPlayers) {
-    // Find the weekly attendance mission for this player (any status)
     let pm = await db.playerMission.findFirst({
       where: { playerId: att.playerId, missionId: ATTENDANCE_MISSION_ID },
       include: {
@@ -95,9 +94,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    if (!pm) continue; // Mission not assigned to this player
+    if (!pm) continue;
 
-    // If completed in a previous week, reset it for the new week
     if (pm.status === "COMPLETED" && pm.completedAt && pm.completedAt < weekStart) {
       pm = await db.playerMission.update({
         where: { id: pm.id },
@@ -109,9 +107,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    if (pm.status !== "ACTIVE") continue; // Already completed this week
+    if (pm.status !== "ACTIVE") continue;
 
-    // Count PRESENT attendances this week
     const weeklyCount = await db.attendance.count({
       where: {
         playerId: att.playerId,
@@ -121,13 +118,11 @@ export async function POST(req: NextRequest) {
     });
 
     if (weeklyCount >= 2) {
-      // Complete the mission
       await db.playerMission.update({
         where: { id: pm.id },
         data: { status: "COMPLETED", completedAt: new Date(), progress: weeklyCount },
       });
 
-      // Award XP
       const updatedPlayer = await db.player.update({
         where: { id: att.playerId },
         data: { xp: { increment: pm.mission.xpReward } },
@@ -139,7 +134,6 @@ export async function POST(req: NextRequest) {
         await db.player.update({ where: { id: att.playerId }, data: { level: newLevel } });
       }
 
-      // Notify player
       await db.notification.create({
         data: {
           userId: pm.player.userId,
@@ -149,7 +143,6 @@ export async function POST(req: NextRequest) {
         },
       });
     } else {
-      // Just update progress
       await db.playerMission.update({
         where: { id: pm.id },
         data: { progress: weeklyCount },
@@ -157,5 +150,5 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ count: results.length });
+  return apiOk({ count: results.length });
 }

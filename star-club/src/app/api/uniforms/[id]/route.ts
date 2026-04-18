@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { requireAdmin, isResponse, apiError, apiOk } from "@/lib/api";
 
 const schema = z.object({
   status: z.enum(["PENDING", "CONFIRMED", "DELIVERED", "CANCELLED"]),
@@ -12,17 +12,13 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireAdmin();
+  if (isResponse(session)) return session;
 
   const { id } = await params;
   const body   = await req.json();
   const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
-  }
+  if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
   const order = await db.uniformOrder.update({
     where: { id },
@@ -47,5 +43,5 @@ export async function PATCH(
     });
   }
 
-  return NextResponse.json(order);
+  return apiOk(order);
 }

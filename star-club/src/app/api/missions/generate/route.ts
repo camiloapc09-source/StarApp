@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
+import { requireRole, isResponse, apiOk } from "@/lib/api";
 
 const MISSIONS_POOL: Record<string, { title: string; description: string; xpReward: number; type: string; icon: string }[]> = {
   home: [
@@ -34,16 +34,13 @@ const MISSIONS_POOL: Record<string, { title: string; description: string; xpRewa
 };
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || !["ADMIN", "COACH"].includes(session.user.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireRole(["ADMIN", "COACH"]);
+  if (isResponse(session)) return session;
 
   const { searchParams } = new URL(req.url);
   const location = (searchParams.get("location") ?? "gym") as keyof typeof MISSIONS_POOL;
   const pool = MISSIONS_POOL[location] ?? MISSIONS_POOL.gym;
 
-  // Return a random mission from the pool
   const mission = pool[Math.floor(Math.random() * pool.length)];
-  return NextResponse.json({ ...mission, location });
+  return apiOk({ ...mission, location });
 }

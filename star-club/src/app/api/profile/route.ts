@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { requireAuth, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
 
 const userSchema = z.object({
   name: z.string().min(2).max(100).optional(),
@@ -22,8 +22,8 @@ const parentSchema = z.object({
 });
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireAuth();
+  if (isResponse(session)) return session;
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
@@ -35,21 +35,18 @@ export async function GET() {
     },
   });
 
-  if (!user) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(user);
+  if (!user) return apiError("Not found", 404);
+  return apiOk(user);
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireAuth();
+  if (isResponse(session)) return session;
 
   const body = await req.json();
 
-  // Update user-level fields
   const userParsed = userSchema.safeParse(body);
-  if (!userParsed.success) {
-    return NextResponse.json({ error: userParsed.error.issues[0].message }, { status: 400 });
-  }
+  if (!userParsed.success) return apiError(userParsed.error.issues[0].message, 400);
 
   await db.user.update({
     where: { id: session.user.id },
@@ -61,28 +58,18 @@ export async function PATCH(req: NextRequest) {
     },
   });
 
-  // Update profile-level fields based on role
   if (session.user.role === "PLAYER") {
     const playerParsed = playerSchema.safeParse(body);
     if (playerParsed.success) {
       const { jerseyNumber } = playerParsed.data;
 
-      // Validate jersey uniqueness (only if a non-null value is being set)
       if (jerseyNumber != null) {
-        const currentPlayer = await db.player.findUnique({
-          where: { userId: session.user.id },
-          select: { id: true },
-        });
+        const clubId = getClubId(session);
         const conflict = await db.player.findFirst({
-          where: { jerseyNumber, NOT: { userId: session.user.id } },
+          where: { clubId, jerseyNumber, NOT: { userId: session.user.id } },
           select: { id: true },
         });
-        if (conflict) {
-          return NextResponse.json(
-            { error: `El dorsal #${jerseyNumber} ya está en uso por otro jugador.` },
-            { status: 409 }
-          );
-        }
+        if (conflict) return apiError(`El dorsal #${jerseyNumber} ya está en uso por otro jugador.`, 409);
       }
 
       await db.player.updateMany({
@@ -109,5 +96,5 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  return NextResponse.json({ ok: true });
+  return apiOk({ ok: true });
 }

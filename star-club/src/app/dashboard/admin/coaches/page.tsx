@@ -26,26 +26,25 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
   const { branch: selectedBranch } = await searchParams;
   const dict = await getDictionary();
 
-  // Get all coaches with session count
-  const coaches = await db.user.findMany({
-    where: {
-      role: "COACH",
-      ...(selectedBranch ? { branch: selectedBranch } : {}),
-    },
-    orderBy: { createdAt: "desc" },
-    include: {
-      _count: { select: { coachSessions: true } },
-    },
-  });
-
-  const categories = await db.category.findMany({ orderBy: { name: "asc" } });
-
-  // Get recent sessions per coach for the list
-  const sessionCounts = await db.session.groupBy({
-    by: ["coachId"],
-    _count: { _all: true },
-    where: { coachId: { not: null } },
-  });
+  // Get all coaches, categories, and session counts in parallel
+  const [coaches, categories, sessionCounts] = await Promise.all([
+    db.user.findMany({
+      where: {
+        role: "COACH",
+        ...(selectedBranch ? { branch: selectedBranch } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: { select: { coachSessions: true } },
+      },
+    }),
+    db.category.findMany({ orderBy: { name: "asc" } }),
+    db.session.groupBy({
+      by: ["coachId"],
+      _count: { _all: true },
+      where: { coachId: { not: null } },
+    }),
+  ]);
   const countMap = Object.fromEntries(
     sessionCounts.filter((s) => s.coachId).map((s) => [s.coachId!, s._count._all])
   );

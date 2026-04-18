@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import * as XLSX from "xlsx";
+import { requireAdmin, getClubId, isResponse } from "@/lib/api";
 
-// GET /api/admin/uniforms/export - export all orders to Excel
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireAdmin();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const url    = new URL(req.url);
-  const status = url.searchParams.get("status"); // optional filter
+  const status = url.searchParams.get("status");
 
   const orders = await db.uniformOrder.findMany({
-    where: status ? { status } : undefined,
+    where: { player: { clubId }, ...(status ? { status } : {}) },
     orderBy: { createdAt: "asc" },
     include: {
       player: { include: { user: { select: { name: true } } } },
@@ -51,8 +49,6 @@ export async function GET(req: NextRequest) {
 
   const wb  = XLSX.utils.book_new();
   const ws  = XLSX.utils.json_to_sheet(rows);
-
-  // Column widths
   ws["!cols"] = [
     { wch: 4 }, { wch: 22 }, { wch: 22 }, { wch: 18 }, { wch: 8 },
     { wch: 14 }, { wch: 16 }, { wch: 12 }, { wch: 12 }, { wch: 22 }, { wch: 28 }, { wch: 14 },
@@ -60,8 +56,7 @@ export async function GET(req: NextRequest) {
 
   XLSX.utils.book_append_sheet(wb, ws, "Pedidos uniformes");
   const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
-
-  const filename = `uniformes-star-club-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  const filename = `uniformes-${new Date().toISOString().slice(0, 10)}.xlsx`;
 
   return new NextResponse(buffer, {
     headers: {

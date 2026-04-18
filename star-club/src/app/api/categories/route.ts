@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { requireAuth, requireAdmin, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
 
 const schema = z.object({
   name: z.string().min(1).max(60),
@@ -10,24 +10,31 @@ const schema = z.object({
   ageMax: z.number().int().min(0).max(99),
 });
 
-export async function GET() {
-  const categories = await db.category.findMany({ orderBy: { name: "asc" } });
-  return NextResponse.json(categories);
+export async function GET(_req: NextRequest) {
+  const session = await requireAuth();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
+
+  const categories = await db.category.findMany({
+    where: { clubId },
+    orderBy: { name: "asc" },
+  });
+  return apiOk(categories);
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireAdmin();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
+
   const body = await req.json();
   const parsed = schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+  if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
   try {
-    const category = await db.category.create({ data: parsed.data });
-    return NextResponse.json(category, { status: 201 });
+    const category = await db.category.create({ data: { ...parsed.data, clubId } });
+    return apiOk(category, 201);
   } catch {
-    return NextResponse.json({ error: "Una categoría con ese nombre ya existe" }, { status: 409 });
+    return apiError("Una categoría con ese nombre ya existe", 409);
   }
 }

@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
+import { requireAuth, requireRole, getClubId, isResponse, apiError, apiOk, rateLimit } from "@/lib/api";
 
 const uploadSchema = z.object({
   playerMissionId: z.string(),
@@ -13,19 +13,20 @@ const uploadSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireAuth();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const { searchParams } = new URL(req.url);
-  const status = searchParams.get("status") || undefined;
+  const status   = searchParams.get("status") || undefined;
   const playerId = searchParams.get("playerId") || undefined;
 
-  const where: any = {};
-  if (status) where.status = status;
-  if (playerId) where.playerId = playerId;
-
   const evidences = await db.evidence.findMany({
-    where,
+    where: {
+      player: { clubId },
+      ...(status ? { status } : {}),
+      ...(playerId ? { playerId } : {}),
+    },
     include: {
       player: { include: { user: true } },
       playerMission: { include: { mission: true } },
@@ -33,40 +34,33 @@ export async function GET(req: NextRequest) {
     orderBy: { submittedAt: "desc" },
   });
 
-  return NextResponse.json(evidences);
+  return apiOk(evidences);
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireRole(["PLAYER"]);
+  if (isResponse(session)) return session;
 
-  // Only players can upload evidence for their missions
-  if (session.user.role !== "PLAYER") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  if (!rateLimit(`evidence:${session.user.id}`, 10, 60_000)) return apiError("Too many uploads", 429);
 
   const body = await req.json();
   const parsed = uploadSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+  if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
   const { playerMissionId, filename, mimeType, data } = parsed.data;
 
-  // find player profile for current user
   const player = await db.player.findUnique({ where: { userId: session.user.id } });
-  if (!player) return NextResponse.json({ error: "Player profile not found" }, { status: 404 });
+  if (!player) return apiError("Player profile not found", 404);
 
-  // verify playerMission exists and belongs to player
   const pm = await db.playerMission.findUnique({ where: { id: playerMissionId } });
-  if (!pm || pm.playerId !== player.id) return NextResponse.json({ error: "PlayerMission not found or not owner" }, { status: 404 });
+  if (!pm || pm.playerId !== player.id) return apiError("PlayerMission not found or not owner", 404);
 
-  // create DB record first to get id
   const created = await db.evidence.create({
     data: {
       playerId: player.id,
       playerMissionId,
       url: "/uploads/evidence/pending",
-      filename,
-      mimeType,
+      filename, mimeType,
       size: Buffer.from(data, "base64").length,
     },
   });
@@ -76,65 +70,65 @@ export async function POST(req: NextRequest) {
 
   const safeFilename = `${created.id}_${filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
   const filePath = path.join(uploadsDir, safeFilename);
-  const buffer = Buffer.from(data, "base64");
-  fs.writeFileSync(filePath, buffer);
+  fs.writeFileSync(filePath, Buffer.from(data, "base64"));
 
   const urlPath = `/uploads/evidence/${safeFilename}`;
   const updated = await db.evidence.update({ where: { id: created.id }, data: { url: urlPath } });
 
-  return NextResponse.json(updated);
+  return apiOk(updated);
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || !["ADMIN", "COACH"].includes(session.user.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireRole(["ADMIN", "COACH"]);
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const body = await req.json();
-  // body can be { action: 'accept', id: string } or { action: 'reject', id } or { action: 'acceptAll' }
-  if (!body || !body.action) return NextResponse.json({ error: "Missing action" }, { status: 400 });
+  if (!body || !body.action) return apiError("Missing action", 400);
 
   if (body.action === "acceptAll") {
     const pending = await db.evidence.findMany({
-      where: { status: "PENDING" },
+      where: { status: "PENDING", player: { clubId } },
       include: { playerMission: { include: { mission: true } }, player: true },
     });
 
     for (const ev of pending) {
       try {
-        await db.evidence.update({ where: { id: ev.id }, data: { status: "ACCEPTED", verifiedAt: new Date(), verifiedBy: session.user.id } });
+        await db.evidence.update({
+          where: { id: ev.id },
+          data: { status: "ACCEPTED", verifiedAt: new Date(), verifiedBy: session.user.id },
+        });
 
-        // award XP to player
         const xp = ev.playerMission?.mission?.xpReward || 0;
         if (xp > 0) {
           await db.player.update({ where: { id: ev.playerId }, data: { xp: { increment: xp }, lastActive: new Date() } });
         }
 
-        // mark playerMission completed
         if (ev.playerMissionId) {
           await db.playerMission.update({ where: { id: ev.playerMissionId }, data: { status: "COMPLETED", completedAt: new Date() } });
         }
 
-        // delete file from disk if exists
         if (ev.url) {
           const localPath = path.join(process.cwd(), "public", ev.url.replace(/^\//, ""));
-          try { fs.unlinkSync(localPath); } catch (e) { /* ignore missing file */ }
+          try { fs.unlinkSync(localPath); } catch { /* ignore missing file */ }
         }
       } catch (e) {
         console.error("Failed to accept evidence", ev.id, e);
       }
     }
 
-    return NextResponse.json({ ok: true, processed: pending.length });
+    return apiOk({ ok: true, processed: pending.length });
   }
 
   if (body.action === "accept" || body.action === "reject") {
     const id = body.id;
-    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    if (!id) return apiError("Missing id", 400);
 
-    const ev = await db.evidence.findUnique({ where: { id }, include: { playerMission: { include: { mission: true } } } });
-    if (!ev) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    const ev = await db.evidence.findUnique({
+      where: { id },
+      include: { playerMission: { include: { mission: true } }, player: { select: { clubId: true } } },
+    });
+    if (!ev || ev.player.clubId !== clubId) return apiError("Not found", 404);
 
     if (body.action === "accept") {
       await db.evidence.update({ where: { id }, data: { status: "ACCEPTED", verifiedAt: new Date(), verifiedBy: session.user.id } });
@@ -150,16 +144,15 @@ export async function PATCH(req: NextRequest) {
 
       if (ev.url) {
         const localPath = path.join(process.cwd(), "public", ev.url.replace(/^\//, ""));
-        try { fs.unlinkSync(localPath); } catch (e) { /* ignore missing file */ }
+        try { fs.unlinkSync(localPath); } catch { /* ignore */ }
       }
 
-      return NextResponse.json({ ok: true });
+      return apiOk({ ok: true });
     } else {
-      // reject
       await db.evidence.update({ where: { id }, data: { status: "REJECTED", verifiedAt: new Date(), verifiedBy: session.user.id } });
-      return NextResponse.json({ ok: true });
+      return apiOk({ ok: true });
     }
   }
 
-  return NextResponse.json({ error: "Unsupported action" }, { status: 400 });
+  return apiError("Unsupported action", 400);
 }

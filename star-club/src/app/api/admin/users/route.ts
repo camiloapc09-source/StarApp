@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { hash } from "bcryptjs";
 import { z } from "zod";
+import { requireAdmin, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
 
 const createUserSchema = z.object({
   name: z.string().min(2),
@@ -16,19 +16,21 @@ const createUserSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const session = await requireAdmin();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const body = await req.json();
   const parsed = createUserSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+  if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
-  const existing = await db.user.findUnique({ where: { email: parsed.data.email } });
-  if (existing) return NextResponse.json({ error: "Email already in use" }, { status: 400 });
+  const existing = await db.user.findFirst({ where: { email: parsed.data.email, clubId } });
+  if (existing) return apiError("Email already in use", 400);
 
   const hashed = await hash(parsed.data.password, 12);
   const user = await db.user.create({
     data: {
+      clubId,
       name: parsed.data.name,
       email: parsed.data.email,
       password: hashed,
@@ -40,5 +42,5 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return NextResponse.json(user, { status: 201 });
+  return apiOk(user, 201);
 }

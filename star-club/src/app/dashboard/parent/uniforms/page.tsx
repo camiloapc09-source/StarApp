@@ -69,8 +69,9 @@ export default async function ParentUniformsPage() {
   }
 
   const playerName = parent.children[0].player.user.name;
-  // Extract last name (last word of full name)
-  const playerLastName = playerName.trim().split(/\s+/).pop() ?? playerName;
+  // Extract surnames: last two words (paternal + maternal) if available
+  const words = playerName.trim().split(/\s+/);
+  const playerSurnames = words.length >= 3 ? words.slice(-2) : words.slice(-1);
   const orders     = parent.uniformOrders;
 
   return (
@@ -105,7 +106,7 @@ export default async function ParentUniformsPage() {
                     ${item.price.toLocaleString("es-CO")}
                   </p>
                 </div>
-                <UniformOrderForm type={item.type} unitPrice={item.price} playerLastName={playerLastName} />
+                <UniformOrderForm type={item.type} unitPrice={item.price} playerSurnames={playerSurnames} />
               </div>
             ))}
           </div>

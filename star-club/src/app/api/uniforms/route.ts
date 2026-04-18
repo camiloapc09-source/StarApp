@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { requireRole, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
 
 const PRICES: Record<string, number> = {
   TRAINING:     75000,
@@ -26,18 +26,15 @@ const orderSchema = z.object({
   notes:          z.string().max(300).optional(),
 });
 
-// GET /api/uniforms - parent sees their orders
 export async function GET() {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireRole(["PARENT"]);
+  if (isResponse(session)) return session;
 
   const parent = await db.parent.findUnique({
     where: { userId: session.user.id },
     select: { id: true },
   });
-  if (!parent) return NextResponse.json({ error: "Parent not found" }, { status: 404 });
+  if (!parent) return apiError("Parent not found", 404);
 
   const orders = await db.uniformOrder.findMany({
     where: { parentId: parent.id },
@@ -45,21 +42,17 @@ export async function GET() {
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(orders);
+  return apiOk(orders);
 }
 
-// POST /api/uniforms - parent places an order
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "PARENT") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireRole(["PARENT"]);
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const body   = await req.json();
   const parsed = orderSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
-  }
+  if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
   const parent = await db.parent.findUnique({
     where: { userId: session.user.id },
@@ -69,83 +62,59 @@ export async function POST(req: NextRequest) {
       },
     },
   });
-  if (!parent) return NextResponse.json({ error: "Parent not found" }, { status: 404 });
-  if (parent.children.length === 0) {
-    return NextResponse.json({ error: "No tienes un jugador vinculado" }, { status: 400 });
-  }
+  if (!parent) return apiError("Parent not found", 404);
+  if (parent.children.length === 0) return apiError("No tienes un jugador vinculado", 400);
 
   const { player } = parent.children[0];
   const playerId   = player.id;
-  const playerName = player.user.name; // full name e.g. "Juan Carlos Pérez López"
+  const playerName = player.user.name;
 
-  // --- GAME uniform validations ---
   if (parsed.data.type === "GAME") {
-    // 1. Name must be player's last name (last word of full name)
-    const lastName = playerName.trim().split(/\s+/).pop()!;
-    if (parsed.data.nameOnJersey.toLowerCase() !== lastName.toLowerCase()) {
-      return NextResponse.json(
-        { error: `Para el uniforme de juego el nombre en la camiseta debe ser el apellido del deportista: "${lastName}"` },
-        { status: 400 }
-      );
+    const words = playerName.trim().split(/\s+/);
+    const validSurnames = words.length >= 3
+      ? [words[words.length - 2], words[words.length - 1]]
+      : [words[words.length - 1]];
+
+    const submittedName = parsed.data.nameOnJersey.toLowerCase();
+    if (!validSurnames.some((s) => s.toLowerCase() === submittedName)) {
+      return apiError(`Para el uniforme de juego el nombre debe ser un apellido del deportista: ${validSurnames.join(" o ")}`, 400);
     }
 
-    // 2. Jersey number must be provided and unique among GAME orders
     if (parsed.data.numberOnJersey == null) {
-      return NextResponse.json(
-        { error: "El uniforme de juego requiere un número en la camiseta." },
-        { status: 400 }
-      );
+      return apiError("El uniforme de juego requiere un número en la camiseta.", 400);
     }
+
     const conflict = await db.uniformOrder.findFirst({
-      where: {
-        type: "GAME",
-        numberOnJersey: parsed.data.numberOnJersey,
-        status: { notIn: ["CANCELLED"] },
-      },
+      where: { type: "GAME", numberOnJersey: parsed.data.numberOnJersey, status: { notIn: ["CANCELLED"] } },
     });
-    if (conflict) {
-      return NextResponse.json(
-        { error: `El número #${parsed.data.numberOnJersey} ya está en uso en otro pedido de uniforme de juego.` },
-        { status: 409 }
-      );
-    }
+    if (conflict) return apiError(`El número #${parsed.data.numberOnJersey} ya está en uso en otro pedido.`, 409);
   }
 
   const unitPrice = PRICES[parsed.data.type];
 
   const order = await db.uniformOrder.create({
     data: {
-      parentId:       parent.id,
-      playerId,
-      type:           parsed.data.type,
-      jerseySize:     parsed.data.jerseySize,
-      shortsSize:     parsed.data.shortsSize,
-      nameOnJersey:   parsed.data.nameOnJersey,
-      numberOnJersey: parsed.data.numberOnJersey ?? null,
-      unitPrice,
-      totalPrice:     unitPrice,
-      notes:          parsed.data.notes ?? null,
-      status:         "PENDING",
+      parentId: parent.id, playerId,
+      type: parsed.data.type, jerseySize: parsed.data.jerseySize, shortsSize: parsed.data.shortsSize,
+      nameOnJersey: parsed.data.nameOnJersey, numberOnJersey: parsed.data.numberOnJersey ?? null,
+      unitPrice, totalPrice: unitPrice, notes: parsed.data.notes ?? null, status: "PENDING",
     },
   });
 
-  // Notify admins
   try {
-    const admins = await db.user.findMany({ where: { role: "ADMIN" }, select: { id: true } });
+    const admins = await db.user.findMany({ where: { clubId, role: "ADMIN" }, select: { id: true } });
     if (admins.length > 0) {
       await db.notification.createMany({
         data: admins.map((a) => ({
-          userId:  a.id,
-          title:   "Nuevo pedido de uniforme",
-          message: `${playerName} solicito ${NAMES[parsed.data.type]} - Camiseta ${parsed.data.jerseySize} / Pantaloneta ${parsed.data.shortsSize}${parsed.data.numberOnJersey != null ? ` #${parsed.data.numberOnJersey}` : ""}. $${unitPrice.toLocaleString("es-CO")}.`,
-          type:    "INFO",
-          link:    "/dashboard/admin/uniforms",
+          userId: a.id,
+          title: "Nuevo pedido de uniforme",
+          message: `${playerName} solicitó ${NAMES[parsed.data.type]} - Camiseta ${parsed.data.jerseySize} / Pantaloneta ${parsed.data.shortsSize}${parsed.data.numberOnJersey != null ? ` #${parsed.data.numberOnJersey}` : ""}.`,
+          type: "INFO",
+          link: "/dashboard/admin/uniforms",
         })),
       });
     }
-  } catch {
-    // Non-fatal
-  }
+  } catch { /* non-fatal */ }
 
-  return NextResponse.json(order, { status: 201 });
+  return apiOk(order, 201);
 }

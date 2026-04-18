@@ -1,32 +1,39 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { writeFile, mkdir } from "fs/promises";
-import { join, extname } from "path";
+import { join } from "path";
+import sharp from "sharp";
+import { requireAuth, getClubId, isResponse, apiError, apiOk, rateLimit } from "@/lib/api";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const AVATAR_SIZE = 400; // px max width/height
 
 // POST /api/profile/avatar — player uploads a pending profile photo
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireAuth();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
+
+  if (!rateLimit(`avatar:${session.user.id}`, 5, 60_000)) return apiError("Too many uploads", 429);
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
-  if (!file) return NextResponse.json({ error: "No se recibió ninguna imagen" }, { status: 400 });
+  if (!file) return apiError("No se recibió ninguna imagen", 400);
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json({ error: "Solo se permiten imágenes JPG, PNG o WEBP" }, { status: 400 });
-  }
-  if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: "Imagen demasiado grande (máx. 5 MB)" }, { status: 400 });
-  }
+  if (!ALLOWED_TYPES.includes(file.type)) return apiError("Solo se permiten imágenes JPG, PNG o WEBP", 400);
+  if (file.size > MAX_SIZE) return apiError("Imagen demasiado grande (máx. 5 MB)", 400);
 
   const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-  const ext = extname(file.name).toLowerCase() || ".jpg";
-  const filename = `avatar-pending-${session.user.id}${ext}`;
+  const raw = Buffer.from(bytes);
+
+  // Compress & resize to AVATAR_SIZE webp
+  const buffer = await sharp(raw)
+    .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: "cover" })
+    .webp({ quality: 80 })
+    .toBuffer();
+
+  const filename = `avatar-pending-${session.user.id}.webp`;
 
   const uploadDir = join(process.cwd(), "public", "uploads", "avatars");
   await mkdir(uploadDir, { recursive: true });
@@ -39,8 +46,7 @@ export async function POST(req: NextRequest) {
     data: { avatarPending: url, avatarStatus: "PENDING" },
   });
 
-  // Notify admins
-  const admins = await db.user.findMany({ where: { role: "ADMIN" }, select: { id: true } });
+  const admins = await db.user.findMany({ where: { clubId, role: "ADMIN" }, select: { id: true } });
   if (admins.length > 0) {
     const user = await db.user.findUnique({ where: { id: session.user.id }, select: { name: true } });
     await db.notification.createMany({
@@ -54,5 +60,5 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ url });
+  return apiOk({ url });
 }

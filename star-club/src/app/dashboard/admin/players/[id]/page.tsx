@@ -21,25 +21,26 @@ export default async function PlayerProfilePage({ params }: Props) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/login");
 
-  const player = await db.player.findUnique({
-    where: { id },
-    include: {
-      user: true,
-      category: true,
-      parentLinks: {
-        include: {
-          parent: { include: { user: true } },
+  const [player, categories] = await Promise.all([
+    db.player.findUnique({
+      where: { id },
+      include: {
+        user: true,
+        category: true,
+        parentLinks: {
+          include: {
+            parent: { include: { user: true } },
+          },
         },
+        payments: { orderBy: { dueDate: "desc" }, take: 8 },
+        attendances: { select: { status: true } },
+        playerMissions: { where: { status: "COMPLETED" }, select: { id: true } },
       },
-      payments: { orderBy: { dueDate: "desc" }, take: 8 },
-      attendances: { select: { status: true } },
-      playerMissions: { where: { status: "COMPLETED" }, select: { id: true } },
-    },
-  });
+    }),
+    db.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+  ]);
 
   if (!player) redirect("/dashboard/admin/players");
-
-  const categories = await db.category.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } });
 
   const level = calculateLevel(player.xp);
   const presentCount = player.attendances.filter((a) => a.status === "PRESENT").length;

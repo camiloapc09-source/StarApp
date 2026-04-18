@@ -24,6 +24,7 @@ export default async function AdminDashboard() {
     recentPlayers,
     overduePayments,
     totalSessions,
+    unreadNotifications,
   ] = await Promise.all([
     db.player.count({ where: { status: "ACTIVE" } }),
     db.player.count({ where: { status: "PENDING" } }),
@@ -37,11 +38,9 @@ export default async function AdminDashboard() {
     }),
     db.payment.count({ where: { status: "OVERDUE" } }),
     db.session.count(),
+    db.notification.count({ where: { userId: session.user.id, isRead: false } }),
   ]);
 
-  const unreadNotifications = await db.notification.count({
-    where: { userId: session.user.id, isRead: false },
-  });
 
   return (
     <div>

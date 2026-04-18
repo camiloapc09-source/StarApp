@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { requireAuth, requireRole, getClubId, isResponse, apiError, apiOk, getCoachCategoryFilter } from "@/lib/api";
 
 const createSessionSchema = z.object({
   title: z.string().min(2),
@@ -13,13 +13,20 @@ const createSessionSchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireAuth();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const { searchParams } = new URL(req.url);
   const limit = parseInt(searchParams.get("limit") || "20");
 
+  const categoryFilter = await getCoachCategoryFilter(session);
+
   const sessions = await db.session.findMany({
+    where: {
+      clubId,
+      ...(categoryFilter ? { categoryId: { in: categoryFilter } } : {}),
+    },
     orderBy: { date: "desc" },
     take: limit,
     include: {
@@ -29,47 +36,36 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  return NextResponse.json(sessions);
+  return apiOk(sessions);
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || !["ADMIN", "COACH"].includes(session.user.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireRole(["ADMIN", "COACH"]);
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const body = await req.json();
   const parsed = createSessionSchema.safeParse(body);
 
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
-  }
+  if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
-  // Only admins can create EVENT/TOURNAMENT type sessions
   if (session.user.role === "COACH" && parsed.data.type === "EVENT") {
-    return NextResponse.json({ error: "Solo el administrador puede crear eventos o torneos." }, { status: 403 });
+    return apiError("Solo el administrador puede crear eventos o torneos.", 403);
   }
 
   const { coachId: bodyCoachId, ...sessionData } = parsed.data;
-
-  // Admin can assign a specific coach; otherwise default to the current user (coach creating their own sessions)
   const resolvedCoachId = session.user.role === "ADMIN" ? (bodyCoachId ?? null) : session.user.id;
 
   const newSession = await db.session.create({
-    data: {
-      ...sessionData,
-      date: new Date(sessionData.date),
-      coachId: resolvedCoachId,
-    },
+    data: { ...sessionData, clubId, date: new Date(sessionData.date), coachId: resolvedCoachId },
   });
 
-  // Notify all players and parents about the new session
   const typeLabels: Record<string, string> = { TRAINING: "Entrenamiento", MATCH: "Partido amistoso", EVENT: "Evento/Torneo" };
   const typeLabel = typeLabels[newSession.type] ?? newSession.type;
   const dateStr = new Date(newSession.date).toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
 
   const recipients = await db.user.findMany({
-    where: { role: { in: ["PLAYER", "PARENT"] } },
+    where: { clubId, role: { in: ["PLAYER", "PARENT"] } },
     select: { id: true },
   });
 
@@ -85,5 +81,5 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  return NextResponse.json(newSession, { status: 201 });
+  return apiOk(newSession, 201);
 }

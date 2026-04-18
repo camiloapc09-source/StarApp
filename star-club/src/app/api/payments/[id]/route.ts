@@ -1,35 +1,35 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
+import { requireAdmin, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
 
-// PATCH /api/payments/[id] — admin confirms payment (from proof or cash)
+// PATCH /api/payments/[id] — admin confirms payment
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireAdmin();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
   const paymentMethod = body.paymentMethod ?? null;
+
+  const existing = await db.payment.findUnique({ where: { id }, select: { clubId: true } });
+  if (!existing || existing.clubId !== clubId) return apiError("Not found", 404);
 
   const payment = await db.payment.update({
     where: { id },
     data: {
       status: "COMPLETED",
       paidAt: new Date(),
-      proofUrl: null, // clear proof image to free DB space
+      proofUrl: null,
       ...(paymentMethod ? { paymentMethod } : {}),
     },
     include: {
       player: {
         select: {
-          id: true,
-          userId: true,
-          paymentDay: true,
+          id: true, userId: true, paymentDay: true,
           payments: {
             where: { status: { in: ["PENDING", "OVERDUE"] } },
             orderBy: { dueDate: "desc" },
@@ -41,7 +41,6 @@ export async function PATCH(
     },
   });
 
-  // Notify player
   await db.notification.create({
     data: {
       userId: payment.player.userId,
@@ -51,12 +50,9 @@ export async function PATCH(
     },
   });
 
-  // Auto-generate next payment if there's no future pending payment
   try {
     const lastPending = payment.player.payments[0];
     const paymentDay = payment.player.paymentDay ?? new Date(payment.dueDate).getDate();
-
-    // Next due date: one month after the confirmed payment's dueDate
     const prevDue = new Date(payment.dueDate);
     const nextMonth = prevDue.getMonth() + 1;
     const nextYear = prevDue.getFullYear() + (nextMonth > 11 ? 1 : 0);
@@ -64,7 +60,6 @@ export async function PATCH(
     const lastDay = new Date(nextYear, month + 1, 0).getDate();
     const nextDue = new Date(nextYear, month, Math.min(paymentDay, lastDay));
 
-    // Only create if no pending payment already exists for or after that date
     const alreadyExists = lastPending && new Date(lastPending.dueDate) >= nextDue;
 
     if (!alreadyExists) {
@@ -73,6 +68,7 @@ export async function PATCH(
 
       await db.payment.create({
         data: {
+          clubId,
           playerId: payment.player.id,
           amount: payment.amount,
           concept: `Mensualidad ${periodLabel}`,
@@ -85,6 +81,5 @@ export async function PATCH(
     console.error("Failed to auto-generate next payment", e);
   }
 
-  return NextResponse.json(payment);
+  return apiOk(payment);
 }
-

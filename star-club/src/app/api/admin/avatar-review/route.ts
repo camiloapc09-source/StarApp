@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
+import { requireAdmin, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
 
 const schema = z.object({
   action: z.enum(["approve", "reject"]),
@@ -10,27 +10,22 @@ const schema = z.object({
 
 // POST /api/admin/avatar-review - admin approves or rejects a pending avatar
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireAdmin();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const body = await req.json();
   const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
-  }
+  if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
   const { action, userId } = parsed.data;
   const target = await db.user.findUnique({
     where: { id: userId },
-    select: { id: true, avatarPending: true, avatarStatus: true },
+    select: { id: true, avatarPending: true, avatarStatus: true, clubId: true },
   });
-  if (!target) return NextResponse.json({ error: "User not found" }, { status: 404 });
+  if (!target || target.clubId !== clubId) return apiError("User not found", 404);
 
-  if (target.avatarStatus !== "PENDING") {
-    return NextResponse.json({ error: "No hay foto pendiente para este usuario" }, { status: 400 });
-  }
+  if (target.avatarStatus !== "PENDING") return apiError("No hay foto pendiente para este usuario", 400);
 
   if (action === "approve") {
     await db.user.update({
@@ -40,7 +35,7 @@ export async function POST(req: NextRequest) {
     await db.notification.create({
       data: {
         userId,
-        title: "Foto de perfil aprobada ",
+        title: "Foto de perfil aprobada ",
         message: "Tu foto de perfil fue aprobada y ya es visible.",
         type: "INFO",
       },
@@ -60,5 +55,5 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ ok: true, action });
+  return apiOk({ ok: true, action });
 }

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { calculateLevel } from "@/lib/utils";
+import { requireRole, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
 
 const assignMissionSchema = z.object({
   playerId: z.string().optional(),
@@ -19,20 +19,17 @@ const awardXPSchema = z.object({
   reason: z.string().optional(),
 });
 
-// POST /api/gamification/award-xp
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || !["ADMIN", "COACH"].includes(session.user.role)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireRole(["ADMIN", "COACH"]);
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const body = await req.json();
   const { action } = body;
 
   if (action === "assign-mission") {
     const parsed = assignMissionSchema.safeParse(body);
-    if (!parsed.success)
-      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+    if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
     const ids = parsed.data.playerIds ?? (parsed.data.playerId ? [parsed.data.playerId] : []);
 
@@ -54,13 +51,15 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    return NextResponse.json({ assigned: ids.length }, { status: 201 });
+    return apiOk({ assigned: ids.length }, 201);
   }
 
   if (action === "award-xp") {
     const parsed = awardXPSchema.safeParse(body);
-    if (!parsed.success)
-      return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
+    if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
+
+    const playerCheck = await db.player.findUnique({ where: { id: parsed.data.playerId }, select: { clubId: true } });
+    if (!playerCheck || playerCheck.clubId !== clubId) return apiError("Player not found", 404);
 
     const player = await db.player.update({
       where: { id: parsed.data.playerId },
@@ -72,10 +71,7 @@ export async function POST(req: NextRequest) {
     const leveledUp = newLevel > player.level;
 
     if (leveledUp) {
-      await db.player.update({
-        where: { id: parsed.data.playerId },
-        data: { level: newLevel },
-      });
+      await db.player.update({ where: { id: parsed.data.playerId }, data: { level: newLevel } });
 
       await db.notification.create({
         data: {
@@ -86,9 +82,8 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // Auto-assign rewards unlocked at this level
       try {
-        const newRewards = await db.reward.findMany({ where: { levelRequired: { lte: newLevel } } });
+        const newRewards = await db.reward.findMany({ where: { clubId, levelRequired: { lte: newLevel } } });
         const earned = await db.playerReward.findMany({ where: { playerId: parsed.data.playerId }, select: { rewardId: true } });
         const earnedIds = new Set(earned.map((r) => r.rewardId));
         const toGrant = newRewards.filter((r) => !earnedIds.has(r.id));
@@ -109,7 +104,7 @@ export async function POST(req: NextRequest) {
       } catch { /* non-fatal */ }
     }
 
-    return NextResponse.json({ ...player, xp: player.xp, newLevel, leveledUp });
+    return apiOk({ ...player, xp: player.xp, newLevel, leveledUp });
   }
 
   if (action === "complete-mission") {
@@ -120,14 +115,14 @@ export async function POST(req: NextRequest) {
       include: { mission: true, player: true },
     });
 
-    if (!pm) return NextResponse.json({ error: "Mission not found" }, { status: 404 });
+    if (!pm) return apiError("Mission not found", 404);
+    if (pm.player.clubId !== clubId) return apiError("Forbidden", 403);
 
     await db.playerMission.update({
       where: { id: playerMissionId },
       data: { status: "COMPLETED", completedAt: new Date() },
     });
 
-    // Award XP
     const player = await db.player.update({
       where: { id: pm.playerId },
       data: { xp: { increment: pm.mission.xpReward } },
@@ -159,7 +154,7 @@ export async function POST(req: NextRequest) {
         },
       });
       try {
-        const newRewards = await db.reward.findMany({ where: { levelRequired: { lte: newLevel } } });
+        const newRewards = await db.reward.findMany({ where: { clubId, levelRequired: { lte: newLevel } } });
         const earned = await db.playerReward.findMany({ where: { playerId: pm.playerId }, select: { rewardId: true } });
         const earnedIds = new Set(earned.map((r) => r.rewardId));
         const toGrant = newRewards.filter((r) => !earnedIds.has(r.id));
@@ -180,8 +175,8 @@ export async function POST(req: NextRequest) {
       } catch { /* non-fatal */ }
     }
 
-    return NextResponse.json({ success: true, xpAwarded: pm.mission.xpReward });
+    return apiOk({ ok: true, xpAwarded: pm.mission.xpReward });
   }
 
-  return NextResponse.json({ error: "Unknown action" }, { status: 400 });
+  return apiError("Unknown action", 400);
 }

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs cat *)",
+      "Bash(npx prisma *)",
+      "Bash(npx tsx *)",
+      "Bash(npx tsc *)",
+      "Bash(npx next *)",
+      "Bash(awk -F'\\(' '{print $1}')"
+    ]
+  }
+}

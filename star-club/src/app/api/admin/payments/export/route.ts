@@ -1,19 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import * as XLSX from "xlsx";
+import { requireAdmin, getClubId, isResponse } from "@/lib/api";
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const session = await requireAdmin();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
 
   const url    = new URL(req.url);
-  const status = url.searchParams.get("status"); // optional filter
+  const status = url.searchParams.get("status");
 
   const payments = await db.payment.findMany({
-    where: status ? { status } : undefined,
+    where: { clubId, ...(status ? { status } : {}) },
     orderBy: { dueDate: "asc" },
     include: {
       player: {
@@ -62,7 +61,7 @@ export async function GET(req: NextRequest) {
   XLSX.utils.book_append_sheet(wb, ws, "Pagos");
 
   const buffer   = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
-  const filename = `pagos-star-club-${new Date().toISOString().slice(0, 10)}.xlsx`;
+  const filename = `pagos-${new Date().toISOString().slice(0, 10)}.xlsx`;
 
   return new NextResponse(buffer, {
     headers: {

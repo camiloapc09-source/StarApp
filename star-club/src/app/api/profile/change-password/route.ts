@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { compare, hash } from "bcryptjs";
+import { requireAuth, isResponse, apiError, apiOk, rateLimit } from "@/lib/api";
 
 const schema = z.object({
   currentPassword: z.string().min(1),
@@ -10,26 +10,24 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await requireAuth();
+  if (isResponse(session)) return session;
+
+  if (!rateLimit(`chpass:${session.user.id}`, 5, 60_000)) return apiError("Too many attempts", 429);
 
   const body = await req.json();
   const parsed = schema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
-  }
+  if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
     select: { password: true },
   });
 
-  if (!user) return NextResponse.json({ error: "Usuario no encontrado" }, { status: 404 });
+  if (!user) return apiError("Usuario no encontrado", 404);
 
   const valid = await compare(parsed.data.currentPassword, user.password);
-  if (!valid) {
-    return NextResponse.json({ error: "La contraseña actual es incorrecta" }, { status: 400 });
-  }
+  if (!valid) return apiError("La contraseña actual es incorrecta", 400);
 
   const hashed = await hash(parsed.data.newPassword, 12);
   await db.user.update({
@@ -37,5 +35,5 @@ export async function POST(req: NextRequest) {
     data: { password: hashed },
   });
 
-  return NextResponse.json({ success: true });
+  return apiOk({ ok: true });
 }
