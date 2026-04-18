@@ -1,20 +1,10 @@
 import "dotenv/config";
+import { PrismaNeonHttp } from "@prisma/adapter-neon";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { hash } from "bcryptjs";
 
 function createPrismaClient() {
-  if (process.env.TURSO_DATABASE_URL) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaLibSql } = require("@prisma/adapter-libsql");
-    const adapter = new PrismaLibSql({
-      url: process.env.TURSO_DATABASE_URL,
-      authToken: process.env.TURSO_AUTH_TOKEN ?? "",
-    });
-    return new PrismaClient({ adapter } as never);
-  }
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { PrismaBetterSqlite3 } = require("@prisma/adapter-better-sqlite3");
-  const adapter = new PrismaBetterSqlite3({ url: "file:./dev.db" });
+  const adapter = new PrismaNeonHttp(process.env.DATABASE_URL!, {});
   return new PrismaClient({ adapter } as never);
 }
 
@@ -29,48 +19,20 @@ const STAR_CLUB_ID = "club-star";
 async function main() {
   console.log("🌱 Seeding Star Club (production-safe)...\n");
 
-  // ── SQL migrations (idempotent) ────────────────────────────────────────────
-  const migrations: [string, string][] = [
-    ["coachCategoryIds on User",  `ALTER TABLE "User" ADD COLUMN "coachCategoryIds" TEXT NOT NULL DEFAULT '[]'`],
-    ["clubId on Club (create)",   `CREATE TABLE IF NOT EXISTS "Club" ("id" TEXT NOT NULL PRIMARY KEY, "name" TEXT NOT NULL, "slug" TEXT NOT NULL, "email" TEXT, "logo" TEXT, "sport" TEXT NOT NULL DEFAULT 'BASKETBALL', "country" TEXT NOT NULL DEFAULT 'CO', "city" TEXT, "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, "updatedAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP)`],
-    ["slug unique on Club",       `CREATE UNIQUE INDEX IF NOT EXISTS "Club_slug_key" ON "Club"("slug")`],
-    ["clubId on User",            `ALTER TABLE "User" ADD COLUMN "clubId" TEXT NOT NULL DEFAULT 'club-star'`],
-    ["clubId on Category",        `ALTER TABLE "Category" ADD COLUMN "clubId" TEXT NOT NULL DEFAULT 'club-star'`],
-    ["clubId on Player",          `ALTER TABLE "Player" ADD COLUMN "clubId" TEXT NOT NULL DEFAULT 'club-star'`],
-    ["clubId on Session",         `ALTER TABLE "Session" ADD COLUMN "clubId" TEXT NOT NULL DEFAULT 'club-star'`],
-    ["clubId on Payment",         `ALTER TABLE "Payment" ADD COLUMN "clubId" TEXT NOT NULL DEFAULT 'club-star'`],
-    ["clubId on Mission",         `ALTER TABLE "Mission" ADD COLUMN "clubId" TEXT NOT NULL DEFAULT 'club-star'`],
-    ["clubId on Reward",          `ALTER TABLE "Reward" ADD COLUMN "clubId" TEXT NOT NULL DEFAULT 'club-star'`],
-    ["clubId on Invite",          `ALTER TABLE "Invite" ADD COLUMN "clubId" TEXT NOT NULL DEFAULT 'club-star'`],
-  ];
-
-  for (const [label, sql] of migrations) {
-    try {
-      await prisma.$executeRawUnsafe(sql);
-      console.log(`✅ Migration: ${label}`);
-    } catch {
-      // Column/table already exists — safe to ignore
-    }
-  }
-
-  // ── Remove old unique index on Category.name (replaced by composite) ───────
-  try {
-    await prisma.$executeRawUnsafe(`DROP INDEX IF EXISTS "Category_name_key"`);
-    console.log("✅ Migration: dropped Category_name_key unique index");
-  } catch {
-    // ignore
-  }
-
-  // ── Remove old unique index on User.email (replaced by composite) ──────────
-  // NOTE: We keep User.email unique PER CLUB, but SQLite doesn't support
-  // partial indexes easily, so we keep the original email unique for now
-  // and enforce uniqueness at app level for multi-club scenarios.
-
   // ── Star Club ──────────────────────────────────────────────────────────────
-  await prisma.$executeRawUnsafe(`
-    INSERT OR IGNORE INTO "Club" ("id","name","slug","email","sport","country","city","createdAt","updatedAt")
-    VALUES ('club-star','Star Club','star-club','admin@starclub.com','BASKETBALL','CO','Colombia',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)
-  `);
+  await prisma.club.upsert({
+    where: { id: STAR_CLUB_ID },
+    update: {},
+    create: {
+      id: STAR_CLUB_ID,
+      name: "Star Club",
+      slug: "star-club",
+      email: "admin@starclub.com",
+      sport: "BASKETBALL",
+      country: "CO",
+      city: "Colombia",
+    },
+  });
   console.log("✅ Club: Star Club (id=club-star)");
 
   // ── Categories ────────────────────────────────────────────────────────────
