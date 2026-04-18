@@ -29,7 +29,7 @@ export async function PATCH(
     include: {
       player: {
         select: {
-          id: true, userId: true, paymentDay: true,
+          id: true, userId: true, paymentDay: true, monthlyAmount: true,
           payments: {
             where: { status: { in: ["PENDING", "OVERDUE"] } },
             orderBy: { dueDate: "desc" },
@@ -66,11 +66,14 @@ export async function PATCH(
       const periodEnd = new Date(nextYear, month + 1, Math.min(paymentDay, new Date(nextYear, month + 2, 0).getDate()) - 1);
       const periodLabel = `${nextDue.toLocaleDateString("es-CO", { day: "numeric", month: "short" })} – ${periodEnd.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })}`;
 
+      // Use player's base monthly fee so early-payment discounts don't carry over
+      const nextAmount = payment.player.monthlyAmount ?? payment.amount;
+
       await db.payment.create({
         data: {
           clubId,
           playerId: payment.player.id,
-          amount: payment.amount,
+          amount: nextAmount,
           concept: `Mensualidad ${periodLabel}`,
           status: "PENDING",
           dueDate: nextDue,

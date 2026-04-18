@@ -39,9 +39,33 @@ export async function POST(
 
   if (payment.status === "COMPLETED") return apiError("Payment already completed", 400);
 
+  // Apply early-payment discount if the submission falls within the club's early window
+  // Window: [dueDate, dueDate + earlyPaymentDays)
+  let discountedAmount: number | undefined;
+  try {
+    const club = await db.club.findUnique({
+      where: { id: payment.clubId },
+      select: { earlyPaymentDiscount: true, earlyPaymentDays: true },
+    });
+    if (club && club.earlyPaymentDiscount > 0 && club.earlyPaymentDays > 0) {
+      const now = new Date();
+      const windowStart = new Date(payment.dueDate);
+      const windowEnd = new Date(payment.dueDate);
+      windowEnd.setDate(windowEnd.getDate() + club.earlyPaymentDays);
+      if (now >= windowStart && now < windowEnd) {
+        discountedAmount = Math.max(0, payment.amount - club.earlyPaymentDiscount);
+      }
+    }
+  } catch { /* non-fatal: proceed with original amount */ }
+
   const updated = await db.payment.update({
     where: { id },
-    data: { status: "SUBMITTED", paymentMethod: parsed.data.paymentMethod, proofNote: parsed.data.proofNote ?? null },
+    data: {
+      status: "SUBMITTED",
+      paymentMethod: parsed.data.paymentMethod,
+      proofNote: parsed.data.proofNote ?? null,
+      ...(discountedAmount !== undefined ? { amount: discountedAmount } : {}),
+    },
   });
 
   try {
