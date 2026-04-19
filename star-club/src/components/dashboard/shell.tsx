@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import { Sidebar } from "./sidebar";
+import { BottomNav } from "./bottom-nav";
 import { DashboardContext } from "./dashboard-context";
+import { NovaWordmark } from "@/components/nova-logo";
+import Link from "next/link";
+import { Bell } from "lucide-react";
 
 interface DashboardShellProps {
   role: string;
@@ -18,97 +21,89 @@ export function DashboardShell({
   role,
   userName,
   userAvatar,
-  notificationCount,
+  notificationCount = 0,
   clubName = "StarApp",
   clubLogo,
   children,
 }: DashboardShellProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const notifHref = `/dashboard/${role.toLowerCase()}/notifications`;
 
   return (
     <DashboardContext.Provider value={{ clubLogo, clubName }}>
-    <div className="min-h-screen bg-[var(--bg-primary)]">
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/60 md:hidden"
-          onClick={() => setSidebarOpen(false)}
+      <div className="min-h-screen bg-[var(--bg-primary)]">
+        {/* Desktop sidebar */}
+        <Sidebar
+          role={role}
+          userName={userName}
+          userAvatar={userAvatar}
+          notificationCount={notificationCount}
+          clubName={clubName}
+          clubLogo={clubLogo}
+          isOpen={false}
+          onClose={() => {}}
         />
-      )}
 
-      <Sidebar
-        role={role}
-        userName={userName}
-        userAvatar={userAvatar}
-        notificationCount={notificationCount}
-        clubName={clubName}
-        clubLogo={clubLogo}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
-
-      {/* Content — full width on mobile, shifted on desktop */}
-      <main className="md:ml-64 min-h-screen">
-        {/* Mobile top bar */}
-        <div
-          className="md:hidden flex items-center justify-between px-4 py-3 sticky top-0 z-20 backdrop-blur-xl"
-          style={{
-            background: "rgba(7,7,26,0.88)",
-            borderBottom: "1px solid rgba(255,255,255,0.06)",
-          }}
-        >
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="p-2 rounded-lg transition-colors"
+        {/* Main content */}
+        <main className="md:ml-64 min-h-screen pb-24 md:pb-0">
+          {/* Mobile top bar — clean, no hamburger */}
+          <div
+            className="md:hidden sticky top-0 z-20 flex items-center justify-between px-5 py-3 backdrop-blur-2xl"
             style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.08)",
-              color: "rgba(255,255,255,0.70)",
+              background: "rgba(5,5,20,0.92)",
+              borderBottom: "1px solid rgba(255,255,255,0.06)",
             }}
-            aria-label="Abrir menú"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-              <line x1="3" y1="6" x2="21" y2="6" />
-              <line x1="3" y1="12" x2="21" y2="12" />
-              <line x1="3" y1="18" x2="21" y2="18" />
-            </svg>
-          </button>
+            {/* Club logo + name */}
+            <div className="flex items-center gap-2.5">
+              {clubLogo ? (
+                <img
+                  src={clubLogo}
+                  alt={clubName}
+                  className="w-7 h-7 rounded-full object-cover"
+                  style={{ border: "1px solid rgba(139,92,246,0.4)" }}
+                />
+              ) : (
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black"
+                  style={{
+                    background: "linear-gradient(135deg, rgba(139,92,246,0.3), rgba(96,165,250,0.2))",
+                    border: "1px solid rgba(139,92,246,0.4)",
+                    color: "#C4B5FD",
+                  }}
+                >
+                  {clubName.charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="text-[13px] font-bold tracking-tight" style={{ color: "rgba(255,255,255,0.85)" }}>
+                {clubName}
+              </span>
+            </div>
 
-          <div className="flex items-center gap-2">
-            {clubLogo ? (
-              <img
-                src={clubLogo}
-                alt={clubName}
-                className="w-7 h-7 rounded-full object-cover flex-shrink-0"
-                style={{ border: "1px solid rgba(139,92,246,0.35)", boxShadow: "0 0 8px rgba(139,92,246,0.25)" }}
-              />
-            ) : (
-              <div
-                className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
-                style={{
-                  background: "rgba(139,92,246,0.15)",
-                  border: "1px solid rgba(139,92,246,0.35)",
-                  color: "#DEC4FF",
-                  boxShadow: "0 0 8px rgba(139,92,246,0.20)",
-                }}
-              >
-                {clubName.charAt(0).toUpperCase()}
-              </div>
-            )}
-            <span
-              className="text-sm font-black tracking-widest uppercase"
-              style={{ color: "rgba(255,255,255,0.88)" }}
-            >
-              {clubName}
-            </span>
+            {/* Wordmark centered */}
+            <div className="absolute left-1/2 -translate-x-1/2">
+              <NovaWordmark dark height={22} showTag={false} />
+            </div>
+
+            {/* Bell */}
+            <Link href={notifHref} className="relative p-2 rounded-xl" style={{ color: "rgba(255,255,255,0.45)" }}>
+              <Bell size={18} strokeWidth={1.8} />
+              {notificationCount > 0 && (
+                <span
+                  className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black text-white"
+                  style={{ background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}
+                >
+                  {notificationCount > 9 ? "9+" : notificationCount}
+                </span>
+              )}
+            </Link>
           </div>
 
-          <div className="w-8" />
-        </div>
+          {children}
+        </main>
 
-        {children}
-      </main>
-    </div>
+        {/* Mobile bottom nav */}
+        <BottomNav role={role} notificationCount={notificationCount} />
+      </div>
     </DashboardContext.Provider>
   );
 }

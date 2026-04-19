@@ -24,9 +24,18 @@ export async function GET(req: NextRequest) {
   if (code) {
     const invite = await db.invite.findUnique({
       where: { code },
-      select: { id: true, code: true, role: true, used: true, expiresAt: true, club: { select: { name: true, slug: true, logo: true } } },
+      select: { id: true, code: true, role: true, used: true, expiresAt: true, clubId: true, club: { select: { name: true, slug: true, logo: true, zonePrices: true } } },
     });
-    return apiOk(invite);
+    if (!invite) return apiOk(null);
+    // Get distinct coach branches for this club (used as sede options in registration)
+    const coachBranches = await db.user.findMany({
+      where: { clubId: invite.clubId, role: "COACH", branch: { not: null } },
+      select: { branch: true },
+      distinct: ["branch"],
+    });
+    const branches = coachBranches.map((c) => c.branch!).sort();
+    const { clubId: _cid, ...rest } = invite;
+    return apiOk({ ...rest, branches });
   }
 
   const session = await requireAdmin();

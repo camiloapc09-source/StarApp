@@ -1,6 +1,5 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -80,8 +79,9 @@ export function Sidebar({
     <aside
       className={`dashboard-sidebar${isOpen ? " sidebar-open" : ""} fixed left-0 top-0 z-40 h-screen w-64 flex flex-col transition-transform duration-300`}
       style={{
-        background: "#07071A",
+        background: "rgba(5,5,18,0.98)",
         borderRight: "1px solid rgba(255,255,255,0.06)",
+        backdropFilter: "blur(20px)",
       }}
     >
       {/* Mobile close */}

@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { NovaIcon, NovaWordmark } from "@/components/nova-logo";
+import Link from "next/link";
 
 const SPORT_EMOJI: Record<string, string> = {
   BASKETBALL: "🏀",
@@ -23,56 +23,6 @@ interface Club {
   slug: string;
 }
 
-const PHI = 1.6180339887;
-const STARS = Array.from({ length: 110 }, (_, i) => ({
-  id: i,
-  x: (i * PHI * 37.3) % 100,
-  y: (i * PHI * PHI * 53.7) % 100,
-  size: i % 5 === 0 ? 1.6 : i % 3 === 0 ? 1.0 : 0.6,
-  opacity: 0.12 + (i % 8) * 0.07,
-  duration: 2.5 + (i % 6),
-  delay: (i % 5) * 0.7,
-}));
-
-function StarField() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {STARS.map((s) => (
-        <motion.div
-          key={s.id}
-          style={{
-            position: "absolute",
-            left: `${s.x}%`,
-            top: `${s.y}%`,
-            width: s.size,
-            height: s.size,
-            borderRadius: "50%",
-            background: "white",
-          }}
-          animate={{ opacity: [s.opacity, s.opacity * 0.1, s.opacity] }}
-          transition={{ duration: s.duration, delay: s.delay, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `
-            radial-gradient(ellipse 70% 55% at 10% 20%, rgba(76,29,149,0.22) 0%, transparent 60%),
-            radial-gradient(ellipse 55% 45% at 88% 70%, rgba(29,78,216,0.13) 0%, transparent 55%),
-            radial-gradient(ellipse 45% 35% at 55% 90%, rgba(13,148,136,0.09) 0%, transparent 50%),
-            radial-gradient(ellipse 30% 30% at 75% 15%, rgba(139,92,246,0.08) 0%, transparent 50%)
-          `,
-        }}
-      />
-    </div>
-  );
-}
-
 export function ClubLoginForm({ club }: { club: Club }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -84,20 +34,12 @@ export function ClubLoginForm({ club }: { club: Club }) {
     e.preventDefault();
     setError("");
     setLoading(true);
-
-    const result = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-
+    const result = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
-
     if (result?.error) {
-      setError("Correo o contraseña inválidos. Inténtalo de nuevo.");
+      setError("Correo o contraseña incorrectos.");
       return;
     }
-
     window.location.replace("/");
   }
 
@@ -105,46 +47,65 @@ export function ClubLoginForm({ club }: { club: Club }) {
 
   return (
     <div
-      className="h-screen flex relative overflow-hidden"
-      style={{ background: "#030308" }}
+      className="min-h-screen flex flex-col items-center justify-center px-5 py-10 relative overflow-hidden"
+      style={{ background: "#06060F" }}
     >
-      <StarField />
+      {/* Background gradients */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(ellipse 80% 60% at 20% 0%, rgba(88,28,235,0.18) 0%, transparent 55%),
+            radial-gradient(ellipse 60% 50% at 85% 80%, rgba(29,78,216,0.12) 0%, transparent 55%),
+            radial-gradient(ellipse 40% 40% at 50% 50%, rgba(139,92,246,0.04) 0%, transparent 60%)
+          `,
+        }}
+      />
 
-      {/* ── LEFT — club branding (desktop only) ── */}
-      <div className="hidden lg:flex lg:w-[45%] flex-col items-center justify-center px-12 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
-          className="text-center w-full max-w-xs"
+      {/* Back link */}
+      <div className="w-full max-w-sm mb-6 relative z-10">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors"
+          style={{ color: "rgba(255,255,255,0.28)" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.60)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.28)")}
         >
-          {/* Club logo floating */}
+          <ArrowRight size={12} style={{ transform: "rotate(180deg)" }} />
+          Cambiar club
+        </Link>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 28 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-sm relative z-10"
+      >
+        {/* Club identity */}
+        <div className="flex flex-col items-center mb-8">
           <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-            className="mb-6"
+            animate={{ y: [0, -6, 0] }}
+            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            className="mb-4"
           >
             {club.logo ? (
-              <div
-                className="w-32 h-32 rounded-full overflow-hidden mx-auto"
+              <img
+                src={club.logo}
+                alt={club.name}
+                className="w-20 h-20 rounded-[28px] object-cover"
                 style={{
+                  boxShadow: "0 8px 40px rgba(139,92,246,0.35), 0 2px 8px rgba(0,0,0,0.6)",
                   border: "1px solid rgba(255,255,255,0.10)",
-                  boxShadow: "0 0 60px rgba(139,92,246,0.40), 0 0 120px rgba(139,92,246,0.12)",
                 }}
-              >
-                <img
-                  src={club.logo}
-                  alt={club.name}
-                  style={{ width: "128px", height: "128px", objectFit: "cover", display: "block" }}
-                />
-              </div>
+              />
             ) : (
               <div
-                className="w-32 h-32 rounded-full flex items-center justify-center mx-auto text-6xl"
+                className="w-20 h-20 rounded-[28px] flex items-center justify-center text-4xl"
                 style={{
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  background: "rgba(255,255,255,0.02)",
-                  boxShadow: "0 0 60px rgba(139,92,246,0.40), 0 0 120px rgba(139,92,246,0.12)",
+                  background: "rgba(139,92,246,0.12)",
+                  border: "1px solid rgba(139,92,246,0.25)",
+                  boxShadow: "0 8px 40px rgba(139,92,246,0.30)",
                 }}
               >
                 {emoji}
@@ -152,218 +113,130 @@ export function ClubLoginForm({ club }: { club: Club }) {
             )}
           </motion.div>
 
-          {/* Club name */}
-          <h2
-            className="font-black tracking-tighter text-white uppercase mb-2 leading-none"
-            style={{ fontSize: "clamp(1.8rem, 3.2vw, 2.8rem)" }}
-          >
-            {club.name}
-          </h2>
-
-          <p
-            className="text-[10px] font-bold tracking-[0.4em] uppercase mb-8"
-            style={{ color: "rgba(255,255,255,0.22)" }}
-          >
+          <h1 className="text-2xl font-black tracking-tight text-white mb-1">{club.name}</h1>
+          <p className="text-xs font-medium tracking-[0.25em] uppercase" style={{ color: "rgba(255,255,255,0.28)" }}>
             {club.sport}
           </p>
+        </div>
 
-          {/* Divider */}
-          <div className="w-8 h-px mx-auto mb-6" style={{ background: "rgba(255,255,255,0.10)" }} />
-
-          {/* StarApp wordmark small */}
-          <div className="flex justify-center mb-5" style={{ opacity: 0.5 }}>
-            <NovaWordmark dark={true} showTag={true} height={52} />
-          </div>
-
-          <a
-            href="/"
-            className="text-[10px] tracking-[0.28em] uppercase transition-colors"
-            style={{ color: "rgba(255,255,255,0.18)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.50)")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.18)")}
-          >
-            ← Cambiar club
-          </a>
-        </motion.div>
-      </div>
-
-      {/* ── RIGHT — login form ── */}
-      <div className="flex-1 flex items-center justify-center px-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.12 }}
-          className="w-full max-w-[340px]"
+        {/* Form card */}
+        <div
+          className="rounded-3xl p-6"
+          style={{
+            background: "rgba(14,12,40,0.80)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(24px)",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.50)",
+          }}
         >
-          {/* Mobile: club logo + wordmark */}
-          <div className="lg:hidden flex flex-col items-center mb-7">
-            <motion.div
-              animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-              className="mb-3"
-            >
-              {club.logo ? (
-                <div
-                  className="w-16 h-16 rounded-full overflow-hidden"
-                  style={{
-                    border: "1px solid rgba(255,255,255,0.10)",
-                    boxShadow: "0 0 36px rgba(139,92,246,0.38)",
-                  }}
-                >
-                  <img
-                    src={club.logo}
-                    alt={club.name}
-                    style={{ width: "64px", height: "64px", objectFit: "cover", display: "block" }}
-                  />
-                </div>
-              ) : (
-                <div
-                  className="w-16 h-16 rounded-full flex items-center justify-center text-3xl"
-                  style={{
-                    border: "1px solid rgba(255,255,255,0.10)",
-                    background: "rgba(255,255,255,0.02)",
-                    boxShadow: "0 0 36px rgba(139,92,246,0.38)",
-                  }}
-                >
-                  {emoji}
-                </div>
-              )}
-            </motion.div>
-            <p className="text-[10px] font-bold tracking-[0.3em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.30)" }}>
-              {club.name}
-            </p>
-          </div>
+          <p className="text-[11px] font-bold tracking-[0.28em] uppercase mb-5" style={{ color: "rgba(255,255,255,0.30)" }}>
+            Inicia sesión
+          </p>
 
-          {/* Heading */}
-          <div className="mb-7">
-            <p
-              className="text-[10px] font-bold tracking-[0.38em] uppercase mb-2"
-              style={{ color: "rgba(255,255,255,0.22)" }}
-            >
-              Bienvenido de vuelta
-            </p>
-            <h1 className="text-[2.2rem] font-black tracking-tighter text-white leading-none">
-              Inicia sesión
-            </h1>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
-            <div>
-              <label
-                className="block text-[10px] font-bold tracking-[0.28em] uppercase mb-3"
-                style={{ color: "rgba(255,255,255,0.28)" }}
-              >
-                Correo o Documento
-              </label>
+            <div
+              className="flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all duration-200"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1.5px solid rgba(255,255,255,0.08)",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(139,92,246,0.50)"; e.currentTarget.style.background = "rgba(139,92,246,0.06)"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+            >
               <input
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@email.com"
+                placeholder="Correo o documento"
                 required
                 autoComplete="username"
-                className="w-full bg-transparent text-white text-sm pb-2.5 outline-none"
-                style={{
-                  borderBottom: "1px solid rgba(255,255,255,0.14)",
-                  color: "white",
-                  caretColor: "#8B5CF6",
-                  fontSize: "14px",
-                }}
-                onFocus={(e) => (e.target.style.borderBottomColor = "rgba(255,255,255,0.42)")}
-                onBlur={(e) => (e.target.style.borderBottomColor = "rgba(255,255,255,0.14)")}
+                className="flex-1 bg-transparent outline-none text-sm"
+                style={{ color: "rgba(255,255,255,0.88)", caretColor: "#8B5CF6" }}
               />
             </div>
 
             {/* Password */}
-            <div className="relative">
-              <label
-                className="block text-[10px] font-bold tracking-[0.28em] uppercase mb-3"
-                style={{ color: "rgba(255,255,255,0.28)" }}
-              >
-                Contraseña
-              </label>
+            <div
+              className="flex items-center gap-3 rounded-2xl px-4 py-3.5 transition-all duration-200"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                border: "1.5px solid rgba(255,255,255,0.08)",
+              }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(139,92,246,0.50)"; e.currentTarget.style.background = "rgba(139,92,246,0.06)"; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
+            >
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Contraseña"
                 required
                 autoComplete="current-password"
-                className="w-full bg-transparent text-white text-sm pb-2.5 outline-none pr-7"
-                style={{
-                  borderBottom: "1px solid rgba(255,255,255,0.14)",
-                  color: "white",
-                  caretColor: "#8B5CF6",
-                  fontSize: "14px",
-                }}
-                onFocus={(e) => (e.target.style.borderBottomColor = "rgba(255,255,255,0.42)")}
-                onBlur={(e) => (e.target.style.borderBottomColor = "rgba(255,255,255,0.14)")}
+                className="flex-1 bg-transparent outline-none text-sm"
+                style={{ color: "rgba(255,255,255,0.88)", caretColor: "#8B5CF6" }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-0 bottom-2.5 transition-colors"
+                className="flex-shrink-0 transition-colors"
                 style={{ color: "rgba(255,255,255,0.25)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.55)")}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.60)")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
               >
-                {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
 
+            {/* Error */}
             {error && (
               <motion.p
-                initial={{ opacity: 0, y: -4 }}
+                initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-[12px] tracking-wide"
-                style={{ color: "rgba(255,100,100,0.85)" }}
+                className="text-xs text-center px-2 py-2 rounded-xl"
+                style={{ color: "#F87171", background: "rgba(239,68,68,0.10)" }}
               >
                 {error}
               </motion.p>
             )}
 
-            {/* CTA */}
-            <div className="pt-1">
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3.5 font-black text-[11px] tracking-[0.28em] uppercase transition-all duration-200"
-                style={{
-                  background: loading ? "rgba(255,255,255,0.07)" : "white",
-                  color: loading ? "rgba(255,255,255,0.30)" : "#030308",
-                  cursor: loading ? "not-allowed" : "pointer",
-                }}
-                onMouseEnter={(e) => {
-                  if (!loading) e.currentTarget.style.background = "rgba(255,255,255,0.88)";
-                }}
-                onMouseLeave={(e) => {
-                  if (!loading) e.currentTarget.style.background = "white";
-                }}
-              >
-                {loading ? "Verificando ..." : "Ingresar →"}
-              </button>
-            </div>
+            {/* Submit */}
+            <motion.button
+              type="submit"
+              disabled={loading}
+              whileTap={{ scale: 0.97 }}
+              className="w-full py-4 rounded-2xl text-sm font-black tracking-wide transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60"
+              style={{
+                background: loading
+                  ? "rgba(139,92,246,0.4)"
+                  : "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4338CA 100%)",
+                color: "white",
+                boxShadow: loading ? "none" : "0 8px 24px rgba(124,58,237,0.35)",
+              }}
+            >
+              {loading ? (
+                <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+              ) : (
+                <>Entrar <ArrowRight size={15} /></>
+              )}
+            </motion.button>
           </form>
+        </div>
 
-          {/* Register link */}
-          <div className="mt-5 pt-4" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-            <p className="text-center text-[11px] tracking-wide" style={{ color: "rgba(255,255,255,0.22)" }}>
-              ¿Sin cuenta?{" "}
-              <a
-                href={`/register?club=${club.slug}`}
-                className="font-bold transition-colors"
-                style={{ color: "rgba(255,255,255,0.45)" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "white")}
-                onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.45)")}
-              >
-                Regístrate
-              </a>
-            </p>
-          </div>
-        </motion.div>
-      </div>
+        {/* Register link */}
+        <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.28)" }}>
+          ¿No tienes cuenta?{" "}
+          <Link
+            href={`/${club.slug}/register`}
+            className="font-semibold transition-colors"
+            style={{ color: "rgba(167,139,250,0.80)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "#A78BFA")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(167,139,250,0.80)")}
+          >
+            Regístrate
+          </Link>
+        </p>
+      </motion.div>
     </div>
   );
 }

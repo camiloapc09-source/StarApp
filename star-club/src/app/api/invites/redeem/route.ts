@@ -8,7 +8,7 @@ const redeemSchema = z.object({
   code: z.string().min(4),
   name: z.string().min(2),
   email: z.string().email(),
-  password: z.string().optional(),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres").optional(),
   dateOfBirth: z.string().optional(),
   documentNumber: z.string().optional(),
   phone: z.string().optional(),
@@ -16,6 +16,7 @@ const redeemSchema = z.object({
   emergencyContact: z.string().optional(),
   eps: z.string().optional(),
   branch: z.string().optional(),
+  zone: z.string().optional(),
   parentName: z.string().optional(),
   parentEmail: z.string().email().optional(),
   parentPhone: z.string().optional(),
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
   const parsed = redeemSchema.safeParse(body);
   if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
-  const { code, name, email, password, dateOfBirth, documentNumber, phone, address, emergencyContact, eps, branch, parentName, parentEmail, parentPhone } = parsed.data;
+  const { code, name, email, password, dateOfBirth, documentNumber, phone, address, emergencyContact, eps, branch, zone, parentName, parentEmail, parentPhone } = parsed.data;
 
   const invite = await db.invite.findUnique({ where: { code } });
   if (!invite) return apiError("Invite not found", 404);
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
             documentNumber: documentNumber || null,
             phone: phone || null,
             address: address || null,
+            zone: zone || branch || null,
             status: "PENDING",
           },
         },
