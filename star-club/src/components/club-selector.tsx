@@ -4,56 +4,12 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { NovaWordmark } from "@/components/nova-logo";
+import { ArrowRight } from "lucide-react";
 
-const PHI = 1.6180339887;
-const STARS = Array.from({ length: 130 }, (_, i) => ({
-  id: i,
-  x: (i * PHI * 41.7) % 100,
-  y: (i * PHI * PHI * 57.3) % 100,
-  size: i % 5 === 0 ? 1.8 : i % 3 === 0 ? 1.1 : 0.6,
-  opacity: 0.12 + (i % 9) * 0.07,
-  duration: 2.5 + (i % 6),
-  delay: (i % 5) * 0.65,
-}));
-
-function StarField() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null;
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {STARS.map((s) => (
-        <motion.div
-          key={s.id}
-          style={{
-            position: "absolute",
-            left: `${s.x}%`,
-            top: `${s.y}%`,
-            width: s.size,
-            height: s.size,
-            borderRadius: "50%",
-            background: "white",
-          }}
-          animate={{ opacity: [s.opacity, s.opacity * 0.1, s.opacity] }}
-          transition={{ duration: s.duration, delay: s.delay, repeat: Infinity, ease: "easeInOut" }}
-        />
-      ))}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `
-            radial-gradient(ellipse 65% 50% at 8% 18%, rgba(76,29,149,0.20) 0%, transparent 58%),
-            radial-gradient(ellipse 50% 40% at 90% 72%, rgba(29,78,216,0.12) 0%, transparent 54%),
-            radial-gradient(ellipse 40% 32% at 52% 92%, rgba(13,148,136,0.08) 0%, transparent 50%),
-            radial-gradient(ellipse 28% 28% at 78% 12%, rgba(139,92,246,0.07) 0%, transparent 48%)
-          `,
-        }}
-      />
-    </div>
-  );
-}
+const SPORT_EMOJI: Record<string, string> = {
+  BASKETBALL: "🏀", VOLLEYBALL: "🏐", FOOTBALL: "⚽",
+  BASEBALL: "⚾", TENNIS: "🎾", SWIMMING: "🏊",
+};
 
 interface Club {
   name: string;
@@ -69,108 +25,123 @@ interface Props {
 }
 
 export function ClubSelector({ clubs, sportEmoji }: Props) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   return (
     <main
-      className="h-screen flex flex-col items-center justify-center px-6 relative overflow-hidden"
-      style={{ background: "#030308" }}
+      className="min-h-screen flex flex-col items-center justify-center px-5 py-12 relative overflow-hidden"
+      style={{ background: "#06060F" }}
     >
-      <StarField />
+      {/* Background */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: `
+            radial-gradient(ellipse 70% 55% at 15% 10%, rgba(88,28,235,0.16) 0%, transparent 55%),
+            radial-gradient(ellipse 55% 45% at 85% 80%, rgba(29,78,216,0.11) 0%, transparent 55%),
+            radial-gradient(ellipse 35% 35% at 50% 50%, rgba(139,92,246,0.04) 0%, transparent 60%)
+          `,
+        }}
+      />
+
+      {mounted && (
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          {Array.from({ length: 60 }, (_, i) => ({
+            x: (i * 1.618 * 41.7) % 100,
+            y: (i * 1.618 * 1.618 * 57.3) % 100,
+            s: i % 5 === 0 ? 1.6 : 0.7,
+            o: 0.08 + (i % 7) * 0.05,
+          })).map((s, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full bg-white"
+              style={{ left: `${s.x}%`, top: `${s.y}%`, width: s.s, height: s.s, opacity: s.o }}
+            />
+          ))}
+        </div>
+      )}
 
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-md"
+        transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+        className="relative z-10 w-full max-w-sm"
       >
-        {/* Brand — wordmark only */}
+        {/* Brand */}
         <div className="flex flex-col items-center mb-10">
-          <NovaWordmark dark={true} showTag={true} height={62} />
+          <NovaWordmark dark={true} showTag={true} height={56} />
         </div>
 
-        {/* Divider */}
-        <div className="w-8 h-px mx-auto mb-7" style={{ background: "rgba(255,255,255,0.10)" }} />
-
-        {/* Club selector label */}
+        {/* Label */}
         <p
-          className="text-[10px] font-bold tracking-[0.42em] uppercase mb-4 text-center"
+          className="text-[10px] font-bold tracking-[0.38em] uppercase mb-4 text-center"
           style={{ color: "rgba(255,255,255,0.22)" }}
         >
           Selecciona tu club
         </p>
 
         {/* Club list */}
-        <div className="space-y-2">
+        <div className="space-y-3">
           {clubs.map((club, i) => (
             <motion.div
               key={club.slug}
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.08 + i * 0.07 }}
+              transition={{ duration: 0.45, delay: 0.10 + i * 0.08 }}
             >
-              <Link
-                href={`/${club.slug}`}
-                className="flex items-center gap-4 px-5 py-4 w-full group transition-all duration-200"
-                style={{
-                  background: "rgba(255,255,255,0.03)",
-                  border: "1px solid rgba(255,255,255,0.07)",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.06)";
-                  e.currentTarget.style.borderColor = "rgba(139,92,246,0.38)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
-                }}
-              >
-                {/* Club logo */}
+              <Link href={`/${club.slug}`} className="block group">
                 <div
-                  className="w-11 h-11 rounded-full overflow-hidden flex items-center justify-center text-xl flex-shrink-0"
+                  className="flex items-center gap-4 p-4 rounded-2xl transition-all duration-200"
                   style={{
-                    border: "1px solid rgba(255,255,255,0.10)",
                     background: "rgba(255,255,255,0.04)",
-                    boxShadow: "0 0 16px rgba(139,92,246,0.22)",
+                    border: "1.5px solid rgba(255,255,255,0.07)",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(139,92,246,0.08)";
+                    e.currentTarget.style.borderColor = "rgba(139,92,246,0.30)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
                   }}
                 >
-                  {club.logo ? (
-                    <img
-                      src={club.logo}
-                      alt={club.name}
-                      style={{ width: "44px", height: "44px", objectFit: "cover", display: "block" }}
-                    />
-                  ) : (
-                    sportEmoji[club.sport] ?? "🏆"
-                  )}
-                </div>
-
-                {/* Club info */}
-                <div className="flex-1 text-left">
-                  <p className="font-black text-white text-[15px] tracking-tight leading-none mb-[5px]">
-                    {club.name}
-                  </p>
-                  <p
-                    className="text-[10px] font-semibold tracking-[0.18em] uppercase"
-                    style={{ color: "rgba(255,255,255,0.30)" }}
+                  {/* Club logo */}
+                  <div
+                    className="w-12 h-12 rounded-2xl overflow-hidden flex-shrink-0 flex items-center justify-center text-xl"
+                    style={{
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.09)",
+                    }}
                   >
-                    {club.sport}{club.city ? ` · ${club.city}` : ""}
-                  </p>
-                </div>
+                    {club.logo ? (
+                      <img src={club.logo} alt={club.name} className="w-full h-full object-cover" />
+                    ) : (
+                      SPORT_EMOJI[club.sport] ?? sportEmoji[club.sport] ?? "🏆"
+                    )}
+                  </div>
 
-                {/* Arrow */}
-                <span
-                  className="text-base transition-transform duration-200 group-hover:translate-x-1"
-                  style={{ color: "rgba(255,255,255,0.22)" }}
-                >
-                  →
-                </span>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-[15px] text-white leading-none mb-1 truncate">{club.name}</p>
+                    <p className="text-[11px] font-medium" style={{ color: "rgba(255,255,255,0.32)" }}>
+                      {club.sport}{club.city ? ` · ${club.city}` : ""}
+                    </p>
+                  </div>
+
+                  <ArrowRight
+                    size={16}
+                    className="flex-shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
+                    style={{ color: "rgba(255,255,255,0.20)" }}
+                  />
+                </div>
               </Link>
             </motion.div>
           ))}
         </div>
 
-        {/* Footer */}
         <p
-          className="text-center text-[9px] tracking-[0.32em] uppercase mt-8"
+          className="text-center text-[9px] tracking-[0.32em] uppercase mt-10"
           style={{ color: "rgba(255,255,255,0.10)" }}
         >
           Powered by StarApp

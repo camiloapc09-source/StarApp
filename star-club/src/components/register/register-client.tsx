@@ -5,28 +5,27 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { NovaWordmark } from "@/components/nova-logo";
 
-// ── inline space input (matches login style) ─────────────────────────────────
 function SpaceInput({ label, error, ...props }: React.InputHTMLAttributes<HTMLInputElement> & { label?: string; error?: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-[10px] font-bold tracking-[0.25em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <label className="text-[10px] font-semibold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
           {label}
         </label>
       )}
       <input
-        className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
+        className="w-full px-4 py-3 rounded-2xl text-sm outline-none transition-all"
         style={{
-          background: "rgba(255,255,255,0.04)",
-          border: `1px solid ${error ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.09)"}`,
-          color: "rgba(255,255,255,0.85)",
+          background: "rgba(255,255,255,0.05)",
+          border: `1.5px solid ${error ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.08)"}`,
+          color: "rgba(255,255,255,0.88)",
           caretColor: "#8B5CF6",
         }}
-        onFocus={(e) => { e.target.style.borderColor = "rgba(139,92,246,0.45)"; e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.10)"; }}
-        onBlur={(e) => { e.target.style.borderColor = error ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.09)"; e.target.style.boxShadow = "none"; }}
+        onFocus={(e) => { e.target.style.borderColor = "rgba(139,92,246,0.50)"; e.target.style.background = "rgba(139,92,246,0.06)"; }}
+        onBlur={(e) => { e.target.style.borderColor = error ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.08)"; e.target.style.background = "rgba(255,255,255,0.05)"; }}
         {...props}
       />
-      {error && <p className="text-[11px]" style={{ color: "rgba(239,68,68,0.85)" }}>{error}</p>}
+      {error && <p className="text-[11px]" style={{ color: "#F87171" }}>{error}</p>}
     </div>
   );
 }
@@ -35,15 +34,15 @@ function SpaceSelect({ label, children, ...props }: React.SelectHTMLAttributes<H
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-[10px] font-bold tracking-[0.25em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <label className="text-[10px] font-semibold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
           {label}
         </label>
       )}
       <select
-        className="w-full px-3 py-2.5 rounded-lg text-sm outline-none appearance-none transition-all"
-        style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.85)" }}
-        onFocus={(e) => { e.target.style.borderColor = "rgba(139,92,246,0.45)"; e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.10)"; }}
-        onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.09)"; e.target.style.boxShadow = "none"; }}
+        className="w-full px-4 py-3 rounded-2xl text-sm outline-none appearance-none transition-all"
+        style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.88)" }}
+        onFocus={(e) => { e.target.style.borderColor = "rgba(139,92,246,0.50)"; e.target.style.background = "rgba(139,92,246,0.06)"; }}
+        onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.background = "rgba(255,255,255,0.05)"; }}
         {...props}
       >
         {children}
@@ -167,10 +166,10 @@ export default function RegisterClient() {
           </div>
 
           <div
-            className="rounded-xl p-7"
-            style={{ background: "rgba(14,14,44,0.85)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(16px)" }}
+            className="rounded-3xl p-6"
+            style={{ background: "rgba(14,12,40,0.82)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(24px)", boxShadow: "0 24px 60px rgba(0,0,0,0.50)" }}
           >
-            <p className="text-[10px] font-bold tracking-[0.35em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.28)" }}>
+            <p className="text-[10px] font-semibold tracking-[0.28em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.30)" }}>
               Acceso
             </p>
             <h1 className="text-2xl font-black tracking-tight text-white mb-6">Registrarse</h1>
@@ -182,14 +181,17 @@ export default function RegisterClient() {
                   key={r}
                   type="button"
                   onClick={() => setModalRole(r)}
-                  className="py-2.5 rounded-lg text-[11px] font-bold tracking-[0.2em] uppercase transition-all"
+                  className="py-3 rounded-2xl text-[12px] font-bold tracking-wide transition-all"
                   style={{
-                    background: modalRole === r ? "white" : "rgba(255,255,255,0.04)",
-                    color: modalRole === r ? "#07071A" : "rgba(255,255,255,0.45)",
-                    border: `1px solid ${modalRole === r ? "white" : "rgba(255,255,255,0.09)"}`,
+                    background: modalRole === r
+                      ? "linear-gradient(135deg, #7C3AED, #4338CA)"
+                      : "rgba(255,255,255,0.04)",
+                    color: modalRole === r ? "white" : "rgba(255,255,255,0.40)",
+                    border: `1.5px solid ${modalRole === r ? "rgba(139,92,246,0.50)" : "rgba(255,255,255,0.08)"}`,
+                    boxShadow: modalRole === r ? "0 4px 16px rgba(124,58,237,0.25)" : "none",
                   }}
                 >
-                  {r === "PLAYER" ? "Deportista" : "Entrenador"}
+                  {r === "PLAYER" ? "🏅 Deportista" : "🏋️ Entrenador"}
                 </button>
               ))}
             </div>
@@ -202,23 +204,21 @@ export default function RegisterClient() {
             />
 
             {modalError && (
-              <p className="text-[11px] mt-2" style={{ color: "rgba(239,68,68,0.85)" }}>{modalError}</p>
+              <p className="text-xs mt-2 px-2 py-1.5 rounded-xl text-center" style={{ color: "#F87171", background: "rgba(239,68,68,0.10)" }}>{modalError}</p>
             )}
 
             <button
               onClick={handleModalContinue}
-              className="w-full mt-5 py-3 font-black text-[11px] tracking-[0.25em] uppercase transition-all"
-              style={{ background: "white", color: "#07071A" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.88)")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "white")}
+              className="w-full mt-5 py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
+              style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4338CA 100%)", color: "white", boxShadow: "0 8px 24px rgba(124,58,237,0.35)" }}
             >
               Continuar →
             </button>
           </div>
 
-          <p className="text-center text-[11px] mt-5" style={{ color: "rgba(255,255,255,0.22)" }}>
+          <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.28)" }}>
             ¿Ya tienes cuenta?{" "}
-            <a href={redirectSlug ? `/${redirectSlug}` : "/"} className="font-bold transition-colors" style={{ color: "rgba(255,255,255,0.50)" }}>
+            <a href={redirectSlug ? `/${redirectSlug}` : "/"} className="font-semibold" style={{ color: "rgba(167,139,250,0.80)" }}>
               Inicia sesión
             </a>
           </p>
@@ -347,16 +347,16 @@ export default function RegisterClient() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3.5 font-black text-[11px] tracking-[0.25em] uppercase transition-all"
+              className="w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-60"
               style={{
-                background: loading ? "rgba(255,255,255,0.07)" : "white",
-                color: loading ? "rgba(255,255,255,0.30)" : "#07071A",
-                cursor: loading ? "not-allowed" : "pointer",
+                background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4338CA 100%)",
+                color: "white",
+                boxShadow: "0 8px 24px rgba(124,58,237,0.30)",
               }}
-              onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "rgba(255,255,255,0.88)"; }}
-              onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = "white"; }}
             >
-              {loading ? "Registrando ..." : "Completar registro →"}
+              {loading
+                ? <><span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Registrando...</>
+                : "Completar registro →"}
             </button>
           </div>
         </form>
