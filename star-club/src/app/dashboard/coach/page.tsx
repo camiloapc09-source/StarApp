@@ -48,7 +48,7 @@ export default async function CoachDashboard() {
         title={dict.header.coachTitle}
         subtitle={dict.header.coachSubtitle.replace("{name}", session.user.name ?? "")}
         notificationCount={unreadNotifications}
-        searchPlaceholder={dict.header.searchPlaceholder}
+
       />
 
       <div className="p-8 space-y-8">

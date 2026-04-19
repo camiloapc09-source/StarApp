@@ -66,7 +66,7 @@ export default async function PlayerDashboard() {
       <Header
         title={dict.header.playerTitleTemplate.replace("{firstName}", session.user.name?.split(" ")[0] ?? "")}
         subtitle={dict.header.playerSubtitle}
-        searchPlaceholder={dict.header.searchPlaceholder}
+
         notificationCount={unreadNotifications}
       />
 
