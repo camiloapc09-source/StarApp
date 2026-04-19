@@ -22,23 +22,20 @@ export function Avatar({ name, src, size = "md", className }: AvatarProps) {
       <img
         src={src}
         alt={name}
-        className={cn(
-          "rounded-full object-cover border border-[var(--border-primary)]",
-          sizeClasses[size],
-          className
-        )}
+        className={cn("rounded-full object-cover", sizeClasses[size], className)}
+        style={{ border: "1px solid rgba(255,255,255,0.10)" }}
       />
     );
   }
 
   return (
     <div
-      className={cn(
-        "rounded-full flex items-center justify-center font-semibold",
-        "bg-accent/10 text-accent border border-accent/20",
-        sizeClasses[size],
-        className
-      )}
+      className={cn("rounded-full flex items-center justify-center font-bold", sizeClasses[size], className)}
+      style={{
+        background: "rgba(139,92,246,0.12)",
+        border: "1px solid rgba(139,92,246,0.25)",
+        color: "#DEC4FF",
+      }}
     >
       {getInitials(name)}
     </div>

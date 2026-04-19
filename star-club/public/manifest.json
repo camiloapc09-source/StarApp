@@ -1,11 +1,11 @@
 {
-  "name": "StarApp - Rendimiento Deportivo",
+  "name": "StarApp — Plataforma Deportiva",
   "short_name": "StarApp",
-  "description": "Plataforma de gestion deportiva con gamificacion y seguimiento de rendimiento.",
+  "description": "La plataforma premium para clubes deportivos.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#0a0a0a",
+  "background_color": "#07071A",
+  "theme_color": "#07071A",
   "orientation": "portrait",
   "scope": "/",
   "icons": [

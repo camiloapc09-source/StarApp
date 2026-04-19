@@ -1,64 +1,86 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Bell } from "lucide-react";
 import LanguageToggle from "@/components/language-toggle";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useDashboard } from "./dashboard-context";
 
 interface HeaderProps {
   title: string;
   subtitle?: string;
   notificationCount?: number;
-  searchPlaceholder?: string;
 }
 
-export function Header({ title, subtitle, notificationCount = 0, searchPlaceholder }: HeaderProps) {
+export function Header({ title, subtitle, notificationCount = 0 }: HeaderProps) {
   const pathname = usePathname();
-  // derive role from current path: /dashboard/admin/... → admin
   const roleMatch = pathname.match(/^\/dashboard\/([^/]+)/);
   const role = roleMatch?.[1] ?? "player";
   const notificationsHref = `/dashboard/${role}/notifications`;
+  const { clubLogo, clubName } = useDashboard();
 
   return (
-    <header className="sticky top-0 z-30 backdrop-blur-xl bg-[var(--bg-primary)]/80 border-b border-[var(--border-primary)]">
+    <header
+      className="sticky top-0 z-30 backdrop-blur-xl"
+      style={{
+        background: "rgba(7,7,26,0.88)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
       <div className="flex items-center justify-between px-8 py-4">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">{title}</h1>
-          {subtitle && (
-            <p className="text-sm text-[var(--text-muted)] mt-0.5">{subtitle}</p>
+        {/* Title + club logo */}
+        <div className="flex items-center gap-3">
+          {/* Club logo circle */}
+          {(clubLogo || clubName) && (
+            <div
+              className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center text-xs font-bold"
+              style={{
+                border: "1px solid rgba(139,92,246,0.38)",
+                boxShadow: "0 0 10px rgba(139,92,246,0.18)",
+                background: "rgba(139,92,246,0.08)",
+                color: "#DEC4FF",
+              }}
+            >
+              {clubLogo
+                ? <img src={clubLogo} alt={clubName} className="w-full h-full object-cover" />
+                : clubName?.charAt(0).toUpperCase()
+              }
+            </div>
           )}
+
+          <div>
+            <h1
+              className="text-lg font-black tracking-tight leading-none"
+              style={{ color: "rgba(255,255,255,0.92)" }}
+            >
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-xs mt-0.5 tracking-wide" style={{ color: "rgba(255,255,255,0.28)" }}>
+                {subtitle}
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Search */}
-          <div className="relative hidden md:block">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]"
-            />
-            <input
-              type="text"
-              placeholder={searchPlaceholder ?? "Buscar..."}
-              className={cn(
-                "pl-9 pr-4 py-2 rounded-xl text-sm w-64",
-                "bg-[var(--bg-elevated)] border border-[var(--border-primary)]",
-                "text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
-                "focus:outline-none focus:ring-2 focus:ring-accent/30"
-              )}
-            />
-          </div>
-
+        {/* Right — language + notifications */}
+        <div className="flex items-center gap-2.5">
           <LanguageToggle />
 
-          {/* Notifications */}
           <Link
             href={notificationsHref}
-            className="relative p-2.5 rounded-xl bg-[var(--bg-elevated)] border border-[var(--border-primary)] hover:bg-[var(--bg-hover)] transition-all"
+            className="relative p-2.5 rounded-lg transition-all"
+            style={{
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              color: "rgba(255,255,255,0.45)",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.16)")}
+            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)")}
           >
-            <Bell size={18} className="text-[var(--text-secondary)]" />
+            <Bell size={16} />
             {notificationCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-error text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                 {notificationCount > 9 ? "9+" : notificationCount}
               </span>
             )}

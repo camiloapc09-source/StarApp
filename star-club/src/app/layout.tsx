@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "STAR CLUB - Plataforma de rendimiento deportivo",
-  description: "Plataforma de gestión deportiva con gamificación, seguimiento de rendimiento e insights en tiempo real.",
+  title: "StarApp — Plataforma Deportiva",
+  description: "La plataforma premium para clubes deportivos. Gestiona, registra y potencia a tus deportistas.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
@@ -24,7 +24,14 @@ export const metadata: Metadata = {
     startupImage: "/icons/icon-512x512.png",
   },
   icons: {
-    apple: "/icons/icon-192x192.png",
+    icon: [
+      { url: "/favicon.png", type: "image/png" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [
+      { url: "/icons/icon-152x152.png", sizes: "152x152" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192" },
+    ],
   },
   other: {
     "mobile-web-app-capable": "yes",

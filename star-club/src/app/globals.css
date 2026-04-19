@@ -4,27 +4,27 @@
 /* Premium dark-mode design inspired by Nike / Adidas      */
 
 :root {
-  /* Core palette */
-  --bg-primary: #0a0a0a;
-  --bg-secondary: #111111;
-  --bg-card: #161616;
-  --bg-elevated: #1a1a1a;
-  --bg-hover: #222222;
+  /* Core palette — space/interstellar dark */
+  --bg-primary: #07071A;
+  --bg-secondary: #0B0B22;
+  --bg-card: #0E0E2C;
+  --bg-elevated: #131336;
+  --bg-hover: #1A1A42;
 
-  /* Borders */
-  --border-primary: #222222;
-  --border-subtle: #1a1a1a;
+  /* Borders — subtle white glass */
+  --border-primary: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.04);
 
   /* Text */
-  --text-primary: #f5f5f5;
-  --text-secondary: #a0a0a0;
-  --text-muted: #666666;
+  --text-primary: #F0EEFF;
+  --text-secondary: rgba(255, 255, 255, 0.55);
+  --text-muted: rgba(255, 255, 255, 0.28);
 
-  /* Brand accent — Star Club violet */
+  /* Brand accent — NOVA violet */
   --accent: #8B5CF6;
   --accent-dim: #7C3AED;
   --accent-secondary: #6D28D9;
-  --accent-glow: rgba(139, 92, 246, 0.15);
+  --accent-glow: rgba(139, 92, 246, 0.18);
 
   /* Status colors */
   --success: #00ff87;
@@ -107,15 +107,15 @@ body {
 
 /* Glass card effect */
 .glass-card {
-  background: rgba(22, 22, 22, 0.8);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-primary);
+  background: rgba(14, 14, 44, 0.75);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
 }
 
 /* Glow effect for accent elements */
 .glow-accent {
-  box-shadow: 0 0 20px rgba(0, 255, 135, 0.15), 0 0 60px rgba(0, 255, 135, 0.05);
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.20), 0 0 60px rgba(139, 92, 246, 0.08);
 }
 
 /* XP progress bar animation */
