@@ -105,6 +105,19 @@ body {
   border-radius: 3px;
 }
 
+/* Admin dashboard hover utilities (server component safe) */
+.quick-action-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.quick-action-card:hover {
+  background: rgba(139,92,246,0.10);
+  border-color: rgba(139,92,246,0.25);
+}
+.player-row:hover {
+  background: rgba(255,255,255,0.03);
+}
+
 /* Glass card effect */
 .glass-card {
   background: rgba(14, 14, 44, 0.75);

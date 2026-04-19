@@ -129,16 +129,7 @@ export default async function AdminDashboard() {
               <Link
                 key={a.href}
                 href={a.href}
-                className="flex flex-col items-center gap-2 py-3 px-2 rounded-2xl text-center transition-all duration-200 group"
-                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(139,92,246,0.10)";
-                  e.currentTarget.style.borderColor = "rgba(139,92,246,0.25)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(255,255,255,0.03)";
-                  e.currentTarget.style.borderColor = "rgba(255,255,255,0.06)";
-                }}
+                className="quick-action-card flex flex-col items-center gap-2 py-3 px-2 rounded-2xl text-center transition-all duration-200"
               >
                 <span className="text-2xl">{a.emoji}</span>
                 <span className="text-[10px] font-semibold leading-tight" style={{ color: "rgba(255,255,255,0.55)" }}>
@@ -157,10 +148,8 @@ export default async function AdminDashboard() {
                 <h2 className="font-bold text-[15px]">{t.common.recentPlayers}</h2>
                 <Link
                   href="/dashboard/admin/players"
-                  className="flex items-center gap-1 text-xs font-semibold transition-colors"
+                  className="flex items-center gap-1 text-xs font-semibold hover:text-[#A78BFA] transition-colors"
                   style={{ color: "rgba(167,139,250,0.75)" }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = "#A78BFA")}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(167,139,250,0.75)")}
                 >
                   {t.common.viewAll} <ArrowRight size={12} />
                 </Link>
@@ -171,12 +160,7 @@ export default async function AdminDashboard() {
                 ) : (
                   recentPlayers.map((player) => (
                     <Link key={player.id} href={`/dashboard/admin/players/${player.id}`}>
-                      <div
-                        className="flex items-center gap-3.5 px-5 py-3.5 transition-all duration-150"
-                        style={{ cursor: "pointer" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-                      >
+                      <div className="player-row flex items-center gap-3.5 px-5 py-3.5 transition-all duration-150 cursor-pointer">
                         <Avatar name={player.user.name} size="sm" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold truncate">{player.user.name}</p>
