@@ -71,7 +71,7 @@ export default async function PlayerProfilePage({ params }: Props) {
   return (
     <div>
       <Header title={player.user.name} subtitle={player.category?.name ?? "Sin categoría"} />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* Back + status */}
         <div className="flex items-center justify-between">
@@ -258,7 +258,7 @@ export default async function PlayerProfilePage({ params }: Props) {
             </div>
           </Card>
         ) : (
-          <Card className="p-8 text-center">
+          <Card className="p-4 md:p-8 text-center">
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
               No hay pagos registrados aún.
             </p>

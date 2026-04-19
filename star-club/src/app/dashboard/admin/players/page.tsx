@@ -44,7 +44,7 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
   return (
     <div>
       <Header title={t.common.players} subtitle={`${players.length} ${t.common.players}`} />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* Inline invite code generator */}
         <Card className="p-5">

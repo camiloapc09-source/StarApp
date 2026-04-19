@@ -58,7 +58,7 @@ export default async function AdminSessionAttendancePage({ params }: { params: P
         title="Tomar asistencia"
         subtitle={`${sess.title} · ${dateStr}`}
       />
-      <div className="p-8 space-y-4">
+      <div className="p-4 md:p-8 space-y-4">
         <Link
           href="/dashboard/admin/attendance"
           className="flex items-center gap-2 text-sm transition-opacity hover:opacity-70"

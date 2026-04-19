@@ -23,7 +23,7 @@ export default async function AdminCategoriesPage() {
         title="Categorías"
         subtitle="Gestiona las categorías del club"
       />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <Card>
           <div className="flex items-center gap-3 mb-6">
             <Tag size={18} style={{ color: "var(--accent)" }} />

@@ -26,7 +26,7 @@ export default async function NotificationsPage() {
         title={dict.notifications?.title ?? "Notificaciones"}
         subtitle={unreadCount > 0 ? `${unreadCount} sin leer` : "Todo al dia"}
       />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
         <Card className="p-6">
           <SendNotificationForm />
         </Card>

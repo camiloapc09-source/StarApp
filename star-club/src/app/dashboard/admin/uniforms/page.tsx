@@ -51,7 +51,7 @@ export default async function AdminUniformsPage() {
   return (
     <div>
       <Header title="Pedidos de uniformes" subtitle={`${stats.total} pedidos activos`} />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* Stats + export */}
         <div className="flex items-start gap-4 flex-wrap">

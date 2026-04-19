@@ -25,7 +25,7 @@ export default async function ParentProfilePage() {
   return (
     <div>
       <Header title="Mi perfil" subtitle="Gestiona tu información de contacto" />
-      <div className="p-8 space-y-6 max-w-2xl">
+      <div className="p-4 md:p-8 space-y-6 max-w-2xl">
         <Card>
           <div className="flex items-center gap-5">
             <Avatar name={user.name} src={user.avatar} size="xl" />

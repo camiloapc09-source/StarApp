@@ -37,7 +37,7 @@ export default async function CoachSessionsPage() {
     <div>
       <Header title={dict.coach?.mySessions ?? "Mis sesiones"} subtitle={`${sessions.length} sesión${sessions.length !== 1 ? "es" : ""}`} />
 
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
         {/* Create session inline card */}
         <Card className="p-5">
           <h3 className="text-sm font-semibold mb-4">Nueva sesión</h3>

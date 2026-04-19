@@ -12,7 +12,7 @@ export default async function NewCoachPage() {
   return (
     <div>
       <Header title={dict.common?.coaches ?? "Entrenadores"} subtitle={"Crear entrenador"} />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="max-w-lg">
           <NewCoachForm />
         </div>

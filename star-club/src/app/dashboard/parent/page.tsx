@@ -67,7 +67,7 @@ export default async function ParentDashboard() {
     return (
       <div>
         <Header title="Inicio" notificationCount={unreadNotifications} />
-        <div className="p-8 text-center">
+        <div className="p-4 md:p-8 text-center">
           <p style={{ color: "var(--text-muted)" }}>
             Tu cuenta no está vinculada a ningún jugador. Contacta al administrador.
           </p>
@@ -97,7 +97,7 @@ export default async function ParentDashboard() {
         subtitle={`Seguimiento de ${player.user.name}`}
         notificationCount={unreadNotifications}
       />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* Child overview */}
         <div

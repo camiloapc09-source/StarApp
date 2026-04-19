@@ -39,7 +39,7 @@ export default async function SessionAttendancePage({ params }: { params: Promis
     <div>
       <Header title={dict.attendance?.takeAttendance ?? "Take attendance"} subtitle={`${sess.title} · ${format(new Date(sess.date), "PPP p")}`} />
 
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <AttendanceForm sessionId={sess.id} players={players} initialAttendances={initialAttendances} t={dict} />
       </div>
     </div>

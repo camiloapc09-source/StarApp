@@ -35,7 +35,7 @@ export default async function PlayerDashboard() {
 
   if (!player) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-4 md:p-8 text-center">
         <p style={{ color: "var(--text-muted)" }}>{dict.player.profileNotSet}</p>
       </div>
     );
@@ -70,7 +70,7 @@ export default async function PlayerDashboard() {
         notificationCount={unreadNotifications}
       />
 
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
         {/* Upcoming sessions calendar */}
         <UpcomingSessionsCard categoryId={player.categoryId} />
 

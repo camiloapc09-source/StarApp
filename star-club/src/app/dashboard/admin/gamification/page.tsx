@@ -47,7 +47,7 @@ export default async function AdminGamificationPage() {
   return (
     <div>
       <Header title={t.common.gamification} subtitle={t.gamification.subtitle} />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
         {/* Actions panel */}
         <Card>
           <div className="flex items-center gap-3 mb-4">

@@ -47,7 +47,7 @@ export default async function ParentReportsPage() {
     return (
       <div>
         <Header title="Reportes" />
-        <div className="p-8 text-center">
+        <div className="p-4 md:p-8 text-center">
           <p style={{ color: "var(--text-muted)" }}>
             {dict.parent?.notLinked ?? "Tu cuenta no está vinculada a ningún jugador todavía."}
           </p>
@@ -110,7 +110,7 @@ export default async function ParentReportsPage() {
         title="Reportes"
         subtitle={`Historial de pagos y asistencia de ${player.user.name}`}
       />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* Child header */}
         <Card className="flex items-center gap-4">

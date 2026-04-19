@@ -47,8 +47,8 @@ export default async function AdminDashboard() {
     <div>
       <Header title={t.common.adminDashboard ?? t.common.dashboard} subtitle={t.common?.adminSubtitle ?? ""} notificationCount={unreadNotifications} />
 
-      <div className="p-8 space-y-8">
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="p-4 md:p-8 space-y-6">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard label={t.common.activePlayers} value={totalPlayers} icon={<Users size={20} />} iconColor="text-accent" />
           <StatCard label={t.common.pendingPlayers} value={pendingPlayers} icon={<UserCheck size={20} />} iconColor="text-warning" />
           <StatCard label={t.common.paidThisMonth} value={completedPayments} icon={<CreditCard size={20} />} iconColor="text-info" />

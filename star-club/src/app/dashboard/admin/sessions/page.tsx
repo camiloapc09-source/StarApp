@@ -41,7 +41,7 @@ export default async function AdminSessionsPage() {
   return (
     <div>
       <Header title="Sesiones" subtitle={`${sessions.length} sesiones · ${totalAttendances} asistencias`} />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* Create session form */}
         <Card className="p-5">

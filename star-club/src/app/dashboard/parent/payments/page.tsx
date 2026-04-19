@@ -36,7 +36,7 @@ export default async function ParentPaymentsPage() {
     return (
       <div>
         <Header title="Pagos" subtitle="Historial y registro de pagos" />
-        <div className="p-8 text-center">
+        <div className="p-4 md:p-8 text-center">
           <p style={{ color: "var(--text-muted)" }}>Tu cuenta no está vinculada a ningún jugador.</p>
         </div>
       </div>
@@ -63,7 +63,7 @@ export default async function ParentPaymentsPage() {
         title="Pagos"
         subtitle={`Cuenta de ${player.user.name}`}
       />
-      <div className="p-8 space-y-6 max-w-2xl">
+      <div className="p-4 md:p-8 space-y-6 max-w-2xl">
 
         {/* Pending / Overdue — with submit form */}
         {pending.length > 0 && (

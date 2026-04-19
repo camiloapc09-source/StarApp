@@ -97,7 +97,7 @@ export function NewPlayerForm({ categories, zonePrices }: NewPlayerFormProps) {
   return (
     <div>
       <Header title={dict.common.addNewPlayer} subtitle={dict.common.playerInformation} />
-      <div className="p-8 max-w-2xl">
+      <div className="p-4 md:p-8 max-w-2xl">
         <Link
           href="/dashboard/admin/players"
           className="inline-flex items-center gap-2 text-sm mb-6 hover:text-[var(--accent)] transition-colors"

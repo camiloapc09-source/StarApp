@@ -106,66 +106,86 @@ export default async function AdminPaymentsPage() {
         title={dict.common.payments}
         subtitle={dict.payments?.subtitle ?? "Gestionar todos los pagos"}
       />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-5">
 
         {/* Top bar with export */}
         <div className="flex justify-end">
           <Link
             href="/api/admin/payments/export"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-2xl text-sm font-semibold border transition-all hover:opacity-80"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:opacity-80"
             style={{
-              background: "rgba(0,255,135,0.08)",
-              color: "var(--success)",
-              borderColor: "rgba(0,255,135,0.25)",
+              background: "rgba(255,255,255,0.05)",
+              color: "rgba(255,255,255,0.70)",
+              border: "1px solid rgba(255,255,255,0.09)",
             }}
           >
-            <FileSpreadsheet size={15} />
+            <FileSpreadsheet size={14} />
             Exportar Excel
           </Link>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card className="flex items-center gap-4">
-            <div className="p-3 rounded-xl" style={{ background: "rgba(0,255,135,0.1)" }}>
-              <CheckCircle2 size={20} style={{ color: "var(--success)" }} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Recaudado */}
+          <div
+            className="rounded-xl p-4 flex flex-col gap-2"
+            style={{ background: "rgba(14,14,44,0.70)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.32)" }}>Recaudado</p>
+              <div className="p-1.5 rounded-lg" style={{ background: "rgba(0,255,135,0.10)" }}>
+                <CheckCircle2 size={13} style={{ color: "var(--success)" }} />
+              </div>
             </div>
-            <div>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>Recaudado</p>
-              <p className="text-xl font-bold">${stats.collected.toLocaleString("es-CO")}</p>
+            <p className="text-xl font-black tracking-tight leading-none" style={{ color: "rgba(255,255,255,0.92)" }}>
+              ${stats.collected.toLocaleString("es-CO")}
+            </p>
+          </div>
+          {/* Por verificar */}
+          <div
+            className="rounded-xl p-4 flex flex-col gap-2"
+            style={{ background: "rgba(14,14,44,0.70)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.32)" }}>Por verificar</p>
+              <div className="p-1.5 rounded-lg" style={{ background: "rgba(99,102,241,0.15)" }}>
+                <Eye size={13} style={{ color: "#818cf8" }} />
+              </div>
             </div>
-          </Card>
-          <Card className="flex items-center gap-4">
-            <div className="p-3 rounded-xl" style={{ background: "rgba(99,102,241,0.15)" }}>
-              <Eye size={20} style={{ color: "#818cf8" }} />
+            <p className="text-xl font-black tracking-tight leading-none" style={{ color: "#818cf8" }}>
+              {submitted.length}
+            </p>
+          </div>
+          {/* Pendiente */}
+          <div
+            className="rounded-xl p-4 flex flex-col gap-2"
+            style={{ background: "rgba(14,14,44,0.70)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.32)" }}>Pendiente</p>
+              <div className="p-1.5 rounded-lg" style={{ background: "rgba(255,184,0,0.10)" }}>
+                <Clock size={13} style={{ color: "var(--warning)" }} />
+              </div>
             </div>
-            <div>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>Por verificar</p>
-              <p className="text-xl font-bold" style={{ color: "#818cf8" }}>{submitted.length}</p>
+            <p className="text-xl font-black tracking-tight leading-none" style={{ color: "var(--warning)" }}>
+              ${stats.pendingAmt.toLocaleString("es-CO")}
+            </p>
+          </div>
+          {/* Vencido */}
+          <div
+            className="rounded-xl p-4 flex flex-col gap-2"
+            style={{ background: "rgba(14,14,44,0.70)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
+          >
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.32)" }}>Vencido</p>
+              <div className="p-1.5 rounded-lg" style={{ background: "rgba(255,71,87,0.10)" }}>
+                <AlertTriangle size={13} style={{ color: "var(--error)" }} />
+              </div>
             </div>
-          </Card>
-          <Card className="flex items-center gap-4">
-            <div className="p-3 rounded-xl" style={{ background: "rgba(255,184,0,0.1)" }}>
-              <Clock size={20} style={{ color: "var(--warning)" }} />
-            </div>
-            <div>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>Pendiente</p>
-              <p className="text-xl font-bold" style={{ color: "var(--warning)" }}>
-                ${stats.pendingAmt.toLocaleString("es-CO")}
-              </p>
-            </div>
-          </Card>
-          <Card className="flex items-center gap-4">
-            <div className="p-3 rounded-xl" style={{ background: "rgba(255,71,87,0.1)" }}>
-              <AlertTriangle size={20} style={{ color: "var(--error)" }} />
-            </div>
-            <div>
-              <p className="text-xs" style={{ color: "var(--text-muted)" }}>Vencido</p>
-              <p className="text-xl font-bold" style={{ color: "var(--error)" }}>
-                ${stats.overdueAmt.toLocaleString("es-CO")}
-              </p>
-            </div>
-          </Card>
+            <p className="text-xl font-black tracking-tight leading-none" style={{ color: "var(--error)" }}>
+              ${stats.overdueAmt.toLocaleString("es-CO")}
+            </p>
+          </div>
         </div>
 
         {/* Action tools */}

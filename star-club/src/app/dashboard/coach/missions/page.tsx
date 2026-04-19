@@ -43,7 +43,7 @@ export default async function CoachMissionsPage() {
   return (
     <div>
       <Header title="Arise System" subtitle="Asigna misiones y gestiona el progreso de tus jugadores" />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* Assign / XP panel */}
         <Card>

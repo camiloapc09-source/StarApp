@@ -65,7 +65,7 @@ export default async function CoachReportsPage() {
   return (
     <div>
       <Header title="Reportes" subtitle="Estadísticas de tus sesiones y jugadores" />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* KPIs */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

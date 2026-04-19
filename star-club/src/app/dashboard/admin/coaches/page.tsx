@@ -74,7 +74,7 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
         title={dict.common?.coaches ?? "Entrenadores"}
         subtitle={`${coaches.length} entrenador${coaches.length !== 1 ? "es" : ""}`}
       />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* Inline invite code generator */}
         <Card className="p-5">

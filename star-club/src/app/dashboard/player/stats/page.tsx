@@ -30,7 +30,7 @@ export default async function PlayerStatsPage() {
 
   if (!player) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-4 md:p-8 text-center">
         <p style={{ color: "var(--text-muted)" }}>Perfil no encontrado. Contacta con tu administrador.</p>
       </div>
     );
@@ -87,7 +87,7 @@ export default async function PlayerStatsPage() {
   return (
     <div>
       <Header title="Mis estadísticas" subtitle="Historial completo de asistencia y progreso" />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* XP progress */}
         <XPProgressCard xp={player.xp} level={level} streak={player.streak} />

@@ -18,7 +18,7 @@ export default async function NewPaymentPage() {
   return (
     <div>
       <Header title="Nuevo pago" subtitle="Registrar pago manual (efectivo) para un deportista" />
-      <div className="p-8 max-w-lg">
+      <div className="p-4 md:p-8 max-w-lg">
         <Card className="p-6">
           <NewPaymentForm
             players={players.map((p) => ({

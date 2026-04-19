@@ -37,7 +37,7 @@ export default async function AdminEvidencePage() {
         title="Evidencias"
         subtitle={`${pending.length} pendiente${pending.length !== 1 ? "s" : ""} de revisión`}
       />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
         <Card>
           <div className="flex items-center gap-3 mb-6">
             <FileImage size={18} style={{ color: "var(--warning)" }} />

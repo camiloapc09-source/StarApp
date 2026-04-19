@@ -51,7 +51,7 @@ export default async function CoachDashboard() {
 
       />
 
-      <div className="p-8 space-y-8">
+      <div className="p-4 md:p-8 space-y-8">
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard label={dict.common.activePlayers} value={playersCount} icon={<Users size={20} />} iconColor="text-accent" />

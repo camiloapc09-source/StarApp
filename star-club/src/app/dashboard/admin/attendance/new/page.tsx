@@ -17,7 +17,7 @@ export default async function AdminNewSessionPage() {
   return (
     <div>
       <Header title="Nueva sesión" subtitle="Crea un entrenamiento, partido o evento" />
-      <div className="p-8 max-w-lg space-y-4">
+      <div className="p-4 md:p-8 max-w-lg space-y-4">
 
         <Link
           href="/dashboard/admin/attendance"

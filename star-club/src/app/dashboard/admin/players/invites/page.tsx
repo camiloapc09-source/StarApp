@@ -23,7 +23,7 @@ export default async function InvitesPage() {
   return (
     <div>
       <Header title={dict.common.players} subtitle={`${unused.length} pendiente${unused.length !== 1 ? "s" : ""}`} />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
         <Card>
           <div className="p-5">
             <h3 className="text-sm font-semibold mb-4">Generar código de invitación</h3>

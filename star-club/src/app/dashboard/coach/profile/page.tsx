@@ -38,7 +38,7 @@ export default async function CoachProfilePage() {
   return (
     <div>
       <Header title="Mi perfil" subtitle="Gestiona tu información de contacto" />
-      <div className="p-8 space-y-6 max-w-2xl">
+      <div className="p-4 md:p-8 space-y-6 max-w-2xl">
 
         {/* Identity card */}
         <Card>

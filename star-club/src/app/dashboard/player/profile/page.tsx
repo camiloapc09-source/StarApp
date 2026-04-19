@@ -46,7 +46,7 @@ export default async function PlayerProfilePage() {
   return (
     <div>
       <Header title="Mi perfil" subtitle="Gestiona tu información personal" />
-      <div className="p-8 space-y-6 max-w-2xl">
+      <div className="p-4 md:p-8 space-y-6 max-w-2xl">
         {/* Avatar header */}
         <Card>
           <AvatarUpload

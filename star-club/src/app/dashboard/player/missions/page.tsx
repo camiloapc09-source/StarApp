@@ -28,7 +28,7 @@ export default async function PlayerMissionsPage() {
 
   if (!player) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-4 md:p-8 text-center">
         <p style={{ color: "var(--text-muted)" }}>Perfil no encontrado.</p>
       </div>
     );
@@ -44,7 +44,7 @@ export default async function PlayerMissionsPage() {
         title="Mis misiones"
         subtitle={`${active.length} activa${active.length !== 1 ? "s" : ""} · ${completed.length} completada${completed.length !== 1 ? "s" : ""}`}
       />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
         {/* Active missions */}
         <Card>
           <div className="flex items-center justify-between mb-5">

@@ -104,7 +104,7 @@ export default async function AdminReportsPage() {
   return (
     <div>
       <Header title={t.common.reports} subtitle={t.reports?.totalRevenue ?? ""} />
-      <div className="p-8 space-y-8">
+      <div className="p-4 md:p-8 space-y-8">
         {/* Export button */}
         <div className="flex justify-end">
           <Link

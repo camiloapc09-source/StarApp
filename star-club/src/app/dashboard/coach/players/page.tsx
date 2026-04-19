@@ -43,7 +43,7 @@ export default async function CoachPlayersPage({ searchParams }: Props) {
         title={dict.common.players}
         subtitle={`${players.length} deportista${players.length !== 1 ? "s" : ""} activo${players.length !== 1 ? "s" : ""}`}
       />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* Category filter */}
         <div className="flex items-center gap-2 flex-wrap">

@@ -26,7 +26,7 @@ export default async function PlayerRewardsPage() {
 
   if (!player) {
     return (
-      <div className="p-8 text-center">
+      <div className="p-4 md:p-8 text-center">
         <p style={{ color: "var(--text-muted)" }}>Perfil no encontrado. Contacta con tu administrador.</p>
       </div>
     );
@@ -47,7 +47,7 @@ export default async function PlayerRewardsPage() {
         title="Mis recompensas"
         subtitle={`${earnedRewards.length} recompensa${earnedRewards.length !== 1 ? "s" : ""} desbloqueada${earnedRewards.length !== 1 ? "s" : ""}`}
       />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
 
         {/* XP card */}
         <XPProgressCard xp={player.xp} level={level} streak={player.streak} />

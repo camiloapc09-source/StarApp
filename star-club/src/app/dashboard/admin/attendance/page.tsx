@@ -33,7 +33,7 @@ export default async function AdminAttendancePage() {
   return (
     <div>
       <Header title={dict.common?.attendance ?? "Attendance"} subtitle={dict.attendance?.subtitle ?? "Session history and attendance records"} />
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
         {sessions.length === 0 ? (
           <Card className="text-center py-12">
             <p style={{ color: "var(--text-muted)" }}>{dict.attendance?.noSessions ?? "No sessions recorded yet."}</p>
