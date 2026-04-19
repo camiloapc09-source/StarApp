@@ -84,7 +84,7 @@ export function ClubSelector({ clubs, sportEmoji }: Props) {
       >
         {/* Brand — wordmark only */}
         <div className="flex flex-col items-center mb-10">
-          <NovaWordmark dark={true} showTag={true} height={86} />
+          <NovaWordmark dark={true} showTag={true} height={62} />
         </div>
 
         {/* Divider */}

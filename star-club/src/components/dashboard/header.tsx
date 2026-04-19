@@ -4,7 +4,6 @@ import { Bell } from "lucide-react";
 import LanguageToggle from "@/components/language-toggle";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useDashboard } from "./dashboard-context";
 
 interface HeaderProps {
   title: string;
@@ -17,7 +16,6 @@ export function Header({ title, subtitle, notificationCount = 0 }: HeaderProps) 
   const roleMatch = pathname.match(/^\/dashboard\/([^/]+)/);
   const role = roleMatch?.[1] ?? "player";
   const notificationsHref = `/dashboard/${role}/notifications`;
-  const { clubLogo, clubName } = useDashboard();
 
   return (
     <header
@@ -28,26 +26,8 @@ export function Header({ title, subtitle, notificationCount = 0 }: HeaderProps) 
       }}
     >
       <div className="flex items-center justify-between px-8 py-4">
-        {/* Title + club logo */}
+        {/* Title */}
         <div className="flex items-center gap-3">
-          {/* Club logo circle */}
-          {(clubLogo || clubName) && (
-            <div
-              className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center text-xs font-bold"
-              style={{
-                border: "1px solid rgba(139,92,246,0.38)",
-                boxShadow: "0 0 10px rgba(139,92,246,0.18)",
-                background: "rgba(139,92,246,0.08)",
-                color: "#DEC4FF",
-              }}
-            >
-              {clubLogo
-                ? <img src={clubLogo} alt={clubName} className="w-full h-full object-cover" />
-                : clubName?.charAt(0).toUpperCase()
-              }
-            </div>
-          )}
-
           <div>
             <h1
               className="text-lg font-black tracking-tight leading-none"
