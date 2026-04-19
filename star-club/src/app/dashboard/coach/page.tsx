@@ -54,19 +54,19 @@ export default async function CoachDashboard() {
       <div className="p-4 md:p-8 space-y-8">
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard label={dict.common.activePlayers} value={playersCount} icon={<Users size={20} />} iconColor="text-accent" />
-          <StatCard label={dict.coach?.mySessions ?? dict.common.sessions} value={sessionsCount} icon={<Calendar size={20} />} iconColor="text-info" />
+          <StatCard label={dict.common.activePlayers} value={playersCount} icon={<Users size={20} />} gradient="linear-gradient(135deg, rgba(139,92,246,0.25), rgba(109,40,217,0.12))" />
+          <StatCard label={dict.coach?.mySessions ?? dict.common.sessions} value={sessionsCount} icon={<Calendar size={20} />} gradient="linear-gradient(135deg, rgba(96,165,250,0.22), rgba(59,130,246,0.10))" />
           <StatCard
             label={dict.coach?.upcomingSessions ?? "Upcoming"}
             value={upcomingSessions.length}
             icon={<UserCheck size={20} />}
-            iconColor="text-warning"
+            gradient="linear-gradient(135deg, rgba(251,191,36,0.22), rgba(245,158,11,0.10))"
           />
           <StatCard
             label={dict.coach?.recentSessions ?? "Recent"}
             value={recentSessions.length}
             icon={<BarChart3 size={20} />}
-            iconColor="text-success"
+            gradient="linear-gradient(135deg, rgba(52,211,153,0.18), rgba(16,185,129,0.10))"
           />
         </div>
 

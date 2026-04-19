@@ -118,24 +118,24 @@ export default async function AdminReportsPage() {
 
         {/* Overview KPIs */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard label={t.common.activePlayers} value={totalPlayers} icon={<Users size={20} />} iconColor="text-accent" />
+          <StatCard label={t.common.activePlayers} value={totalPlayers} icon={<Users size={20} />} gradient="linear-gradient(135deg, rgba(139,92,246,0.25), rgba(109,40,217,0.12))" />
           <StatCard
             label={t.reports.totalRevenue}
             value={formatCurrency(totalRevenue._sum.amount || 0)}
             icon={<CreditCard size={20} />}
-            iconColor="text-info"
+            gradient="linear-gradient(135deg, rgba(96,165,250,0.22), rgba(59,130,246,0.10))"
           />
           <StatCard
             label={t.reports.avgAttendance}
             value={`${attendanceRate}%`}
             icon={<BarChart3 size={20} />}
-            iconColor="text-warning"
+            gradient="linear-gradient(135deg, rgba(251,191,36,0.22), rgba(245,158,11,0.10))"
           />
           <StatCard
             label={t.reports.pendingRevenue}
             value={formatCurrency(pendingRevenue._sum.amount || 0)}
             icon={<TrendingUp size={20} />}
-            iconColor="text-error"
+            gradient="linear-gradient(135deg, rgba(239,68,68,0.22), rgba(220,38,38,0.10))"
           />
         </div>
 
