@@ -7,7 +7,10 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
-import { Users, CreditCard, TrendingUp, UserCheck, Zap, ArrowRight } from "lucide-react";
+import {
+  Users, CreditCard, TrendingUp, UserCheck, Zap, ArrowRight,
+  UserPlus, Calendar, BarChart3, Trophy,
+} from "lucide-react";
 import Link from "next/link";
 
 function getGreeting() {
@@ -25,15 +28,8 @@ export default async function AdminDashboard() {
   const firstName = session.user.name?.split(" ")[0] ?? "";
 
   const [
-    totalPlayers,
-    pendingPlayers,
-    completedPayments,
-    pendingPayments,
-    categories,
-    recentPlayers,
-    overduePayments,
-    totalSessions,
-    unreadNotifications,
+    totalPlayers, pendingPlayers, completedPayments, pendingPayments,
+    categories, recentPlayers, overduePayments, totalSessions, unreadNotifications,
   ] = await Promise.all([
     db.player.count({ where: { clubId, status: "ACTIVE" } }),
     db.player.count({ where: { clubId, status: "PENDING" } }),
@@ -41,9 +37,7 @@ export default async function AdminDashboard() {
     db.payment.count({ where: { clubId, status: "PENDING" } }),
     db.category.findMany({ where: { clubId }, include: { _count: { select: { players: true } } } }),
     db.player.findMany({
-      where: { clubId },
-      take: 6,
-      orderBy: { createdAt: "desc" },
+      where: { clubId }, take: 6, orderBy: { createdAt: "desc" },
       include: { user: true, category: true },
     }),
     db.payment.count({ where: { clubId, status: "OVERDUE" } }),
@@ -52,12 +46,12 @@ export default async function AdminDashboard() {
   ]);
 
   const quickActions = [
-    { label: "Nuevo jugador",   href: "/dashboard/admin/players/new",      emoji: "👤" },
-    { label: "Entrenadores",    href: "/dashboard/admin/coaches",           emoji: "🏋️" },
-    { label: "Nueva sesión",    href: "/dashboard/admin/attendance/new",    emoji: "📅" },
-    { label: "Registrar pago",  href: "/dashboard/admin/payments/new",      emoji: "💳" },
-    { label: "Reportes",        href: "/dashboard/admin/reports",           emoji: "📊" },
-    { label: "Gamificación",    href: "/dashboard/admin/gamification",      emoji: "🏆" },
+    { label: "Nuevo jugador",  href: "/dashboard/admin/players/new",   Icon: UserPlus,   color: "#A78BFA", bg: "rgba(139,92,246,0.18)" },
+    { label: "Entrenadores",   href: "/dashboard/admin/coaches",        Icon: UserCheck,  color: "#60A5FA", bg: "rgba(96,165,250,0.18)" },
+    { label: "Nueva sesión",   href: "/dashboard/admin/attendance/new", Icon: Calendar,   color: "#34D399", bg: "rgba(52,211,153,0.15)" },
+    { label: "Registrar pago", href: "/dashboard/admin/payments/new",   Icon: CreditCard, color: "#60A5FA", bg: "rgba(59,130,246,0.16)" },
+    { label: "Reportes",       href: "/dashboard/admin/reports",        Icon: BarChart3,  color: "#FB923C", bg: "rgba(251,146,60,0.15)" },
+    { label: "Gamificación",   href: "/dashboard/admin/gamification",   Icon: Trophy,     color: "#FCD34D", bg: "rgba(251,191,36,0.15)" },
   ];
 
   return (
@@ -76,9 +70,7 @@ export default async function AdminDashboard() {
         >
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{
-              background: "radial-gradient(ellipse 60% 80% at 90% 50%, rgba(139,92,246,0.12) 0%, transparent 70%)",
-            }}
+            style={{ background: "radial-gradient(ellipse 60% 80% at 90% 50%, rgba(139,92,246,0.12) 0%, transparent 70%)" }}
           />
           <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-1 relative" style={{ color: "rgba(167,139,250,0.70)" }}>
             {getGreeting()}
@@ -93,30 +85,18 @@ export default async function AdminDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard
-            label={t.common.activePlayers}
-            value={totalPlayers}
+          <StatCard label={t.common.activePlayers} value={totalPlayers}
             icon={<Users size={18} style={{ color: "#A78BFA" }} />}
-            gradient="linear-gradient(135deg, rgba(139,92,246,0.25), rgba(109,40,217,0.12))"
-          />
-          <StatCard
-            label={t.common.pendingPlayers}
-            value={pendingPlayers}
+            gradient="linear-gradient(135deg, rgba(139,92,246,0.25), rgba(109,40,217,0.12))" />
+          <StatCard label={t.common.pendingPlayers} value={pendingPlayers}
             icon={<UserCheck size={18} style={{ color: "#FCD34D" }} />}
-            gradient="linear-gradient(135deg, rgba(251,191,36,0.22), rgba(245,158,11,0.10))"
-          />
-          <StatCard
-            label={t.common.paidThisMonth}
-            value={completedPayments}
+            gradient="linear-gradient(135deg, rgba(251,191,36,0.22), rgba(245,158,11,0.10))" />
+          <StatCard label={t.common.paidThisMonth} value={completedPayments}
             icon={<CreditCard size={18} style={{ color: "#60A5FA" }} />}
-            gradient="linear-gradient(135deg, rgba(96,165,250,0.22), rgba(59,130,246,0.10))"
-          />
-          <StatCard
-            label={t.common.overduePayments}
-            value={overduePayments}
+            gradient="linear-gradient(135deg, rgba(96,165,250,0.22), rgba(59,130,246,0.10))" />
+          <StatCard label={t.common.overduePayments} value={overduePayments}
             icon={<TrendingUp size={18} style={{ color: "#F87171" }} />}
-            gradient="linear-gradient(135deg, rgba(239,68,68,0.22), rgba(220,38,38,0.10))"
-          />
+            gradient="linear-gradient(135deg, rgba(239,68,68,0.22), rgba(220,38,38,0.10))" />
         </div>
 
         {/* Quick actions */}
@@ -126,13 +106,11 @@ export default async function AdminDashboard() {
           </p>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {quickActions.map((a) => (
-              <Link
-                key={a.href}
-                href={a.href}
-                className="quick-action-card flex flex-col items-center gap-2 py-3 px-2 rounded-2xl text-center transition-all duration-200"
-              >
-                <span className="text-2xl">{a.emoji}</span>
-                <span className="text-[10px] font-semibold leading-tight" style={{ color: "rgba(255,255,255,0.55)" }}>
+              <Link key={a.href} href={a.href} className="quick-action-card flex flex-col items-center gap-2.5 py-4 px-2 rounded-2xl text-center transition-all duration-200">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: a.bg }}>
+                  <a.Icon size={18} style={{ color: a.color }} strokeWidth={1.8} />
+                </div>
+                <span className="text-[10px] font-semibold leading-tight" style={{ color: "rgba(255,255,255,0.50)" }}>
                   {a.label}
                 </span>
               </Link>
@@ -146,11 +124,7 @@ export default async function AdminDashboard() {
             <Card className="p-0 overflow-hidden">
               <div className="flex items-center justify-between px-5 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <h2 className="font-bold text-[15px]">{t.common.recentPlayers}</h2>
-                <Link
-                  href="/dashboard/admin/players"
-                  className="flex items-center gap-1 text-xs font-semibold hover:text-[#A78BFA] transition-colors"
-                  style={{ color: "rgba(167,139,250,0.75)" }}
-                >
+                <Link href="/dashboard/admin/players" className="flex items-center gap-1 text-xs font-semibold hover:text-[#A78BFA] transition-colors" style={{ color: "rgba(167,139,250,0.75)" }}>
                   {t.common.viewAll} <ArrowRight size={12} />
                 </Link>
               </div>
@@ -170,8 +144,7 @@ export default async function AdminDashboard() {
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <div className="flex items-center gap-1 text-xs font-bold" style={{ color: "#A78BFA" }}>
-                            <Zap size={11} />
-                            {player.xp} XP
+                            <Zap size={11} />{player.xp} XP
                           </div>
                           <Badge variant={player.status === "ACTIVE" ? "success" : player.status === "PENDING" ? "warning" : "default"}>
                             {player.status}
@@ -187,7 +160,6 @@ export default async function AdminDashboard() {
 
           {/* Right column */}
           <div className="space-y-5">
-            {/* Categories */}
             <Card>
               <h2 className="font-bold text-[15px] mb-4">{t.common.categories}</h2>
               <div className="space-y-2.5">
@@ -197,10 +169,7 @@ export default async function AdminDashboard() {
                   categories.map((cat) => (
                     <div key={cat.id} className="flex items-center justify-between">
                       <span className="text-sm font-medium">{cat.name}</span>
-                      <span
-                        className="text-[11px] font-bold px-2.5 py-1 rounded-full"
-                        style={{ background: "rgba(139,92,246,0.12)", color: "#C4B5FD" }}
-                      >
+                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background: "rgba(139,92,246,0.12)", color: "#C4B5FD" }}>
                         {cat._count.players}
                       </span>
                     </div>
@@ -209,14 +178,13 @@ export default async function AdminDashboard() {
               </div>
             </Card>
 
-            {/* Overview */}
             <Card>
               <h2 className="font-bold text-[15px] mb-4">{t.common.overview}</h2>
               <div className="space-y-3">
                 {[
-                  { label: t.common.totalSessions, value: totalSessions, color: "rgba(255,255,255,0.88)" },
-                  { label: t.common.pendingPayments, value: pendingPayments, color: "#FCD34D" },
-                  { label: t.common.categories, value: categories.length, color: "rgba(255,255,255,0.88)" },
+                  { label: t.common.totalSessions,   value: totalSessions,   color: "rgba(255,255,255,0.88)" },
+                  { label: t.common.pendingPayments,  value: pendingPayments,  color: "#FCD34D" },
+                  { label: t.common.categories,       value: categories.length, color: "rgba(255,255,255,0.88)" },
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between py-1">
                     <span className="text-sm" style={{ color: "rgba(255,255,255,0.42)" }}>{row.label}</span>
