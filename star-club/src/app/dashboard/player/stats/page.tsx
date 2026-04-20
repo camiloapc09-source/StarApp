@@ -6,8 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { XPProgressCard } from "@/components/gamification/xp-progress-card";
+import { Leaderboard } from "@/components/gamification/leaderboard";
 import { calculateLevel, LEVEL_TITLES } from "@/lib/utils";
-import { Calendar, CheckCircle2, XCircle, Clock, Flame, Zap } from "lucide-react";
+import { Calendar, CheckCircle2, XCircle, Clock, Flame, Trophy } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -36,34 +37,37 @@ export default async function PlayerStatsPage() {
     );
   }
 
-  const level     = calculateLevel(player.xp);
-  const levelTitle = LEVEL_TITLES[level] ?? "";
+  // Leaderboard: top 20 players in same club by XP
+  const leaderboardPlayers = await db.player.findMany({
+    where: { clubId: player.clubId, status: "ACTIVE" },
+    select: { id: true, xp: true, user: { select: { name: true } } },
+    orderBy: { xp: "desc" },
+    take: 20,
+  });
 
-  // Global stats
+  const sorted  = [...leaderboardPlayers].sort((a, b) => b.xp - a.xp);
+  const myRank  = sorted.findIndex((p) => p.id === player.id) + 1;
+  const level   = calculateLevel(player.xp);
+
+  // Attendance stats
   const totalSessions = player.attendances.length;
   const presentCount  = player.attendances.filter((a) => a.status === "PRESENT").length;
   const lateCount     = player.attendances.filter((a) => a.status === "LATE").length;
   const absentCount   = player.attendances.filter((a) => a.status === "ABSENT").length;
   const attendanceRate = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 0;
 
-  // Last 4 months stats
   const now = new Date();
   const monthStats = Array.from({ length: 4 }, (_, i) => {
-    const ref   = subMonths(now, 3 - i);
-    const start = startOfMonth(ref);
-    const end   = endOfMonth(ref);
+    const ref    = subMonths(now, 3 - i);
+    const start  = startOfMonth(ref);
+    const end    = endOfMonth(ref);
     const inMonth = player.attendances.filter((a) => {
       const d = new Date(a.session.date);
       return d >= start && d <= end;
     });
     const present = inMonth.filter((a) => a.status === "PRESENT").length;
     const total   = inMonth.length;
-    return {
-      label: format(ref, "MMM", { locale: es }),
-      present,
-      total,
-      rate: total > 0 ? Math.round((present / total) * 100) : 0,
-    };
+    return { label: format(ref, "MMM", { locale: es }), present, total, rate: total > 0 ? Math.round((present / total) * 100) : 0 };
   });
 
   const statusIcon: Record<string, React.ReactNode> = {
@@ -73,72 +77,83 @@ export default async function PlayerStatsPage() {
     EXCUSED: <Clock size={14} style={{ color: "var(--info)" }} />,
   };
   const statusLabel: Record<string, string> = {
-    PRESENT: "Presente",
-    LATE:    "Tarde",
-    ABSENT:  "Ausente",
-    EXCUSED: "Justificado",
+    PRESENT: "Presente", LATE: "Tarde", ABSENT: "Ausente", EXCUSED: "Justificado",
   };
   const typeLabel: Record<string, string> = {
-    TRAINING: "Entrenamiento",
-    MATCH: "Partido",
-    EVENT: "Evento",
+    TRAINING: "Entrenamiento", MATCH: "Partido", EVENT: "Evento",
   };
 
   return (
     <div>
-      <Header title="Mis estadísticas" subtitle="Historial completo de asistencia y progreso" />
-      <div className="p-4 md:p-8 space-y-6">
+      <Header title="Mis estadísticas" subtitle="Progreso, asistencia y ranking" />
+      <div className="p-4 md:p-8 space-y-5">
 
-        {/* XP progress */}
-        <XPProgressCard xp={player.xp} level={level} streak={player.streak} />
+        {/* XP card with rank */}
+        <XPProgressCard
+          xp={player.xp}
+          streak={player.streak}
+          rank={myRank > 0 ? myRank : undefined}
+          totalPlayers={leaderboardPlayers.length}
+        />
 
-        {/* Overall attendance */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Attendance stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: "Total sesiones", value: totalSessions, color: "var(--text-primary)" },
-            { label: "Presente",       value: presentCount,  color: "var(--success)"      },
-            { label: "Tarde",          value: lateCount,     color: "var(--warning)"      },
-            { label: "Ausente",        value: absentCount,   color: "var(--error)"        },
+            { label: "Sesiones",  value: totalSessions, color: "var(--text-primary)"  },
+            { label: "Presente",  value: presentCount,  color: "var(--success)"       },
+            { label: "Tarde",     value: lateCount,     color: "var(--warning)"       },
+            { label: "Ausente",   value: absentCount,   color: "var(--error)"         },
           ].map(({ label, value, color }) => (
-            <Card key={label} className="text-center">
-              <p className="text-2xl font-bold" style={{ color }}>{value}</p>
-              <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{label}</p>
+            <Card key={label} className="text-center py-4">
+              <p className="text-2xl font-black" style={{ color }}>{value}</p>
+              <p className="text-[10px] mt-1 uppercase tracking-wide font-semibold" style={{ color: "var(--text-muted)" }}>{label}</p>
             </Card>
           ))}
         </div>
 
         {/* Monthly trend */}
         <Card>
-          <h2 className="font-semibold mb-5 flex items-center gap-2">
-            <Flame size={16} style={{ color: "var(--accent)" }} />
-            Asistencia mensual
+          <h2 className="font-bold text-[14px] mb-4 flex items-center gap-2">
+            <Flame size={15} style={{ color: "#FF6B35" }} />
+            Asistencia por mes
           </h2>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-4 gap-3">
             {monthStats.map(({ label, rate, present, total }) => (
               <div key={label} className="text-center">
-                <p
-                  className="text-2xl font-bold"
-                  style={{ color: rate >= 80 ? "var(--success)" : rate >= 50 ? "var(--warning)" : "var(--error)" }}
-                >
+                <p className="text-xl font-black"
+                  style={{ color: rate >= 80 ? "var(--success)" : rate >= 50 ? "var(--warning)" : "var(--error)" }}>
                   {rate}%
                 </p>
-                <p className="text-xs font-medium capitalize mt-1">{label}</p>
-                <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{present}/{total}</p>
-                <div className="mt-2">
-                  <ProgressBar value={rate} max={100} height="sm" animated={false} />
-                </div>
+                <p className="text-xs font-semibold capitalize mt-0.5">{label}</p>
+                <p className="text-[10px] mb-1.5" style={{ color: "var(--text-muted)" }}>{present}/{total}</p>
+                <ProgressBar value={rate} max={100} height="sm" animated={false} />
               </div>
             ))}
           </div>
         </Card>
 
+        {/* Leaderboard */}
+        <Card>
+          <div className="flex items-center gap-2 mb-4">
+            <Trophy size={15} style={{ color: "#FCD34D" }} />
+            <h2 className="font-bold text-[14px]">Ranking del club</h2>
+            {myRank > 0 && (
+              <span className="ml-auto text-xs font-bold px-2.5 py-1 rounded-full"
+                style={{ background: "rgba(139,92,246,0.12)", color: "#A78BFA" }}>
+                #{myRank}
+              </span>
+            )}
+          </div>
+          <Leaderboard players={leaderboardPlayers} currentPlayerId={player.id} />
+        </Card>
+
         {/* Session history */}
         <Card className="p-0 overflow-hidden">
-          <div className="px-6 py-4 border-b flex items-center gap-2" style={{ borderColor: "var(--border-primary)" }}>
-            <Calendar size={16} style={{ color: "var(--accent)" }} />
-            <h2 className="font-semibold text-sm">Historial de sesiones</h2>
-            <span className="ml-auto text-xs" style={{ color: "var(--text-muted)" }}>
-              Asistencia: {attendanceRate}%
+          <div className="px-5 py-4 border-b flex items-center gap-2" style={{ borderColor: "var(--border-primary)" }}>
+            <Calendar size={15} style={{ color: "var(--accent)" }} />
+            <h2 className="font-bold text-[14px]">Historial de sesiones</h2>
+            <span className="ml-auto text-xs font-semibold" style={{ color: "var(--text-muted)" }}>
+              {attendanceRate}% asistencia
             </span>
           </div>
           <div className="divide-y" style={{ borderColor: "var(--border-primary)" }}>
@@ -148,10 +163,8 @@ export default async function PlayerStatsPage() {
               </p>
             ) : (
               player.attendances.map((att) => (
-                <div key={att.id} className="flex items-center gap-4 px-6 py-3">
-                  <div className="flex-shrink-0">
-                    {statusIcon[att.status] ?? statusIcon.ABSENT}
-                  </div>
+                <div key={att.id} className="flex items-center gap-3 px-5 py-3">
+                  <div className="flex-shrink-0">{statusIcon[att.status] ?? statusIcon.ABSENT}</div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{att.session.title}</p>
                     <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>
@@ -159,13 +172,11 @@ export default async function PlayerStatsPage() {
                       {" · "}{typeLabel[att.session.type] ?? att.session.type}
                     </p>
                   </div>
-                  <Badge
-                    variant={
-                      att.status === "PRESENT" ? "success" :
-                      att.status === "LATE"    ? "warning" :
-                      att.status === "EXCUSED" ? "default" : "error"
-                    }
-                  >
+                  <Badge variant={
+                    att.status === "PRESENT" ? "success" :
+                    att.status === "LATE"    ? "warning" :
+                    att.status === "EXCUSED" ? "default" : "error"
+                  }>
                     {statusLabel[att.status] ?? att.status}
                   </Badge>
                 </div>

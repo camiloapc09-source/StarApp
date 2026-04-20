@@ -7,9 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { XPProgressCard } from "@/components/gamification/xp-progress-card";
 import { MissionsList } from "@/components/gamification/missions-list";
 import { UpcomingSessionsCard } from "@/components/shared/upcoming-sessions-card";
-import { Calendar, Trophy, Zap } from "lucide-react";
+import { Calendar, Trophy, Zap, ArrowRight } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
+import Link from "next/link";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -46,12 +47,17 @@ export default async function PlayerDashboard() {
     );
   }
 
-  const unreadNotifications = await db.notification.count({ where: { userId: session.user.id, isRead: false } });
+  const [unreadNotifications, totalSessions, clubPlayers] = await Promise.all([
+    db.notification.count({ where: { userId: session.user.id, isRead: false } }),
+    db.session.count({ where: { date: { gte: startOfMonth(new Date()), lte: endOfMonth(new Date()) } } }),
+    db.player.findMany({
+      where: { clubId: player.clubId, status: "ACTIVE" },
+      select: { id: true, xp: true },
+      orderBy: { xp: "desc" },
+    }),
+  ]);
 
-  const totalSessions = await db.session.count({
-    where: { date: { gte: startOfMonth(new Date()), lte: endOfMonth(new Date()) } },
-  });
-
+  const myRank       = clubPlayers.findIndex((p) => p.id === player.id) + 1;
   const presentCount = player.attendances?.filter((a: any) => a.status === "PRESENT").length || 0;
   const attendanceRate = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 0;
 
@@ -83,29 +89,44 @@ export default async function PlayerDashboard() {
             border: "1px solid rgba(139,92,246,0.20)",
           }}
         >
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 60% 80% at 90% 50%, rgba(139,92,246,0.12) 0%, transparent 70%)" }}
-          />
+          <div className="absolute inset-0 pointer-events-none"
+            style={{ background: "radial-gradient(ellipse 60% 80% at 90% 50%, rgba(139,92,246,0.12) 0%, transparent 70%)" }} />
           <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-1 relative" style={{ color: "rgba(167,139,250,0.70)" }}>
             {getGreeting()}
           </p>
           <h2 className="text-2xl font-black tracking-tight text-white relative">{firstName} ⚡</h2>
-          <div className="flex items-center gap-3 mt-2 relative">
+          <div className="flex items-center gap-3 mt-2 relative flex-wrap">
             <span className="flex items-center gap-1 text-sm font-bold" style={{ color: "#A78BFA" }}>
-              <Zap size={13} />{player.xp} XP
+              <Zap size={13} />{player.xp.toLocaleString("es-CO")} XP
             </span>
-            <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.30)" }}>·</span>
+            {myRank > 0 && (
+              <>
+                <span style={{ color: "rgba(255,255,255,0.25)" }}>·</span>
+                <Link href="/dashboard/player/stats"
+                  className="text-sm font-bold flex items-center gap-1"
+                  style={{ color: "#FCD34D" }}>
+                  #{myRank} del club <ArrowRight size={12} />
+                </Link>
+              </>
+            )}
+            <span style={{ color: "rgba(255,255,255,0.25)" }}>·</span>
             <span className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
-              {activeMissions > 0 ? `${activeMissions} misión${activeMissions !== 1 ? "es" : ""} activa${activeMissions !== 1 ? "s" : ""}` : "Sin misiones activas"}
+              {activeMissions > 0
+                ? `${activeMissions} misión${activeMissions !== 1 ? "es" : ""} activa${activeMissions !== 1 ? "s" : ""}`
+                : "Sin misiones activas"}
             </span>
           </div>
         </div>
 
-        {/* XP + upcoming sessions */}
+        {/* XP card + sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="space-y-4">
-            <XPProgressCard xp={player.xp} level={player.level} streak={player.streak} />
+            <XPProgressCard
+              xp={player.xp}
+              streak={player.streak}
+              rank={myRank > 0 ? myRank : undefined}
+              totalPlayers={clubPlayers.length}
+            />
 
             {/* Attendance */}
             <Card>
@@ -118,13 +139,11 @@ export default async function PlayerDashboard() {
                 <span className="text-xs" style={{ color: "var(--text-muted)" }}>este mes</span>
               </div>
               <div className="w-full rounded-full overflow-hidden mb-2" style={{ height: 5, background: "var(--bg-elevated)" }}>
-                <div
-                  className="h-full rounded-full transition-all duration-700"
+                <div className="h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${attendanceRate}%`,
                     background: attendanceRate >= 80 ? "var(--success)" : attendanceRate >= 60 ? "var(--warning)" : "var(--error)",
-                  }}
-                />
+                  }} />
               </div>
               <div className="flex justify-between text-[10px]" style={{ color: "var(--text-muted)" }}>
                 <span>{presentCount} presentes</span>
@@ -139,7 +158,7 @@ export default async function PlayerDashboard() {
                 <Trophy size={15} style={{ color: "var(--warning)" }} />
               </div>
               {player.rewards?.length === 0 ? (
-                <p className="text-sm" style={{ color: "var(--text-muted)" }}>Aún no tienes logros. ¡Completa misiones!</p>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>¡Completa misiones para ganar logros!</p>
               ) : (
                 <div className="space-y-2">
                   {player.rewards?.map((pr: any) => (
@@ -192,16 +211,12 @@ export default async function PlayerDashboard() {
                   style={{ background: "rgba(255,255,255,0.02)" }}
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div
-                      className="w-2 h-2 rounded-full flex-shrink-0"
+                    <div className="w-2 h-2 rounded-full flex-shrink-0"
                       style={{
-                        background:
-                          att.status === "PRESENT" ? "var(--success)"
+                        background: att.status === "PRESENT" ? "var(--success)"
                           : att.status === "LATE" ? "var(--warning)"
-                          : att.status === "EXCUSED" ? "var(--info)"
-                          : "var(--error)",
-                      }}
-                    />
+                          : att.status === "EXCUSED" ? "var(--info)" : "var(--error)",
+                      }} />
                     <span className="text-sm truncate">{att.session.title}</span>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
@@ -210,8 +225,8 @@ export default async function PlayerDashboard() {
                     </span>
                     <Badge variant={
                       att.status === "PRESENT" ? "success"
-                      : att.status === "LATE" ? "warning"
-                      : att.status === "EXCUSED" ? "info" : "error"
+                        : att.status === "LATE" ? "warning"
+                        : att.status === "EXCUSED" ? "info" : "error"
                     }>
                       {att.status === "PRESENT" ? "Presente"
                         : att.status === "LATE" ? "Tarde"

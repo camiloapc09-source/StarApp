@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Target, CheckCircle2, Clock, Zap } from "lucide-react";
+import { Target, CheckCircle2, Zap, Calendar, Trophy, Star, Flame } from "lucide-react";
 
 interface Mission {
   id: string;
@@ -20,110 +20,120 @@ interface MissionsListProps {
   className?: string;
 }
 
-const typeColors: Record<string, string> = {
-  DAILY: "text-info bg-info/10 border-info/20",
-  WEEKLY: "text-warning bg-warning/10 border-warning/20",
-  CHALLENGE: "text-error bg-error/10 border-error/20",
-  SPECIAL: "text-accent bg-accent/10 border-accent/20",
+const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; Icon: typeof Target }> = {
+  DAILY:     { label: "Diaria",   color: "#60A5FA", bg: "rgba(96,165,250,0.12)",   Icon: Calendar },
+  WEEKLY:    { label: "Semanal",  color: "#FCD34D", bg: "rgba(252,211,77,0.12)",   Icon: Flame    },
+  CHALLENGE: { label: "Reto",     color: "#F87171", bg: "rgba(248,113,113,0.12)",  Icon: Trophy   },
+  SPECIAL:   { label: "Especial", color: "#A78BFA", bg: "rgba(167,139,250,0.12)",  Icon: Star     },
 };
 
 export function MissionsList({ missions, className }: MissionsListProps) {
-  const activeMissions = missions.filter((m) => m.status === "ACTIVE");
+  const activeMissions    = missions.filter((m) => m.status === "ACTIVE");
   const completedMissions = missions.filter((m) => m.status === "COMPLETED");
 
+  if (missions.length === 0) {
+    return (
+      <div className="text-center py-10">
+        <Target size={32} className="mx-auto mb-3" style={{ color: "rgba(255,255,255,0.15)" }} />
+        <p className="text-sm font-semibold mb-1">Sin misiones asignadas</p>
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>
+          Tu entrenador te asignará misiones pronto
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className={cn("space-y-3", className)}>
-      {missions.length === 0 ? (
-        <div className="text-center py-8">
-          <Target size={32} className="mx-auto mb-3" style={{ color: "var(--text-muted)" }} />
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            No missions assigned yet
-          </p>
-        </div>
-      ) : (
-        <>
-          {activeMissions.map((mission, i) => (
-            <motion.div
-              key={mission.id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="p-4 rounded-xl border"
-              style={{
-                background: "var(--bg-elevated)",
-                borderColor: "var(--border-primary)",
-              }}
-            >
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium">{mission.title}</p>
-                  <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                    {mission.description}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span
-                    className={cn(
-                      "text-[10px] font-medium px-2 py-0.5 rounded-full border",
-                      typeColors[mission.type] || typeColors.DAILY
-                    )}
-                  >
-                    {mission.type}
-                  </span>
-                  <div className="flex items-center gap-1 text-xs" style={{ color: "var(--accent)" }}>
-                    <Zap size={12} />
-                    <span className="font-bold">+{mission.xpReward}</span>
-                  </div>
-                </div>
+    <div className={cn("space-y-2", className)}>
+      {activeMissions.map((mission, i) => {
+        const cfg     = TYPE_CONFIG[mission.type] ?? TYPE_CONFIG.DAILY;
+        const TypeIcon = cfg.Icon;
+        const pct     = mission.target > 1 ? Math.round((mission.progress / mission.target) * 100) : null;
+
+        return (
+          <motion.div
+            key={mission.id}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.07 }}
+            className="p-4 rounded-2xl"
+            style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.07)",
+            }}
+          >
+            <div className="flex items-start gap-3">
+              {/* Type icon */}
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                style={{ background: cfg.bg }}>
+                <TypeIcon size={16} style={{ color: cfg.color }} strokeWidth={1.8} />
               </div>
 
-              {/* Progress */}
-              {mission.target > 1 && (
-                <div>
-                  <div className="flex justify-between text-xs mb-1.5" style={{ color: "var(--text-muted)" }}>
-                    <span>{mission.progress} / {mission.target}</span>
-                    <span>{Math.round((mission.progress / mission.target) * 100)}%</span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold leading-tight">{mission.title}</p>
+                    <p className="text-[11px] mt-0.5 leading-tight" style={{ color: "rgba(255,255,255,0.40)" }}>
+                      {mission.description}
+                    </p>
                   </div>
-                  <div
-                    className="w-full rounded-full overflow-hidden"
-                    style={{ height: 4, background: "var(--bg-card)" }}
-                  >
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(mission.progress / mission.target) * 100}%` }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
-                      className="h-full rounded-full"
-                      style={{ background: "var(--accent)" }}
-                    />
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <Zap size={11} style={{ color: "#A78BFA" }} />
+                    <span className="text-xs font-black" style={{ color: "#A78BFA" }}>+{mission.xpReward}</span>
                   </div>
                 </div>
-              )}
-            </motion.div>
-          ))}
 
-          {completedMissions.length > 0 && (
-            <div>
-              <p className="text-xs font-medium mb-2" style={{ color: "var(--text-muted)" }}>
-                COMPLETED ({completedMissions.length})
-              </p>
-              {completedMissions.map((mission) => (
-                <div
-                  key={mission.id}
-                  className="flex items-center gap-3 p-3 rounded-xl opacity-50"
-                >
-                  <CheckCircle2 size={16} style={{ color: "var(--success)" }} />
-                  <span className="text-sm line-through" style={{ color: "var(--text-muted)" }}>
-                    {mission.title}
-                  </span>
-                  <div className="ml-auto flex items-center gap-1 text-xs" style={{ color: "var(--success)" }}>
-                    <Zap size={12} />
-                    <span>+{mission.xpReward}</span>
+                {/* Progress */}
+                {pct !== null && (
+                  <div className="mt-2.5">
+                    <div className="flex justify-between text-[10px] mb-1" style={{ color: "rgba(255,255,255,0.30)" }}>
+                      <span>{mission.progress} / {mission.target}</span>
+                      <span style={{ color: cfg.color }}>{pct}%</span>
+                    </div>
+                    <div className="w-full rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.06)" }}>
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${pct}%` }}
+                        transition={{ duration: 0.9, ease: "easeOut" }}
+                        className="h-full rounded-full"
+                        style={{ background: cfg.color }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
-          )}
-        </>
+
+            {/* Type badge */}
+            <div className="mt-2 flex justify-end">
+              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                style={{ background: cfg.bg, color: cfg.color }}>
+                {cfg.label}
+              </span>
+            </div>
+          </motion.div>
+        );
+      })}
+
+      {completedMissions.length > 0 && (
+        <div className="pt-2">
+          <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>
+            Completadas ({completedMissions.length})
+          </p>
+          {completedMissions.map((mission) => (
+            <div key={mission.id}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1"
+              style={{ background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.10)" }}>
+              <CheckCircle2 size={14} style={{ color: "#34D399" }} />
+              <span className="text-sm flex-1 line-through" style={{ color: "rgba(255,255,255,0.35)" }}>
+                {mission.title}
+              </span>
+              <div className="flex items-center gap-1 text-xs font-bold" style={{ color: "#34D399" }}>
+                <Zap size={10} />{mission.xpReward}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
