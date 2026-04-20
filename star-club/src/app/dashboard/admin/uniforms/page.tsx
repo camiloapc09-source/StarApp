@@ -54,35 +54,29 @@ export default async function AdminUniformsPage() {
       <div className="p-4 md:p-8 space-y-6">
 
         {/* Stats + export */}
-        <div className="flex items-start gap-4 flex-wrap">
-          <div className="grid grid-cols-3 gap-4 flex-1 min-w-0">
+        <div className="space-y-3">
+          <div className="grid grid-cols-3 gap-3">
             <Card>
-              <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Total pedidos</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--text-muted)" }}>Total</p>
               <p className="text-2xl font-bold">{stats.total}</p>
             </Card>
             <Card>
-              <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Pendientes</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--text-muted)" }}>Pendientes</p>
               <p className="text-2xl font-bold" style={{ color: stats.pending > 0 ? "var(--warning)" : "var(--text-primary)" }}>
                 {stats.pending}
               </p>
             </Card>
             <Card>
-              <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>Total $</p>
-              <p className="text-2xl font-bold" style={{ color: "var(--success)" }}>
+              <p className="text-[10px] font-semibold uppercase tracking-wide mb-1" style={{ color: "var(--text-muted)" }}>Total $</p>
+              <p className="text-xl font-bold" style={{ color: "var(--success)" }}>
                 ${stats.revenue.toLocaleString("es-CO")}
               </p>
             </Card>
           </div>
-
-          {/* Export button */}
           <Link
             href="/api/admin/uniforms/export"
-            className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-semibold border transition-all hover:opacity-80 whitespace-nowrap self-start mt-0.5"
-            style={{
-              background: "rgba(0,255,135,0.08)",
-              color: "var(--success)",
-              borderColor: "rgba(0,255,135,0.25)",
-            }}
+            className="flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold border transition-all hover:opacity-80"
+            style={{ background: "rgba(0,255,135,0.08)", color: "var(--success)", borderColor: "rgba(0,255,135,0.25)" }}
           >
             <FileSpreadsheet size={15} />
             Exportar Excel

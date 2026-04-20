@@ -3,6 +3,16 @@
 import { useState } from "react";
 import { Pencil, Trash2, Plus, Check, X, Users } from "lucide-react";
 
+function fixText(s: string | null): string | null {
+  if (!s) return s;
+  return s
+    .replace(/Ã³/g,"ó").replace(/Ã±/g,"ñ").replace(/Ã¡/g,"á")
+    .replace(/Ã©/g,"é").replace(/Ã­/g,"í").replace(/Ãº/g,"ú")
+    .replace(/Ã"/g,"Ó").replace(/Ã'/g,"Ñ").replace(/Ã!/g,"Á")
+    .replace(/Ã‰/g,"É").replace(/Ã/g,"Í").replace(/Ãš/g,"Ú")
+    .replace(/Ã¼/g,"ü").replace(/Ã¤/g,"ä");
+}
+
 type Category = {
   id: string;
   name: string;
@@ -118,7 +128,7 @@ export default function CategoriesManager({ initialCategories }: Props) {
             <div className="flex-1 min-w-0">
               <p className="font-semibold">{cat.name}</p>
               <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                {cat.ageMin}–{cat.ageMax} años{cat.description ? ` · ${cat.description}` : ""}
+                {cat.ageMin}–{cat.ageMax} años{cat.description ? ` · ${fixText(cat.description)}` : ""}
               </p>
             </div>
             <div className="flex items-center gap-1.5 text-sm" style={{ color: "var(--text-secondary)" }}>

@@ -47,49 +47,41 @@ export default async function AdminAttendancePage() {
             return (
               <Card key={s.id} className="p-0 overflow-hidden">
                 <div
-                  className="px-6 py-4 flex items-center gap-4 border-b"
+                  className="px-4 py-4 border-b space-y-3"
                   style={{ borderColor: "var(--border-primary)" }}
                 >
-                  <div
-                    className="w-12 h-12 rounded-xl flex flex-col items-center justify-center"
-                    style={{ background: "var(--bg-elevated)" }}
-                  >
-                    <span className="text-sm font-bold leading-none">
-                      {format(new Date(s.date), "dd")}
-                    </span>
-                    <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
-                      {format(new Date(s.date), "MMM")}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{s.title}</h3>
-                    <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-                      {s.category?.name || dict.attendance?.allLabel} · {dict.attendance?.coachPrefix ?? "Coach"}: {s.coach?.name || "Sin asignar"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <p className="font-bold text-lg">{rate}%</p>
-                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                        {presentCount}/{total} {dict.attendance?.presentLabel ?? "present"}
+                  {/* Top row: date + title + rate + badge */}
+                  <div className="flex items-start gap-3">
+                    <div
+                      className="w-11 h-11 rounded-xl flex flex-col items-center justify-center flex-shrink-0"
+                      style={{ background: "var(--bg-elevated)" }}
+                    >
+                      <span className="text-sm font-bold leading-none">{format(new Date(s.date), "dd")}</span>
+                      <span className="text-[9px]" style={{ color: "var(--text-muted)" }}>{format(new Date(s.date), "MMM")}</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm leading-tight">{s.title}</h3>
+                      <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
+                        {s.category?.name || "Todas"} · {s.coach?.name || "Sin asignar"}
                       </p>
                     </div>
-                    <Badge
-                      variant={
-                        s.type === "MATCH" ? "warning" : s.type === "EVENT" ? "info" : "default"
-                      }
-                    >
+                    <div className="flex-shrink-0 text-right">
+                      <p className="font-bold text-base">{rate}%</p>
+                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{presentCount}/{total}</p>
+                    </div>
+                    <Badge variant={s.type === "MATCH" ? "warning" : s.type === "EVENT" ? "info" : "default"} >
                       {s.type}
                     </Badge>
-                    <Link
-                      href={`/dashboard/admin/attendance/${s.id}`}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80 flex-shrink-0"
-                      style={{ background: "var(--accent)", color: "#000" }}
-                    >
-                      <ClipboardList size={13} />
-                      Tomar asistencia
-                    </Link>
                   </div>
+                  {/* Full-width button below */}
+                  <Link
+                    href={`/dashboard/admin/attendance/${s.id}`}
+                    className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+                    style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA", border: "1px solid rgba(139,92,246,0.25)" }}
+                  >
+                    <ClipboardList size={13} />
+                    Tomar asistencia
+                  </Link>
                 </div>
 
                 {s.attendances.length > 0 && (

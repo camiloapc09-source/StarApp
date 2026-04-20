@@ -117,7 +117,7 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
         </div>
 
         {/* Coaches list */}
-        <Card className="p-0 overflow-hidden">
+        <Card className="p-0">
           <div className="px-6 py-4 border-b" style={{ borderColor: "var(--border-primary)" }}>
             <h2 className="font-semibold">
               {selectedBranch ?? "Todos los entrenadores"}
