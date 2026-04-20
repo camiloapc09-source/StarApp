@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn, signOut } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import { Eye, EyeOff, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -65,7 +65,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
       {/* Back link */}
       <div className="w-full max-w-sm mb-6 relative z-10">
         <button
-          onClick={() => signOut({ callbackUrl: "/" })}
+          onClick={() => { window.location.href = "/"; }}
           className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors"
           style={{ color: "rgba(255,255,255,0.28)" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.60)")}

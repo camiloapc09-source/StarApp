@@ -78,38 +78,42 @@ export default async function AdminSessionsPage() {
           <div className="space-y-3">
             {sessions.map((s) => (
               <Card key={s.id} className="p-0 overflow-hidden">
-                <div className="px-5 py-4 flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-sm">{s.title}</h3>
-                      <Badge variant={typeVariant[s.type] ?? "default"}>{typeLabel[s.type] ?? s.type}</Badge>
+                <div className="px-4 py-4">
+                  {/* Top: title + attendance count + edit/delete */}
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-semibold text-sm">{s.title}</h3>
+                        <Badge variant={typeVariant[s.type] ?? "default"}>{typeLabel[s.type] ?? s.type}</Badge>
+                      </div>
+                      <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                        {format(new Date(s.date), "EE dd MMM yyyy · HH:mm", { locale: es })}
+                        {s.category && ` · ${s.category.name}`}
+                        {s.coach && ` · ${s.coach.name}`}
+                      </p>
                     </div>
-                    <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-                      {format(new Date(s.date), "EE dd MMM yyyy · HH:mm", { locale: es })}
-                      {s.category && ` · ${s.category.name}`}
-                      {s.coach && ` · ${s.coach.name}`}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 flex-shrink-0">
-                    <div className="flex items-center gap-1 text-sm font-semibold">
-                      <Users size={13} style={{ color: "var(--accent)" }} />
-                      {s._count.attendances}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <div className="flex items-center gap-1 text-sm font-semibold">
+                        <Users size={13} style={{ color: "var(--accent)" }} />
+                        {s._count.attendances}
+                      </div>
+                      <EditSessionButton
+                        session={{ id: s.id, title: s.title, type: s.type, date: s.date.toISOString(), notes: s.notes, categoryId: s.categoryId, coachId: s.coachId }}
+                        categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+                        coaches={coaches}
+                        userRole="ADMIN"
+                      />
+                      <DeleteSessionButton sessionId={s.id} sessionTitle={s.title} />
                     </div>
-                    <Link
-                      href={`/dashboard/admin/attendance/${s.id}`}
-                      className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
-                      style={{ background: "var(--accent)", color: "#000" }}
-                    >
-                      Tomar asistencia
-                    </Link>
-                    <EditSessionButton
-                      session={{ id: s.id, title: s.title, type: s.type, date: s.date.toISOString(), notes: s.notes, categoryId: s.categoryId, coachId: s.coachId }}
-                      categories={categories.map((c) => ({ id: c.id, name: c.name }))}
-                      coaches={coaches}
-                      userRole="ADMIN"
-                    />
-                    <DeleteSessionButton sessionId={s.id} sessionTitle={s.title} />
                   </div>
+                  {/* Bottom: full-width attendance button */}
+                  <Link
+                    href={`/dashboard/admin/attendance/${s.id}`}
+                    className="mt-3 flex items-center justify-center w-full py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+                    style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA", border: "1px solid rgba(139,92,246,0.25)" }}
+                  >
+                    Tomar asistencia
+                  </Link>
                 </div>
               </Card>
             ))}

@@ -143,56 +143,44 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
                 return (
                   <div
                     key={coach.id}
-                    className="flex items-center gap-4 px-6 py-4 hover:bg-[var(--bg-hover)] transition-all"
+                    className="flex gap-3 px-4 py-4 hover:bg-[var(--bg-hover)] transition-all"
                   >
                     <Avatar name={coach.name} src={coach.avatar ?? undefined} size="md" />
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{coach.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{coach.email}</p>
-                    </div>
-
-                    <div className="hidden md:flex items-center gap-6 text-sm">
-                      {coach.branch && (
-                        <div className="flex gap-1 flex-wrap">
-                          {coach.branch.split(",").map((b) => b.trim()).filter(Boolean).map((b) => (
-                            <Badge key={b} variant={branchBadge[b] ?? "default"}>{b}</Badge>
-                          ))}
+                      {/* Top row: name + actions */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate">{coach.name}</p>
+                          <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>{coach.email}</p>
+                          {/* Desktop-only extra info */}
+                          <div className="hidden md:flex items-center gap-4 mt-1.5 text-xs" style={{ color: "var(--text-muted)" }}>
+                            {coach.branch && coach.branch.split(",").map((b) => b.trim()).filter(Boolean).map((b) => (
+                              <Badge key={b} variant={branchBadge[b] ?? "default"}>{b}</Badge>
+                            ))}
+                            <span className="flex items-center gap-1">
+                              <CalendarDays size={11} style={{ color: "var(--accent)" }} />{sessions} sesiones
+                            </span>
+                            {coach.phone && (
+                              <a href={`https://wa.me/${coach.phone.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer"
+                                className="font-medium" style={{ color: "#25D366" }}>📱 WhatsApp</a>
+                            )}
+                          </div>
                         </div>
-                      )}
-                      <div className="text-center">
-                        <div className="flex items-center gap-1 font-medium">
-                          <CalendarDays size={13} style={{ color: "var(--accent)" }} />
-                          <span>{sessions}</span>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <CoachEditButton coach={{ id: coach.id, name: coach.name, email: coach.email, phone: coach.phone, branch: coach.branch }} />
+                          <CoachResetPasswordButton coachId={coach.id} coachName={coach.name} />
+                          <CoachDeleteButton coachId={coach.id} coachName={coach.name} />
                         </div>
-                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>Sesiones</p>
                       </div>
-                      <div className="text-center hidden lg:block">
-                        <p className="font-medium">{format(new Date(coach.createdAt), "dd MMM yyyy", { locale: es })}</p>
-                        <p className="text-xs" style={{ color: "var(--text-muted)" }}>Ingresó</p>
+                      {/* Category select below name — full width on mobile */}
+                      <div className="mt-2">
+                        <CoachCategorySelect
+                          coachId={coach.id}
+                          coachCategoryIds={coach.coachCategoryIds ?? "[]"}
+                          categories={categories}
+                        />
                       </div>
-                    </div>
-
-                    {coach.phone && (
-                      <a
-                        href={`https://wa.me/${coach.phone.replace(/[^0-9]/g, "")}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs px-2 py-1 rounded-xl font-medium hidden xl:flex items-center gap-1 transition-all hover:opacity-80 flex-shrink-0"
-                        style={{ background: "rgba(37,211,102,0.12)", color: "#25D366" }}
-                      >
-                        📱 WhatsApp
-                      </a>
-                    )}
-                    <CoachCategorySelect
-                      coachId={coach.id}
-                      coachCategoryIds={coach.coachCategoryIds ?? "[]"}
-                      categories={categories}
-                    />
-                    <div className="flex items-center gap-1 ml-2">
-                      <CoachEditButton coach={{ id: coach.id, name: coach.name, email: coach.email, phone: coach.phone, branch: coach.branch }} />
-                      <CoachResetPasswordButton coachId={coach.id} coachName={coach.name} />
-                      <CoachDeleteButton coachId={coach.id} coachName={coach.name} />
                     </div>
                   </div>
                 );
