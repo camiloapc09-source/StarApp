@@ -5,7 +5,7 @@ import { BottomNav } from "./bottom-nav";
 import { DashboardContext } from "./dashboard-context";
 import { NovaWordmark } from "@/components/nova-logo";
 import Link from "next/link";
-import { Bell } from "lucide-react";
+import { Bell, LogOut } from "lucide-react";
 
 interface DashboardShellProps {
   role: string;
@@ -84,18 +84,30 @@ export function DashboardShell({
               <NovaWordmark dark height={22} showTag={false} />
             </div>
 
-            {/* Bell */}
-            <Link href={notifHref} className="relative p-2 rounded-xl" style={{ color: "rgba(255,255,255,0.45)" }}>
-              <Bell size={18} strokeWidth={1.8} />
-              {notificationCount > 0 && (
-                <span
-                  className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black text-white"
-                  style={{ background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}
+            {/* Right: bell + logout */}
+            <div className="flex items-center gap-1">
+              <Link href={notifHref} className="relative p-2 rounded-xl" style={{ color: "rgba(255,255,255,0.45)" }}>
+                <Bell size={18} strokeWidth={1.8} />
+                {notificationCount > 0 && (
+                  <span
+                    className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black text-white"
+                    style={{ background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}
+                  >
+                    {notificationCount > 9 ? "9+" : notificationCount}
+                  </span>
+                )}
+              </Link>
+              <form action="/api/auth/signout" method="POST">
+                <button
+                  type="submit"
+                  className="p-2 rounded-xl transition-colors"
+                  style={{ color: "rgba(255,255,255,0.28)" }}
+                  title="Cerrar sesión"
                 >
-                  {notificationCount > 9 ? "9+" : notificationCount}
-                </span>
-              )}
-            </Link>
+                  <LogOut size={17} strokeWidth={1.8} />
+                </button>
+              </form>
+            </div>
           </div>
 
           {children}
