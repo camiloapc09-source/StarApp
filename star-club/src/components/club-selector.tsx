@@ -146,6 +146,16 @@ export function ClubSelector({ clubs, sportEmoji }: Props) {
         >
           Powered by StarApp
         </p>
+
+        <div className="flex justify-center mt-4">
+          <Link
+            href="/crear-club"
+            className="text-xs font-semibold hover:opacity-80 transition-opacity"
+            style={{ color: "rgba(139,92,246,0.60)" }}
+          >
+            ¿Tienes un club? Regístralo gratis →
+          </Link>
+        </div>
       </motion.div>
     </main>
   );

@@ -57,6 +57,17 @@ export async function POST(req: NextRequest) {
 
   const { sessionId, attendances } = parsed.data;
 
+  // Coaches can only record attendance for sessions they own
+  if (session.user.role === "COACH") {
+    const sessionRecord = await db.session.findUnique({
+      where: { id: sessionId },
+      select: { coachId: true },
+    });
+    if (!sessionRecord || sessionRecord.coachId !== session.user.id) {
+      return apiError("Solo puedes registrar asistencia en tus propias sesiones", 403);
+    }
+  }
+
   const results = await Promise.all(
     attendances.map((att) =>
       db.attendance.upsert({

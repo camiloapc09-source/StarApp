@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Calendar, CreditCard, Trophy, Bell,
-  BarChart3, Target, UserCheck, Tag, FileImage, User, Shirt, LogOut,
+  BarChart3, Target, UserCheck, Tag, FileImage, User, Shirt, LogOut, Settings,
   type LucideIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -31,6 +31,7 @@ const roleNavigationIds: Record<string, SidebarLink[]> = {
     { key: "evidence",     href: "/dashboard/admin/evidence",     icon: FileImage },
     { key: "uniforms",     href: "/dashboard/admin/uniforms",     icon: Shirt },
     { key: "reports",      href: "/dashboard/admin/reports",      icon: BarChart3 },
+    { key: "settings",     href: "/dashboard/admin/settings",     icon: Settings },
   ],
   coach: [
     { key: "dashboard", href: "/dashboard/coach",              icon: LayoutDashboard },

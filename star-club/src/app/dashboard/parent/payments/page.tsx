@@ -6,8 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, Clock, AlertTriangle, CreditCard, Eye } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, CreditCard, FileText } from "lucide-react";
 import PaymentSubmitForm from "@/components/parent/payment-submit-form";
+import Link from "next/link";
 
 export default async function ParentPaymentsPage() {
   const session = await auth();
@@ -147,9 +148,18 @@ export default async function ParentPaymentsPage() {
                       {payment.paymentMethod ? ` · ${payment.paymentMethod}` : ""}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold">${payment.amount.toLocaleString("es-CO")}</p>
-                    <Badge variant="success">Pagado</Badge>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="text-right">
+                      <p className="text-sm font-bold">${payment.amount.toLocaleString("es-CO")}</p>
+                      <Badge variant="success">Pagado</Badge>
+                    </div>
+                    <Link
+                      href={`/dashboard/parent/payments/${payment.id}/receipt`}
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all hover:opacity-80"
+                      style={{ background: "rgba(139,92,246,0.10)", color: "#A78BFA", border: "1px solid rgba(139,92,246,0.20)" }}
+                    >
+                      <FileText size={11} /> Recibo
+                    </Link>
                   </div>
                 </div>
               ))}

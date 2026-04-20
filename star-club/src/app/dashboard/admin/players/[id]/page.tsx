@@ -12,6 +12,8 @@ import { calculateLevel } from "@/lib/utils";
 import PlayerActivateButton from "@/components/admin/player-activate-button";
 import AdminEditPlayerButton from "@/components/admin/admin-edit-player-button";
 import DeletePlayerButton from "@/components/admin/delete-player-button";
+import ResetPasswordButton from "@/components/admin/reset-password-button";
+import PlayerNotesPanel from "@/components/admin/player-notes-panel";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -36,6 +38,7 @@ export default async function PlayerProfilePage({ params }: Props) {
         payments: { orderBy: { dueDate: "desc" }, take: 8 },
         attendances: { select: { status: true } },
         playerMissions: { where: { status: "COMPLETED" }, select: { id: true } },
+        playerNotes: { orderBy: { createdAt: "desc" } },
       },
     }),
     db.category.findMany({ where: { clubId }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
@@ -148,6 +151,7 @@ export default async function PlayerProfilePage({ params }: Props) {
                 categories={categories}
               />
               <DeletePlayerButton playerId={player.id} playerName={player.user.name} />
+              <ResetPasswordButton userId={player.user.id} userName={player.user.name} role="PLAYER" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -201,11 +205,16 @@ export default async function PlayerProfilePage({ params }: Props) {
             <h3 className="text-sm font-semibold mb-4">Acudiente / Tutor</h3>
             <div className="space-y-4">
               {player.parentLinks.map((link) => (
-                <div key={link.id} className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
-                  <InfoRow label="Nombre" value={link.parent.user.name} />
-                  <InfoRow label="Email" value={link.parent.user.email} />
-                  {link.parent.phone && <InfoRow label="Teléfono / WhatsApp" value={link.parent.phone} />}
-                  {link.parent.relation && <InfoRow label="Relación" value={link.parent.relation} />}
+                <div key={link.id}>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
+                    <InfoRow label="Nombre" value={link.parent.user.name} />
+                    <InfoRow label="Email" value={link.parent.user.email} />
+                    {link.parent.phone && <InfoRow label="Teléfono / WhatsApp" value={link.parent.phone} />}
+                    {link.parent.relation && <InfoRow label="Relación" value={link.parent.relation} />}
+                  </div>
+                  <div className="mt-3">
+                    <ResetPasswordButton userId={link.parent.user.id} userName={link.parent.user.name} role="PARENT" />
+                  </div>
                 </div>
               ))}
             </div>
@@ -264,6 +273,20 @@ export default async function PlayerProfilePage({ params }: Props) {
             </p>
           </Card>
         )}
+
+        {/* Coach notes */}
+        <Card className="p-6">
+          <PlayerNotesPanel
+            playerId={player.id}
+            initialNotes={player.playerNotes.map((n) => ({
+              id: n.id,
+              body: n.body,
+              createdAt: n.createdAt.toISOString(),
+              authorId: n.authorId,
+            }))}
+            authorName={session.user.name ?? "Admin"}
+          />
+        </Card>
       </div>
     </div>
   );

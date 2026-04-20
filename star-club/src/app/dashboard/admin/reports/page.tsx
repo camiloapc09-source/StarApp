@@ -8,7 +8,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { Avatar } from "@/components/ui/avatar";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { calculateLevel, LEVEL_TITLES, formatCurrency } from "@/lib/utils";
-import { Users, CreditCard, BarChart3, Trophy, TrendingUp, Download } from "lucide-react";
+import { Users, CreditCard, BarChart3, Trophy, TrendingUp, Download, AlertTriangle, Flame, UserCheck } from "lucide-react";
 import Link from "next/link";
 import { AttendanceChart, RevenueChart, PaymentPieChart } from "@/components/admin/report-charts";
 
@@ -18,8 +18,15 @@ export default async function AdminReportsPage() {
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
+  const now = new Date();
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const startOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
   const [
     totalPlayers,
@@ -30,6 +37,10 @@ export default async function AdminReportsPage() {
     paymentStats,
     recentAttendances,
     recentPayments,
+    // Retention data
+    newPlayersThisMonth,
+    playersActive3Months,
+    playersWithRecentAttendance,
   ] = await Promise.all([
     db.player.count({ where: { clubId, status: "ACTIVE" } }),
     db.payment.aggregate({
@@ -55,6 +66,17 @@ export default async function AdminReportsPage() {
     db.payment.findMany({
       where: { clubId, createdAt: { gte: sixMonthsAgo } },
       select: { status: true, amount: true, createdAt: true },
+    }),
+    // New players this month
+    db.player.count({ where: { clubId, status: "ACTIVE", createdAt: { gte: startOfThisMonth } } }),
+    // Players registered 3+ months ago (stable/retained)
+    db.player.count({ where: { clubId, status: "ACTIVE", createdAt: { lte: threeMonthsAgo } } }),
+    // Players with at least 1 attendance in last 30 days (active)
+    db.player.count({
+      where: {
+        clubId, status: "ACTIVE",
+        attendances: { some: { session: { date: { gte: thirtyDaysAgo } }, status: "PRESENT" } },
+      },
     }),
   ]);
 
@@ -138,6 +160,67 @@ export default async function AdminReportsPage() {
             gradient="linear-gradient(135deg, rgba(239,68,68,0.22), rgba(220,38,38,0.10))"
           />
         </div>
+
+        {/* Retention metrics */}
+        <Card>
+          <div className="flex items-center gap-2 mb-5">
+            <UserCheck size={16} style={{ color: "#A78BFA" }} />
+            <h2 className="font-bold text-[14px]">Retención de jugadores</h2>
+          </div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              {
+                label:    "Activos este mes",
+                value:    playersWithRecentAttendance,
+                total:    totalPlayers,
+                color:    "var(--success)",
+                bg:       "rgba(52,211,153,0.08)",
+                desc:     "asistieron en los últimos 30 días",
+              },
+              {
+                label:    "Jugadores nuevos",
+                value:    newPlayersThisMonth,
+                total:    totalPlayers,
+                color:    "#60A5FA",
+                bg:       "rgba(96,165,250,0.08)",
+                desc:     "se unieron este mes",
+              },
+              {
+                label:    "Retenidos 3+ meses",
+                value:    playersActive3Months,
+                total:    totalPlayers,
+                color:    "#A78BFA",
+                bg:       "rgba(167,139,250,0.08)",
+                desc:     "llevan más de 3 meses activos",
+              },
+              {
+                label:    "Riesgo de abandono",
+                value:    Math.max(0, totalPlayers - playersWithRecentAttendance),
+                total:    totalPlayers,
+                color:    "var(--error)",
+                bg:       "rgba(239,68,68,0.08)",
+                desc:     "sin asistencia en 30 días",
+              },
+            ].map(({ label, value, total, color, bg, desc }) => {
+              const pct = total > 0 ? Math.round((value / total) * 100) : 0;
+              return (
+                <div key={label} className="rounded-xl p-4" style={{ background: bg, border: `1px solid ${color}22` }}>
+                  <p className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: `${color}99` }}>
+                    {label}
+                  </p>
+                  <div className="flex items-baseline gap-1.5 mb-1">
+                    <span className="text-2xl font-black" style={{ color }}>{value}</span>
+                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>/ {total}</span>
+                  </div>
+                  <div className="w-full rounded-full overflow-hidden mb-2" style={{ height: 3, background: "rgba(255,255,255,0.08)" }}>
+                    <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
+                  </div>
+                  <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>{pct}% {desc}</p>
+                </div>
+              );
+            })}
+          </div>
+        </Card>
 
         {/* Monthly charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

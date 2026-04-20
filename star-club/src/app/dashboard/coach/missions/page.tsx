@@ -54,6 +54,7 @@ export default async function CoachMissionsPage() {
           <GamificationActions
             players={players.map((p) => ({ id: p.id, name: p.user.name, xp: p.xp }))}
             missions={missions.map((m) => ({ id: m.id, title: m.title, xpReward: m.xpReward, type: m.type }))}
+            showCustomTab={true}
           />
         </Card>
 

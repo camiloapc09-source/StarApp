@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Copy, Check, RefreshCw } from "lucide-react";
+import { Copy, Check, RefreshCw, Link2 } from "lucide-react";
 
 type Props = {
   defaultRole?: "PLAYER" | "COACH";
@@ -41,9 +41,14 @@ export default function NewInviteForm({ defaultRole = "PLAYER", hideRoleSelect =
     }
   }
 
+  function getInviteUrl(code: string) {
+    const origin = typeof window !== "undefined" ? window.location.origin : "";
+    return `${origin}/register?code=${code}`;
+  }
+
   function copyCode() {
     if (!result?.code) return;
-    navigator.clipboard?.writeText(result.code).catch(() => {});
+    navigator.clipboard?.writeText(getInviteUrl(result.code)).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   }
@@ -86,27 +91,36 @@ export default function NewInviteForm({ defaultRole = "PLAYER", hideRoleSelect =
 
       {result && (
         <div
-          className="flex items-center justify-between gap-4 px-5 py-4 rounded-xl border"
+          className="rounded-xl border overflow-hidden"
           style={{ background: "var(--bg-elevated)", borderColor: "var(--accent)", borderWidth: 1 }}
         >
-          <div>
-            <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: "var(--text-muted)" }}>
-              Código de registro · {role === "PLAYER" ? "Deportista" : "Entrenador"}
-            </p>
-            <span className="font-mono text-2xl font-black tracking-wider" style={{ color: "var(--accent)" }}>
-              {result.code}
+          <div className="px-5 py-3 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[10px] uppercase tracking-widest mb-1" style={{ color: "var(--text-muted)" }}>
+                Código · {role === "PLAYER" ? "Deportista" : "Entrenador"}
+              </p>
+              <span className="font-mono text-xl font-black tracking-wider" style={{ color: "var(--accent)" }}>
+                {result.code}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={copyCode}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all flex-shrink-0"
+              style={copied
+                ? { background: "rgba(0,255,135,0.15)", color: "var(--accent)", borderColor: "var(--accent)" }
+                : { background: "var(--bg-hover)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }}
+            >
+              {copied ? <><Check size={14} /> Copiado</> : <><Copy size={14} /> Copiar link</>}
+            </button>
+          </div>
+          <div className="px-5 py-2.5 flex items-center gap-2 border-t"
+            style={{ borderColor: "rgba(255,255,255,0.06)", background: "rgba(0,0,0,0.15)" }}>
+            <Link2 size={11} style={{ color: "var(--text-muted)", flexShrink: 0 }} />
+            <span className="text-[11px] font-mono truncate" style={{ color: "var(--text-muted)" }}>
+              {getInviteUrl(result.code)}
             </span>
           </div>
-          <button
-            type="button"
-            onClick={copyCode}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-all"
-            style={copied
-              ? { background: "rgba(0,255,135,0.15)", color: "var(--accent)", borderColor: "var(--accent)" }
-              : { background: "var(--bg-hover)", color: "var(--text-primary)", borderColor: "var(--border-primary)" }}
-          >
-            {copied ? <><Check size={14} /> Copiado</> : <><Copy size={14} /> Copiar</>}
-          </button>
         </div>
       )}
     </div>

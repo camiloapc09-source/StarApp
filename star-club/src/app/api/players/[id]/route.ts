@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { requireAuth, requireAdmin, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
+import { requireAuth, requireAdmin, getClubId, getCoachCategoryFilter, isResponse, apiError, apiOk } from "@/lib/api";
 
 const updateSchema = z.object({
   status: z.enum(["ACTIVE", "PENDING", "INACTIVE"]).optional(),
@@ -27,6 +27,7 @@ export async function GET(
   const session = await requireAuth();
   if (isResponse(session)) return session;
   const clubId = getClubId(session);
+  const { role } = session.user as { role: string; id: string };
 
   const { id } = await params;
 
@@ -43,6 +44,27 @@ export async function GET(
   });
 
   if (!player || player.clubId !== clubId) return apiError("Not found", 404);
+
+  // Role-based access control — prevent IDOR
+  if (role === "PLAYER") {
+    const self = await db.player.findUnique({ where: { userId: session.user.id }, select: { id: true } });
+    if (!self || self.id !== player.id) return apiError("Forbidden", 403);
+  } else if (role === "PARENT") {
+    const parent = await db.parent.findUnique({
+      where: { userId: session.user.id },
+      include: { children: { select: { playerId: true } } },
+    });
+    if (!parent) return apiError("Forbidden", 403);
+    const ownChildren = parent.children.map((c) => c.playerId);
+    if (!ownChildren.includes(player.id)) return apiError("Forbidden", 403);
+  } else if (role === "COACH") {
+    const categoryFilter = await getCoachCategoryFilter(session);
+    if (categoryFilter !== null && player.categoryId && !categoryFilter.includes(player.categoryId)) {
+      return apiError("Forbidden", 403);
+    }
+  }
+  // ADMIN: no extra check needed
+
   return apiOk(player);
 }
 

@@ -49,7 +49,13 @@ export default async function PlayerDashboard() {
 
   const [unreadNotifications, totalSessions, clubPlayers] = await Promise.all([
     db.notification.count({ where: { userId: session.user.id, isRead: false } }),
-    db.session.count({ where: { date: { gte: startOfMonth(new Date()), lte: endOfMonth(new Date()) } } }),
+    db.session.count({
+      where: {
+        // Only count sessions for this player's category, not all club sessions
+        ...(player.categoryId ? { categoryId: player.categoryId } : {}),
+        date: { gte: startOfMonth(new Date()), lte: endOfMonth(new Date()) },
+      },
+    }),
     db.player.findMany({
       where: { clubId: player.clubId, status: "ACTIVE" },
       select: { id: true, xp: true },

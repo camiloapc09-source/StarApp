@@ -13,6 +13,14 @@ const assignMissionSchema = z.object({
   message: "Se requiere playerId o playerIds",
 });
 
+const createAndAssignSchema = z.object({
+  playerId: z.string().min(1),
+  title: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
+  xpReward: z.number().int().min(1).max(1000).default(50),
+  type: z.enum(["DAILY", "WEEKLY", "CHALLENGE", "SPECIAL"]).default("CHALLENGE"),
+});
+
 const awardXPSchema = z.object({
   playerId: z.string(),
   xp: z.number().positive(),
@@ -176,6 +184,44 @@ export async function POST(req: NextRequest) {
     }
 
     return apiOk({ ok: true, xpAwarded: pm.mission.xpReward });
+  }
+
+  if (action === "create-and-assign") {
+    const parsed = createAndAssignSchema.safeParse(body);
+    if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
+
+    const playerCheck = await db.player.findFirst({
+      where: { id: parsed.data.playerId, clubId },
+      select: { id: true, userId: true },
+    });
+    if (!playerCheck) return apiError("Jugador no encontrado", 404);
+
+    // Create a club-level mission (inactive so it doesn't pollute the global list)
+    const mission = await db.mission.create({
+      data: {
+        clubId,
+        title: parsed.data.title,
+        description: parsed.data.description ?? "",
+        xpReward: parsed.data.xpReward,
+        type: parsed.data.type,
+        isActive: false, // private — only assigned to this player
+      },
+    });
+
+    const pm = await db.playerMission.create({
+      data: { playerId: parsed.data.playerId, missionId: mission.id, target: 1, status: "ACTIVE" },
+    });
+
+    await db.notification.create({
+      data: {
+        userId: playerCheck.userId,
+        title: "Nueva misión personalizada",
+        message: `Tu entrenador te asignó: "${mission.title}" (+${mission.xpReward} XP).`,
+        type: "ACHIEVEMENT",
+      },
+    });
+
+    return apiOk({ mission, playerMissionId: pm.id }, 201);
   }
 
   return apiError("Unknown action", 400);

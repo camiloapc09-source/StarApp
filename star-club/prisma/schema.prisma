@@ -15,6 +15,7 @@ model Club {
   email     String?
   logo      String?
   sport     String   @default("BASKETBALL")
+  plan      String   @default("STARTER") // STARTER | PRO | ENTERPRISE
   country   String   @default("CO")
   city      String?
   // Billing cycle config
@@ -125,6 +126,7 @@ model Player {
   rewards        PlayerReward[]
   evidences      Evidence[]
   uniformOrders  UniformOrder[]
+  playerNotes    PlayerNote[]
 
   @@index([clubId])
   @@index([status])
@@ -352,4 +354,32 @@ model UniformOrder {
 
   @@index([parentId])
   @@index([playerId])
+}
+
+// ─── ACCESS CODES (SaaS club registration gate) ───────────
+model AccessCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  plan      String    @default("STARTER") // STARTER | PRO | ENTERPRISE
+  notes     String?   // e.g. "Club Estrellas - pagó $X - WhatsApp 31x..."
+  usedByClubId String?
+  usedAt    DateTime?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([code])
+}
+
+// ─── PLAYER NOTES (coach observations, injuries) ──────────
+model PlayerNote {
+  id        String   @id @default(cuid())
+  clubId    String
+  playerId  String
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  authorId  String   // userId of admin or coach who wrote the note
+  body      String
+  createdAt DateTime @default(now())
+
+  @@index([playerId])
+  @@index([clubId])
 }

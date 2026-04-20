@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import fs from "fs";
 import path from "path";
+import { randomBytes } from "crypto";
 import { requireAuth, requireRole, getClubId, isResponse, apiError, apiOk, rateLimit } from "@/lib/api";
 
 const uploadSchema = z.object({
@@ -68,7 +69,10 @@ export async function POST(req: NextRequest) {
   const uploadsDir = path.join(process.cwd(), "public", "uploads", "evidence");
   fs.mkdirSync(uploadsDir, { recursive: true });
 
-  const safeFilename = `${created.id}_${filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+  // Use a random token to prevent filename enumeration (not the evidence ID)
+  const token = randomBytes(12).toString("hex");
+  const ext = filename.split(".").pop()?.replace(/[^a-zA-Z0-9]/g, "") || "bin";
+  const safeFilename = `ev-${token}.${ext}`;
   const filePath = path.join(uploadsDir, safeFilename);
   fs.writeFileSync(filePath, Buffer.from(data, "base64"));
 

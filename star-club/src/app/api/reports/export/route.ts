@@ -5,8 +5,9 @@ import { requireAdmin, getClubId, isResponse, apiError } from "@/lib/api";
 function escapeCSV(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return "";
   const str = String(value);
-  if (/^[=+\-@\t\r]/.test(str)) return `'${str.replace(/"/g, '""')}`;
-  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+  // Neutralize formula injection: prefix with space and wrap in double quotes
+  if (/^[=+\-@\t\r]/.test(str)) return `"' ${str.replace(/"/g, '""')}"`;
+  if (str.includes(",") || str.includes('"') || str.includes("\n") || str.includes("\r")) {
     return `"${str.replace(/"/g, '""')}"`;
   }
   return str;

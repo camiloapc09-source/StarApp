@@ -10,10 +10,11 @@ import { es } from "date-fns/locale";
 import { CheckCircle2, Clock, AlertTriangle, Eye, Banknote, MessageCircle, ImageOff, PhoneCall, FileSpreadsheet } from "lucide-react";
 import { getDictionary } from "@/lib/dict";
 import Link from "next/link";
-import { PaymentConfirmButton, PaymentCashButton, PaymentRejectButton } from "@/components/admin/payment-actions";
+import { PaymentConfirmButton, PaymentRejectButton } from "@/components/admin/payment-actions";
 import BulkPaymentButton from "@/components/admin/bulk-payment-button";
 import MarkOverdueButton from "@/components/admin/mark-overdue-button";
 import ProofViewer from "@/components/admin/proof-viewer";
+import BulkMarkReceivedPanel from "@/components/admin/bulk-mark-received-panel";
 
 export default async function AdminPaymentsPage() {
   const session = await auth();
@@ -50,6 +51,47 @@ export default async function AdminPaymentsPage() {
             title: "Pago vencido",
             message: `Tu pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" esta vencido.`,
             type: "PAYMENT",
+          },
+        });
+      }
+    }
+  }
+
+  // Due-soon notifications: payments due in 1-7 days → notify player + parents once
+  const in7Days  = new Date(Date.now() + 7  * 24 * 60 * 60 * 1000);
+  const tomorrow = new Date(Date.now() + 1  * 24 * 60 * 60 * 1000);
+  const dueSoon  = await db.payment.findMany({
+    where: { clubId, status: "PENDING", dueDate: { gte: tomorrow, lte: in7Days } },
+    select: {
+      id: true, concept: true, amount: true, dueDate: true,
+      player: {
+        select: {
+          userId: true,
+          parentLinks: { select: { parent: { select: { userId: true } } } },
+        },
+      },
+    },
+  });
+  for (const p of dueSoon) {
+    const daysLeft = Math.ceil((new Date(p.dueDate).getTime() - Date.now()) / 86400000);
+    const targetUserIds = [
+      p.player.userId,
+      ...p.player.parentLinks.map((l) => l.parent.userId),
+    ].filter(Boolean) as string[];
+    for (const userId of targetUserIds) {
+      const alreadySent = await db.notification.findFirst({
+        where: { userId, type: "PAYMENT", title: { contains: "próximo" },
+          message: { contains: p.concept },
+          createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
+      });
+      if (!alreadySent) {
+        await db.notification.create({
+          data: {
+            userId,
+            title: `Pago próximo a vencer ⏰`,
+            message: `El pago de $${p.amount.toLocaleString("es-CO")} por "${p.concept}" vence en ${daysLeft} día${daysLeft !== 1 ? "s" : ""}.`,
+            type: "PAYMENT",
+            link: "/dashboard/parent/payments",
           },
         });
       }
@@ -271,84 +313,31 @@ export default async function AdminPaymentsPage() {
           </Card>
         )}
 
-        {/* ACCION REQUERIDA */}
+        {/* ACCION REQUERIDA — bulk selectable */}
         {actionItems.length > 0 && (
-          <Card className="p-0 overflow-hidden">
-            <div
-              className="px-6 py-4 border-b flex items-center justify-between"
-              style={{ borderColor: "rgba(255,184,0,0.2)", background: "rgba(255,184,0,0.04)" }}
-            >
-              <div className="flex items-center gap-3">
-                <AlertTriangle size={16} style={{ color: "var(--warning)" }} />
-                <h2 className="font-semibold text-sm" style={{ color: "var(--warning)" }}>
-                  Acción requerida — {actionItems.length} pago{actionItems.length !== 1 ? "s" : ""}
-                </h2>
-              </div>
-              <Link
-                href="/dashboard/admin/payments/new"
-                className="text-xs px-3 py-1.5 rounded-xl font-semibold transition-all"
-                style={{ background: "var(--accent)", color: "#000" }}
-              >
-                + Agregar pago
-              </Link>
-            </div>
-            <div className="divide-y" style={{ borderColor: "var(--border-primary)" }}>
-              {actionItems.map((payment) => {
-                const parentLink = payment.player.parentLinks?.[0]?.parent;
-                const phone = parentLink?.phone || parentLink?.user?.phone;
-                const digits = phone?.replace?.(/[^0-9]/g, "");
-                const daysLeft = differenceInDays(new Date(payment.dueDate), new Date());
-                const isLate = payment.status === "OVERDUE" || daysLeft < 0;
-                const lastPaid = lastPaidMap.get(payment.playerId);
-                const waMsg = encodeURIComponent(
-                  isLate
-                    ? `Hola ${parentLink?.user?.name || payment.player.user.name}, le informamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" esta vencido desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")}. Por favor regularice su situacion. Gracias.`
-                    : `Hola ${parentLink?.user?.name || payment.player.user.name}, le recordamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" vence el ${format(new Date(payment.dueDate), "dd/MM/yyyy")}. No olvide realizarlo a tiempo.`
-                );
-                const waHref = digits ? `https://wa.me/${digits}?text=${waMsg}` : null;
-                return (
-                  <div key={payment.id} className="p-5 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Avatar name={payment.player.user.name} size="sm" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold">{payment.player.user.name}</p>
-                        <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{payment.concept}</p>
-                        {lastPaid ? (
-                          <p className="text-[11px] mt-1" style={{ color: "var(--text-muted)" }}>
-                            Ultimo pago: {format(new Date(lastPaid.paidAt ?? lastPaid.dueDate), "dd MMM yyyy", { locale: es })} · ${lastPaid.amount.toLocaleString("es-CO")}
-                          </p>
-                        ) : (
-                          <p className="text-[11px] mt-1" style={{ color: "var(--warning)" }}>Sin pagos anteriores</p>
-                        )}
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <p className="text-base font-black">${payment.amount.toLocaleString("es-CO")}</p>
-                        <p className="text-xs font-medium" style={{ color: isLate ? "var(--error)" : "var(--warning)" }}>
-                          {isLate
-                            ? `Vencido ${Math.abs(daysLeft)}d`
-                            : `Vence ${format(new Date(payment.dueDate), "dd MMM", { locale: es })}`}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <PaymentCashButton paymentId={payment.id} />
-                      {waHref && (
-                        <a
-                          href={waHref}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
-                          style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}
-                        >
-                          <PhoneCall size={13} /> Cobrar por WhatsApp
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
+          <BulkMarkReceivedPanel
+            payments={actionItems.map((p) => {
+              const lp = lastPaidMap.get(p.playerId);
+              return {
+                id: p.id,
+                amount: p.amount,
+                concept: p.concept,
+                status: p.status,
+                dueDate: p.dueDate,
+                player: {
+                  user: {
+                    name: p.player.user.name,
+                    avatar: p.player.user.avatar,
+                    phone: p.player.user.phone,
+                  },
+                  parentLinks: p.player.parentLinks,
+                },
+                lastPaid: lp
+                  ? { paidAt: lp.paidAt, dueDate: lp.dueDate, amount: lp.amount }
+                  : null,
+              };
+            })}
+          />
         )}
 
         {/* PROGRAMADOS */}

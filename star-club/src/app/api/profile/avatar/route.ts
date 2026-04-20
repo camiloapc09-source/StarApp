@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import { randomBytes } from "crypto";
 import sharp from "sharp";
 import { requireAuth, getClubId, isResponse, apiError, apiOk, rateLimit } from "@/lib/api";
 
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
   if (isResponse(session)) return session;
   const clubId = getClubId(session);
 
-  if (!rateLimit(`avatar:${session.user.id}`, 5, 60_000)) return apiError("Too many uploads", 429);
+  if (!rateLimit(`avatar:${session.user.id}`, 3, 5 * 60_000)) return apiError("Too many uploads", 429);
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
@@ -27,13 +28,14 @@ export async function POST(req: NextRequest) {
   const bytes = await file.arrayBuffer();
   const raw = Buffer.from(bytes);
 
-  // Compress & resize to AVATAR_SIZE webp
   const buffer = await sharp(raw)
     .resize(AVATAR_SIZE, AVATAR_SIZE, { fit: "cover" })
     .webp({ quality: 80 })
     .toBuffer();
 
-  const filename = `avatar-pending-${session.user.id}.webp`;
+  // Use a random token instead of userId to prevent filename enumeration
+  const token = randomBytes(16).toString("hex");
+  const filename = `ap-${token}.webp`; // ap = avatar-pending
 
   const uploadDir = join(process.cwd(), "public", "uploads", "avatars");
   await mkdir(uploadDir, { recursive: true });

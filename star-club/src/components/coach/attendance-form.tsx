@@ -61,6 +61,13 @@ export default function AttendanceForm({
     }
   }
 
+  function markAll(status: string) {
+    const all: Record<string, string> = {};
+    players.forEach((p) => (all[p.id] = status));
+    setStatuses(all);
+    setSaved(false);
+  }
+
   const presentCount = players.filter((p) => statuses[p.id] === "PRESENT").length;
   const lateCount    = players.filter((p) => statuses[p.id] === "LATE").length;
   const absentCount  = players.filter((p) => !statuses[p.id] || statuses[p.id] === "ABSENT").length;
@@ -75,17 +82,27 @@ export default function AttendanceForm({
         </Card>
       ) : (
         <>
-          {/* Summary bar */}
-          <div className="flex gap-3 text-xs font-semibold">
-            <span className="px-3 py-1.5 rounded-xl" style={{ background: "rgba(52,211,153,0.12)", color: "#34D399" }}>
-              ✓ {presentCount} presentes
-            </span>
-            <span className="px-3 py-1.5 rounded-xl" style={{ background: "rgba(251,191,36,0.12)", color: "#FCD34D" }}>
-              ⏰ {lateCount} tarde
-            </span>
-            <span className="px-3 py-1.5 rounded-xl" style={{ background: "rgba(239,68,68,0.12)", color: "#F87171" }}>
-              ✗ {absentCount} ausentes
-            </span>
+          {/* Bulk actions + summary */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => markAll("PRESENT")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+              style={{ background: "rgba(52,211,153,0.14)", color: "#34D399", border: "1px solid rgba(52,211,153,0.25)" }}
+            >
+              <Check size={12} strokeWidth={2.5} /> Todos presentes
+            </button>
+            <button
+              onClick={() => markAll("ABSENT")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+              style={{ background: "rgba(239,68,68,0.10)", color: "#F87171", border: "1px solid rgba(239,68,68,0.20)" }}
+            >
+              <X size={12} strokeWidth={2.5} /> Todos ausentes
+            </button>
+            <div className="ml-auto flex gap-2 text-xs font-semibold">
+              <span className="px-2.5 py-1 rounded-xl" style={{ background: "rgba(52,211,153,0.10)", color: "#34D399" }}>✓ {presentCount}</span>
+              <span className="px-2.5 py-1 rounded-xl" style={{ background: "rgba(251,191,36,0.10)", color: "#FCD34D" }}>⏰ {lateCount}</span>
+              <span className="px-2.5 py-1 rounded-xl" style={{ background: "rgba(239,68,68,0.10)", color: "#F87171" }}>✗ {absentCount}</span>
+            </div>
           </div>
 
           {/* Player rows */}

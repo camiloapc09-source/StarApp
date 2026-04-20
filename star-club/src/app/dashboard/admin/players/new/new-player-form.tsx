@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Copy, Check, X } from "lucide-react";
 import Link from "next/link";
 import { getClientDictionary } from "@/lib/client-dict";
 
@@ -24,6 +24,7 @@ export function NewPlayerForm({ categories, zonePrices }: NewPlayerFormProps) {
   const hasZones = !!zonePrices && Object.keys(zonePrices).length > 0;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [parentCredentials, setParentCredentials] = useState<{ password: string; email: string; name: string } | null>(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -88,6 +89,16 @@ export function NewPlayerForm({ categories, zonePrices }: NewPlayerFormProps) {
     if (!res.ok) {
       setError(data.error || "Failed to create player");
       return;
+    }
+
+    // If a parent account was created, show credentials before navigating
+    if (data.parentTempPassword) {
+      setParentCredentials({
+        password: data.parentTempPassword,
+        email: data.parentLoginEmail ?? "",
+        name: form.parentName ?? "",
+      });
+      return; // wait for admin to close modal before navigating
     }
 
     router.push("/dashboard/admin/players");
@@ -198,6 +209,97 @@ export function NewPlayerForm({ categories, zonePrices }: NewPlayerFormProps) {
             </div>
           </form>
         </Card>
+      </div>
+
+      {/* Parent credentials modal */}
+      {parentCredentials && (
+        <ParentCredentialsModal
+          credentials={parentCredentials}
+          onClose={() => {
+            setParentCredentials(null);
+            router.push("/dashboard/admin/players");
+            router.refresh();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function ParentCredentialsModal({
+  credentials,
+  onClose,
+}: {
+  credentials: { password: string; email: string; name: string };
+  onClose: () => void;
+}) {
+  const [copied, setCopied] = useState<"email" | "password" | null>(null);
+
+  function copy(text: string, field: "email" | "password") {
+    navigator.clipboard.writeText(text);
+    setCopied(field);
+    setTimeout(() => setCopied(null), 2000);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.80)", backdropFilter: "blur(4px)" }}>
+      <div className="w-full max-w-sm rounded-2xl p-6 space-y-5"
+        style={{ background: "var(--bg-card)", border: "1px solid var(--border-primary)" }}>
+
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="font-bold text-base">¡Jugador creado!</h2>
+            <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>
+              Comparte estos datos con el acudiente
+            </p>
+          </div>
+          <button onClick={onClose} className="p-1 rounded-lg hover:opacity-70">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="rounded-xl p-4 space-y-3"
+          style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)" }}>
+          <p className="text-xs font-bold tracking-wider uppercase" style={{ color: "rgba(167,139,250,0.70)" }}>
+            Acceso de {credentials.name}
+          </p>
+
+          <div className="space-y-2">
+            {[
+              { label: "Email / Usuario", value: credentials.email, field: "email" as const },
+              { label: "Contraseña temporal", value: credentials.password, field: "password" as const },
+            ].map((row) => (
+              <div key={row.field} className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    {row.label}
+                  </p>
+                  <p className={`font-mono font-bold mt-0.5 ${row.field === "password" ? "text-xl tracking-widest" : "text-sm"}`}
+                    style={{ color: row.field === "password" ? "#C4B5FD" : "rgba(255,255,255,0.85)" }}>
+                    {row.value}
+                  </p>
+                </div>
+                <button onClick={() => copy(row.value, row.field)}
+                  className="p-1.5 rounded-lg flex-shrink-0 transition-colors"
+                  style={{ color: copied === row.field ? "#34D399" : "rgba(255,255,255,0.35)" }}>
+                  {copied === row.field ? <Check size={14} /> : <Copy size={14} />}
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>
+            Pídele que cambie la contraseña en su perfil después de entrar.
+          </p>
+        </div>
+
+        <button onClick={onClose}
+          className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
+          style={{ background: "var(--accent)", color: "#000" }}>
+          Listo, ya la compartí
+        </button>
       </div>
     </div>
   );

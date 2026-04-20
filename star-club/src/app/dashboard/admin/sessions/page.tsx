@@ -11,6 +11,7 @@ import { CalendarDays, Users } from "lucide-react";
 import DeleteSessionButton from "@/components/coach/delete-session-button";
 import CreateSessionForm from "@/components/coach/create-session-form";
 import EditSessionButton from "@/components/coach/edit-session-button";
+import RecurringSessionForm from "@/components/coach/recurring-session-form";
 
 export default async function AdminSessionsPage() {
   const session = await auth();
@@ -47,6 +48,19 @@ export default async function AdminSessionsPage() {
         <Card className="p-5">
           <h3 className="text-sm font-semibold mb-4">Nueva sesión / partido / evento</h3>
           <CreateSessionForm
+            categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+            coaches={coaches}
+            userRole="ADMIN"
+          />
+        </Card>
+
+        {/* Recurring sessions */}
+        <Card className="p-5">
+          <h3 className="text-sm font-semibold mb-1">Sesiones recurrentes</h3>
+          <p className="text-xs mb-4" style={{ color: "var(--text-muted)" }}>
+            Crea múltiples sesiones automáticamente para las próximas semanas.
+          </p>
+          <RecurringSessionForm
             categories={categories.map((c) => ({ id: c.id, name: c.name }))}
             coaches={coaches}
             userRole="ADMIN"

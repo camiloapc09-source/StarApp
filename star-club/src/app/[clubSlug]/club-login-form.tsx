@@ -236,6 +236,13 @@ export function ClubLoginForm({ club }: { club: Club }) {
             Regístrate
           </Link>
         </p>
+
+        <p className="text-center text-xs mt-2" style={{ color: "rgba(255,255,255,0.20)" }}>
+          ¿Olvidaste tu contraseña?{" "}
+          <span style={{ color: "rgba(255,255,255,0.35)" }}>
+            Contacta al administrador de tu club para que la resetee.
+          </span>
+        </p>
       </motion.div>
     </div>
   );

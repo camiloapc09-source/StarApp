@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Zap, Plus, AlertTriangle } from "lucide-react";
+import { Zap, Plus, AlertTriangle, Clock } from "lucide-react";
 import Link from "next/link";
 import { calculateLevel } from "@/lib/utils";
 import NewInviteForm from "@/components/admin/new-invite-form";
@@ -41,6 +41,8 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
     }),
   ]);
 
+  const pendingPlayers = players.filter((p) => p.status === "PENDING");
+
   return (
     <div>
       <Header title={t.common.players} subtitle={`${players.length} ${t.common.players}`} />
@@ -62,6 +64,39 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
                 avatarPending: u.avatarPending!,
               }))}
             />
+          </Card>
+        )}
+
+        {/* Pending player approvals */}
+        {pendingPlayers.length > 0 && (
+          <Card className="p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Clock size={15} style={{ color: "var(--warning)" }} />
+              <h3 className="text-sm font-semibold">Deportistas pendientes de activación ({pendingPlayers.length})</h3>
+            </div>
+            <div className="space-y-3">
+              {pendingPlayers.map((p) => (
+                <div key={p.id} className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl"
+                  style={{ background: "rgba(255,184,0,0.05)", border: "1px solid rgba(255,184,0,0.15)" }}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                      style={{ background: "rgba(255,184,0,0.15)", color: "var(--warning)" }}>
+                      {p.user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate">{p.user.name}</p>
+                      <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{p.user.email}</p>
+                    </div>
+                  </div>
+                  <Link href={`/dashboard/admin/players/${p.id}`} className="relative z-10">
+                    <span className="text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition-all hover:opacity-80"
+                      style={{ background: "var(--accent)", color: "#000" }}>
+                      Activar →
+                    </span>
+                  </Link>
+                </div>
+              ))}
+            </div>
           </Card>
         )}
 

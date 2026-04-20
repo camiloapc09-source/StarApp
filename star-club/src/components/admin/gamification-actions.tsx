@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Zap, Target, Plus, CheckCircle2, X, Sparkles, RefreshCw } from "lucide-react";
+import { Zap, Target, Plus, CheckCircle2, X, Sparkles, RefreshCw, PenLine } from "lucide-react";
 
 type Player  = { id: string; name: string; xp: number };
 type Mission = { id: string; title: string; xpReward: number; type: string };
 
-type Props = { players: Player[]; missions: Mission[] };
+type Props = { players: Player[]; missions: Mission[]; showCustomTab?: boolean };
 
 type GeneratedMission = {
   title: string;
@@ -17,8 +17,8 @@ type GeneratedMission = {
   location: string;
 };
 
-export default function GamificationActions({ players, missions: initialMissions }: Props) {
-  const [tab, setTab] = useState<"mission" | "xp" | "generate">("mission");
+export default function GamificationActions({ players, missions: initialMissions, showCustomTab = false }: Props) {
+  const [tab, setTab] = useState<"mission" | "xp" | "generate" | "custom">("mission");
 
   // Assign mission
   const [playerId, setPlayerId] = useState("");
@@ -40,6 +40,14 @@ export default function GamificationActions({ players, missions: initialMissions
   const [genMission, setGenMission] = useState<GeneratedMission | null>(null);
   const [createLoading, setCreateLoading] = useState(false);
   const [createMsg, setCreateMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  // Custom mission (coach-only)
+  const [customPlayerId, setCustomPlayerId] = useState("");
+  const [customTitle, setCustomTitle] = useState("");
+  const [customXp, setCustomXp] = useState(50);
+  const [customType, setCustomType] = useState("CHALLENGE");
+  const [customLoading, setCustomLoading] = useState(false);
+  const [customMsg, setCustomMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   async function assignMission(e: React.FormEvent) {
     e.preventDefault();
@@ -127,6 +135,35 @@ export default function GamificationActions({ players, missions: initialMissions
     setTimeout(() => setCreateMsg(null), 4000);
   }
 
+  async function createAndAssign(e: React.FormEvent) {
+    e.preventDefault();
+    if (!customPlayerId || !customTitle.trim()) return;
+    setCustomLoading(true);
+    setCustomMsg(null);
+    const res = await fetch("/api/gamification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "create-and-assign",
+        playerId: customPlayerId,
+        title: customTitle.trim(),
+        xpReward: customXp,
+        type: customType,
+      }),
+    });
+    if (res.ok) {
+      setCustomMsg({ ok: true, text: "¡Misión personalizada asignada!" });
+      setCustomPlayerId("");
+      setCustomTitle("");
+      setCustomXp(50);
+    } else {
+      const d = await res.json();
+      setCustomMsg({ ok: false, text: d.error ?? "Error" });
+    }
+    setCustomLoading(false);
+    setTimeout(() => setCustomMsg(null), 3500);
+  }
+
   const selectCls = "w-full rounded-xl px-4 py-3 text-sm outline-none border";
   const selectStyle = { background: "var(--bg-elevated)", borderColor: "var(--border-primary)", color: "var(--text-primary)" } as const;
 
@@ -138,6 +175,7 @@ export default function GamificationActions({ players, missions: initialMissions
           { id: "mission", label: "Asignar misión", icon: <Target size={13} /> },
           { id: "xp",      label: "Otorgar XP",     icon: <Zap size={13} /> },
           { id: "generate",label: "Generar con IA",  icon: <Sparkles size={13} /> },
+          ...(showCustomTab ? [{ id: "custom" as const, label: "Personalizada", icon: <PenLine size={13} /> }] : []),
         ] as const).map((t) => (
           <button
             key={t.id}
@@ -312,6 +350,62 @@ export default function GamificationActions({ players, missions: initialMissions
             </p>
           )}
         </div>
+      )}
+
+      {/* 🎯 Custom mission (coach assigns to specific player) */}
+      {tab === "custom" && (
+        <form onSubmit={createAndAssign} className="space-y-3">
+          <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+            Crea una misión exclusiva para un jugador. No aparece en el catálogo global.
+          </p>
+          <select value={customPlayerId} onChange={(e) => setCustomPlayerId(e.target.value)} required className={selectCls} style={selectStyle}>
+            <option value="">Selecciona un jugador</option>
+            {players.map((p) => <option key={p.id} value={p.id}>{p.name} ({p.xp} XP)</option>)}
+          </select>
+          <input
+            value={customTitle}
+            onChange={(e) => setCustomTitle(e.target.value)}
+            placeholder="Descripción de la misión (ej. Hacer 100 abdominales)"
+            required
+            className={`w-full ${selectCls}`}
+            style={selectStyle}
+          />
+          <div className="flex gap-3">
+            <div className="flex-1">
+              <label className="block text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>XP a otorgar</label>
+              <input
+                type="number" min={1} max={500} value={customXp}
+                onChange={(e) => setCustomXp(Number(e.target.value))}
+                className={`w-full ${selectCls}`}
+                style={selectStyle}
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>Tipo</label>
+              <select value={customType} onChange={(e) => setCustomType(e.target.value)} className={`w-full ${selectCls}`} style={selectStyle}>
+                <option value="CHALLENGE">Reto</option>
+                <option value="DAILY">Diaria</option>
+                <option value="WEEKLY">Semanal</option>
+                <option value="SPECIAL">Especial</option>
+              </select>
+            </div>
+          </div>
+          <button
+            type="submit"
+            disabled={customLoading || !customPlayerId || !customTitle.trim()}
+            className="w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-40 flex items-center justify-center gap-2"
+            style={{ background: "rgba(255,184,0,0.15)", color: "var(--warning)", border: "1px solid rgba(255,184,0,0.25)" }}
+          >
+            <PenLine size={14} /> {customLoading ? "Asignando..." : `Asignar misión personalizada (+${customXp} XP)`}
+          </button>
+          {customMsg && (
+            <p className="text-sm text-center font-medium flex items-center justify-center gap-1.5"
+               style={{ color: customMsg.ok ? "var(--success)" : "var(--error)" }}>
+              {customMsg.ok ? <CheckCircle2 size={14} /> : <X size={14} />}
+              {customMsg.text}
+            </p>
+          )}
+        </form>
       )}
     </div>
   );

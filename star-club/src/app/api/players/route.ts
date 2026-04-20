@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { hash } from "bcryptjs";
+import { randomBytes } from "crypto";
 import { z } from "zod";
 import { calculateLevel } from "@/lib/utils";
 import { requireAuth, requireAdmin, getClubId, isResponse, apiError, apiOk, getCoachCategoryFilter } from "@/lib/api";
@@ -100,15 +101,21 @@ export async function POST(req: NextRequest) {
   });
 
   const playerProfile = await db.player.findFirst({ where: { userId: user.id } });
+  let parentTempPassword: string | undefined;
+  let parentLoginEmailResult: string | undefined;
 
-  if (parentName && documentNumber) {
-    // Parent login: email = player's documentNumber, password = player's documentNumber
-    const parentLoginId = documentNumber;
-    let parentUser = await db.user.findFirst({ where: { email: parentLoginId, clubId } });
+  if (parentName && (parentEmail || documentNumber)) {
+    // Use parentEmail as login if provided, else fall back to documentNumber
+    const parentLoginEmail = parentEmail || `${documentNumber}@club.local`;
+    // Generate a random temporary password — NOT the document number
+    const tempPassword = randomBytes(5).toString("hex"); // 10 chars
+    const parentHashed = await hash(tempPassword, 12);
+
+    let parentUser = await db.user.findFirst({ where: { email: parentLoginEmail, clubId } });
     if (!parentUser) {
-      const parentHashed = await hash(documentNumber, 12);
       parentUser = await db.user.create({
-        data: { name: parentName, email: parentLoginId, password: parentHashed, role: "PARENT", clubId },
+        data: { name: parentName, email: parentLoginEmail, password: parentHashed, role: "PARENT", clubId,
+          ...(parentPhone ? { phone: parentPhone } : {}) },
       });
     }
 
@@ -121,6 +128,19 @@ export async function POST(req: NextRequest) {
     if (playerProfile) {
       await db.parentPlayer.create({ data: { parentId: parent.id, playerId: playerProfile.id } });
     }
+
+    // Notify admin with the temporary password so they can share it with the parent
+    await db.notification.create({
+      data: {
+        userId: session.user.id,
+        title: "Cuenta de acudiente creada",
+        message: `Acudiente: ${parentName} | Login: ${parentLoginEmail} | Contraseña temporal: ${tempPassword} — compártela y pídele que la cambie.`,
+        type: "INFO",
+      },
+    });
+
+    parentTempPassword = tempPassword;
+    parentLoginEmailResult = parentLoginEmail;
   }
 
   try {
@@ -163,5 +183,8 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  return apiOk(user, 201);
+  return apiOk({
+    ...user,
+    ...(parentTempPassword ? { parentTempPassword, parentLoginEmail: parentLoginEmailResult } : {}),
+  }, 201);
 }
