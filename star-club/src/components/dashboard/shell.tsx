@@ -14,6 +14,7 @@ interface DashboardShellProps {
   notificationCount?: number;
   clubName?: string;
   clubLogo?: string | null;
+  plan?: string;
   children: React.ReactNode;
 }
 
@@ -24,12 +25,13 @@ export function DashboardShell({
   notificationCount = 0,
   clubName = "StarApp",
   clubLogo,
+  plan = "STARTER",
   children,
 }: DashboardShellProps) {
   const notifHref = `/dashboard/${role.toLowerCase()}/notifications`;
 
   return (
-    <DashboardContext.Provider value={{ clubLogo, clubName }}>
+    <DashboardContext.Provider value={{ clubLogo, clubName, plan }}>
       <div className="min-h-screen bg-[var(--bg-primary)]">
         {/* Desktop sidebar */}
         <Sidebar
@@ -39,6 +41,7 @@ export function DashboardShell({
           notificationCount={notificationCount}
           clubName={clubName}
           clubLogo={clubLogo}
+          plan={plan}
           isOpen={false}
           onClose={() => {}}
         />

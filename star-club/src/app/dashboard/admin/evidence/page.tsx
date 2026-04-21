@@ -11,6 +11,23 @@ export default async function AdminEvidencePage() {
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
+  // Plan gate
+  const clubForPlan = await db.club.findUnique({ where: { id: clubId }, select: { plan: true } });
+  const { getLimits } = await import("@/lib/plans");
+  const { default: UpgradeBanner } = await import("@/components/admin/upgrade-banner");
+  if (!getLimits(clubForPlan?.plan ?? "STARTER").evidence) {
+    return (
+      <div>
+        <Header title="Evidencias" subtitle="Comprobantes de misiones" />
+        <UpgradeBanner
+          feature="Panel de evidencias"
+          description="Revisa y aprueba las fotos que suben los jugadores como prueba de sus misiones. Disponible en el plan PRO."
+          currentPlan={clubForPlan?.plan}
+        />
+      </div>
+    );
+  }
+
   const [pending, recent] = await Promise.all([
     db.evidence.findMany({
       where: { status: "PENDING", player: { clubId } },

@@ -5,17 +5,21 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Calendar, CreditCard, Trophy, Bell,
   BarChart3, Target, UserCheck, Tag, FileImage, User, Shirt, LogOut, Settings,
+  Lock,
   type LucideIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getClientDictionary } from "@/lib/client-dict";
 import { NovaWordmark } from "@/components/nova-logo";
+import { getLimits } from "@/lib/plans";
 
 interface SidebarLink {
   key: string;
   href: string;
   icon: LucideIcon;
   badge?: number;
+  // which plan feature gates this item (undefined = always visible)
+  planFeature?: "gamification" | "evidence" | "uniforms" | "exportExcel";
 }
 
 const roleNavigationIds: Record<string, SidebarLink[]> = {
@@ -27,9 +31,9 @@ const roleNavigationIds: Record<string, SidebarLink[]> = {
     { key: "sessions",     href: "/dashboard/admin/sessions",     icon: Calendar },
     { key: "payments",     href: "/dashboard/admin/payments",     icon: CreditCard },
     { key: "categories",   href: "/dashboard/admin/categories",   icon: Tag },
-    { key: "gamification", href: "/dashboard/admin/gamification", icon: Trophy },
-    { key: "evidence",     href: "/dashboard/admin/evidence",     icon: FileImage },
-    { key: "uniforms",     href: "/dashboard/admin/uniforms",     icon: Shirt },
+    { key: "gamification", href: "/dashboard/admin/gamification", icon: Trophy,    planFeature: "gamification" },
+    { key: "evidence",     href: "/dashboard/admin/evidence",     icon: FileImage, planFeature: "evidence" },
+    { key: "uniforms",     href: "/dashboard/admin/uniforms",     icon: Shirt,     planFeature: "uniforms" },
     { key: "reports",      href: "/dashboard/admin/reports",      icon: BarChart3 },
     { key: "settings",     href: "/dashboard/admin/settings",     icon: Settings },
   ],
@@ -51,7 +55,7 @@ const roleNavigationIds: Record<string, SidebarLink[]> = {
   parent: [
     { key: "dashboard", href: "/dashboard/parent",             icon: LayoutDashboard },
     { key: "payments",  href: "/dashboard/parent/payments",    icon: CreditCard },
-    { key: "uniforms",  href: "/dashboard/parent/uniforms",    icon: Shirt },
+    { key: "uniforms",  href: "/dashboard/parent/uniforms",    icon: Shirt,     planFeature: "uniforms" },
     { key: "reports",   href: "/dashboard/parent/reports",     icon: BarChart3 },
     { key: "profile",   href: "/dashboard/parent/profile",     icon: User },
   ],
@@ -64,17 +68,19 @@ interface SidebarProps {
   notificationCount?: number;
   clubName?: string;
   clubLogo?: string | null;
+  plan?: string;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
 export function Sidebar({
   role, userName, notificationCount = 0,
-  clubName = "StarApp", clubLogo, isOpen = false, onClose,
+  clubName = "StarApp", clubLogo, plan = "STARTER", isOpen = false, onClose,
 }: SidebarProps) {
   const pathname = usePathname();
   const dict = getClientDictionary();
   const links = roleNavigationIds[(role ?? "").toLowerCase()] || [];
+  const limits = getLimits(plan);
 
   return (
     <aside
@@ -96,11 +102,8 @@ export function Sidebar({
         </svg>
       </button>
 
-      {/* Top — StarApp wordmark + club name */}
-      <div
-        className="px-5 py-5"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-      >
+      {/* Top — StarApp wordmark */}
+      <div className="px-5 py-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
         <div style={{ filter: "drop-shadow(0 0 12px rgba(139,92,246,0.35))" }}>
           <NovaWordmark dark={true} showTag={false} height={32} />
         </div>
@@ -112,6 +115,26 @@ export function Sidebar({
           const isActive =
             pathname === link.href ||
             (link.href !== `/dashboard/${role.toLowerCase()}` && pathname.startsWith(link.href));
+
+          // Check if this feature is locked by the current plan
+          const isLocked = link.planFeature
+            ? !(limits[link.planFeature] as boolean)
+            : false;
+
+          if (isLocked) {
+            return (
+              <div key={link.href} title={`Disponible en Plan PRO`}>
+                <div
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium"
+                  style={{ color: "rgba(255,255,255,0.20)", cursor: "not-allowed" }}
+                >
+                  <link.icon size={16} strokeWidth={1.5} />
+                  <span className="tracking-wide flex-1">{(dict as any).common[link.key] ?? link.key}</span>
+                  <Lock size={11} style={{ color: "rgba(255,184,0,0.50)", flexShrink: 0 }} />
+                </div>
+              </div>
+            );
+          }
 
           return (
             <Link key={link.href} href={link.href} onClick={onClose}>
@@ -131,7 +154,6 @@ export function Sidebar({
                   if (!isActive) e.currentTarget.style.background = "transparent";
                 }}
               >
-                {/* Active indicator */}
                 {isActive && (
                   <div
                     className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
@@ -181,15 +203,24 @@ export function Sidebar({
             )}
           </motion.div>
         </Link>
+
+        {/* Plan badge — solo STARTER */}
+        {plan === "STARTER" && (
+          <div className="mt-3 mx-1 px-3 py-2 rounded-xl"
+            style={{ background: "rgba(255,184,0,0.06)", border: "1px solid rgba(255,184,0,0.15)" }}>
+            <p className="text-[10px] font-bold tracking-wider uppercase mb-0.5" style={{ color: "rgba(255,184,0,0.60)" }}>
+              Plan Starter
+            </p>
+            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>
+              Actualiza a PRO para desbloquear gamificación, evidencias y más.
+            </p>
+          </div>
+        )}
       </nav>
 
       {/* User profile */}
-      <div
-        className="px-3 py-4"
-        style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-      >
+      <div className="px-3 py-4" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
         <div className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-          {/* Club logo as avatar */}
           <div
             className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center text-xs font-bold"
             style={{
@@ -204,7 +235,6 @@ export function Sidebar({
               : clubName.charAt(0).toUpperCase()
             }
           </div>
-
           <div className="flex-1 min-w-0">
             <p className="text-[13px] font-semibold truncate leading-none mb-1" style={{ color: "rgba(255,255,255,0.82)" }}>
               {userName}
@@ -213,7 +243,6 @@ export function Sidebar({
               {clubName} · {role}
             </p>
           </div>
-
           <form action="/api/auth/signout" method="POST">
             <button
               type="submit"

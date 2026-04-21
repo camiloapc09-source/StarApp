@@ -27,6 +27,22 @@ export async function POST(req: NextRequest) {
   const existing = await db.user.findFirst({ where: { email: parsed.data.email, clubId } });
   if (existing) return apiError("Email already in use", 400);
 
+  // Plan enforcement — coach limit
+  if (parsed.data.role === "COACH") {
+    const { getLimits } = await import("@/lib/plans");
+    const club = await db.club.findUnique({ where: { id: clubId }, select: { plan: true } });
+    const limits = getLimits(club?.plan ?? "STARTER");
+    if (limits.maxCoaches !== Infinity) {
+      const coachCount = await db.user.count({ where: { clubId, role: "COACH" } });
+      if (coachCount >= limits.maxCoaches) {
+        return apiError(
+          `Tu plan ${club?.plan ?? "STARTER"} permite máximo ${limits.maxCoaches} entrenadores. Actualiza a PRO para agregar más.`,
+          403
+        );
+      }
+    }
+  }
+
   const hashed = await hash(parsed.data.password, 12);
   const user = await db.user.create({
     data: {

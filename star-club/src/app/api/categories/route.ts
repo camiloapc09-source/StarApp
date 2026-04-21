@@ -31,6 +31,20 @@ export async function POST(req: NextRequest) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
+  // Plan enforcement — category limit
+  const { getLimits } = await import("@/lib/plans");
+  const club = await db.club.findUnique({ where: { id: clubId }, select: { plan: true } });
+  const limits = getLimits(club?.plan ?? "STARTER");
+  if (limits.maxCategories !== Infinity) {
+    const count = await db.category.count({ where: { clubId } });
+    if (count >= limits.maxCategories) {
+      return apiError(
+        `Tu plan ${club?.plan ?? "STARTER"} permite máximo ${limits.maxCategories} categorías. Actualiza a PRO para agregar más.`,
+        403
+      );
+    }
+  }
+
   try {
     const category = await db.category.create({ data: { ...parsed.data, clubId } });
     return apiOk(category, 201);

@@ -18,6 +18,23 @@ export default async function AdminGamificationPage() {
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
+  // Plan gate
+  const clubForPlan = await db.club.findUnique({ where: { id: clubId }, select: { plan: true } });
+  const { getLimits } = await import("@/lib/plans");
+  const { default: UpgradeBanner } = await import("@/components/admin/upgrade-banner");
+  if (!getLimits(clubForPlan?.plan ?? "STARTER").gamification) {
+    return (
+      <div>
+        <Header title="Gamificación" subtitle="XP, misiones y recompensas" />
+        <UpgradeBanner
+          feature="Gamificación"
+          description="XP, misiones, recompensas y ranking de jugadores están disponibles en el plan PRO."
+          currentPlan={clubForPlan?.plan}
+        />
+      </div>
+    );
+  }
+
   const [missions, players, allPlayers, rewards] = await Promise.all([
     db.mission.findMany({
       where: { clubId },

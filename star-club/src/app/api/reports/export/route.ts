@@ -24,6 +24,12 @@ export async function GET(req: NextRequest) {
   if (isResponse(session)) return session;
   const clubId = getClubId(session);
 
+  const { getLimits } = await import("@/lib/plans");
+  const club = await db.club.findUnique({ where: { id: clubId }, select: { plan: true } });
+  if (!getLimits(club?.plan ?? "STARTER").exportExcel) {
+    return apiError("Exportar datos requiere el plan PRO.", 403);
+  }
+
   const { searchParams } = new URL(req.url);
   const type = searchParams.get("type") ?? "players";
 

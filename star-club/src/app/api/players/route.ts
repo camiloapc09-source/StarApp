@@ -72,8 +72,26 @@ export async function POST(req: NextRequest) {
   const existing = await db.user.findFirst({ where: { email, clubId } });
   if (existing) return apiError("Email already in use", 400);
 
+  // Single query — needs plan + zonePrices + billingCycleDay
+  const club = await db.club.findUnique({
+    where: { id: clubId },
+    select: { plan: true, zonePrices: true, billingCycleDay: true },
+  });
+
+  // Plan enforcement — check player limit
+  const { getLimits } = await import("@/lib/plans");
+  const limits = getLimits(club?.plan ?? "STARTER");
+  if (limits.maxPlayers !== Infinity) {
+    const activeCount = await db.player.count({ where: { clubId, status: "ACTIVE" } });
+    if (activeCount >= limits.maxPlayers) {
+      return apiError(
+        `Tu plan ${club?.plan ?? "STARTER"} permite máximo ${limits.maxPlayers} jugadores activos. Actualiza a PRO para agregar más.`,
+        403
+      );
+    }
+  }
+
   // Resolve monthlyAmount: prefer explicit fee, else derive from club zone prices
-  const club = await db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true, billingCycleDay: true } });
   const zonePrices = club?.zonePrices as Record<string, number> | null;
   const resolvedMonthlyFee = monthlyFee ?? (zone && zonePrices ? zonePrices[zone] : undefined);
 

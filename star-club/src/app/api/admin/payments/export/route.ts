@@ -8,6 +8,12 @@ export async function GET(req: NextRequest) {
   if (isResponse(session)) return session;
   const clubId = getClubId(session);
 
+  const { getLimits } = await import("@/lib/plans");
+  const club = await db.club.findUnique({ where: { id: clubId }, select: { plan: true } });
+  if (!getLimits(club?.plan ?? "STARTER").exportExcel) {
+    return new NextResponse(JSON.stringify({ error: "Exportar datos requiere el plan PRO." }), { status: 403 });
+  }
+
   const url    = new URL(req.url);
   const status = url.searchParams.get("status");
 
