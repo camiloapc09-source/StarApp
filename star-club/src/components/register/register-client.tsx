@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { motion } from "framer-motion";
 import { NovaWordmark } from "@/components/nova-logo";
 
@@ -71,12 +72,12 @@ export default function RegisterClient() {
   const router = useRouter();
 
   const [isModalOpen, setModalOpen] = useState(!codeParam);
-  const [modalRole, setModalRole] = useState<"PLAYER" | "COACH" | "">("");
+  const [modalRole, setModalRole] = useState<"PLAYER" | "COACH" | "PARENT" | "">("");
   const [modalCode, setModalCode] = useState(codeParam);
   const [modalError, setModalError] = useState("");
 
   const [code, setCode] = useState(codeParam);
-  const [invite, setInvite] = useState<{ role: string; branches?: string[]; club?: { name: string; slug: string; logo: string | null; zonePrices?: Record<string, number> | null } } | null>(null);
+  const [invite, setInvite] = useState<{ role: string; branches?: string[]; playerName?: string | null; club?: { name: string; slug: string; logo: string | null; zonePrices?: Record<string, number> | null } } | null>(null);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", dateOfBirth: "", documentNumber: "", phone: "", address: "", parentName: "", parentEmail: "", parentPhone: "", parentRelation: "", emergencyContact: "", eps: "", branch: "" });
 
@@ -93,8 +94,13 @@ export default function RegisterClient() {
     if (!code) return;
     fetch(`/api/invites?code=${encodeURIComponent(code)}`)
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => setInvite(d))
+      .then((d) => {
+        setInvite(d);
+        // Auto-set role if code was in URL (no modal shown)
+        if (d?.role && !modalRole) setModalRole(d.role.toUpperCase() as "PLAYER" | "COACH" | "PARENT");
+      })
       .catch(console.error);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code]);
 
   async function handleModalContinue() {
@@ -124,7 +130,7 @@ export default function RegisterClient() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (modalRole === "COACH") {
+    if (modalRole === "COACH" || modalRole === "PARENT") {
       if (form.password.length < 6) { alert("La contraseña debe tener al menos 6 caracteres."); return; }
       if (form.password !== form.confirmPassword) { alert("Las contraseñas no coinciden."); return; }
     }
@@ -137,10 +143,19 @@ export default function RegisterClient() {
       const payload: Record<string, unknown> = { code, name: form.name, email: form.email, dateOfBirth: form.dateOfBirth, documentNumber: form.documentNumber, phone: form.phone };
       if (modalRole === "COACH") { payload.password = form.password; payload.phone = form.phone || undefined; payload.emergencyContact = form.emergencyContact || undefined; payload.eps = form.eps || undefined; payload.branch = form.branch || undefined; }
       if (modalRole === "PLAYER") { payload.address = form.address || undefined; payload.zone = form.branch || undefined; payload.parentName = form.parentName || undefined; payload.parentPhone = form.parentPhone || undefined; payload.parentRelation = form.parentRelation || undefined; }
+      if (modalRole === "PARENT") { payload.password = form.password; payload.phone = form.phone || undefined; payload.relation = form.parentRelation || undefined; }
       const res = await fetch("/api/invites/redeem", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const data = await res.json();
-      if (res.ok) { alert("¡Registro exitoso! Ya puedes iniciar sesión."); router.push(redirectSlug ? `/${redirectSlug}` : "/"); }
-      else alert(data.error || "Error al registrar");
+      if (res.ok) {
+        if (modalRole === "PARENT") {
+          const login = await signIn("credentials", { email: form.email, password: form.password, redirect: false });
+          if (login?.ok) { router.push("/dashboard/parent"); return; }
+        }
+        alert("¡Registro exitoso! Ya puedes iniciar sesión.");
+        router.push(redirectSlug ? `/${redirectSlug}` : "/");
+      } else {
+        alert(data.error || "Error al registrar");
+      }
     } catch { alert("Error al registrar"); }
     finally { setLoading(false); }
   }
@@ -253,7 +268,7 @@ export default function RegisterClient() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <p className="text-[10px] font-bold tracking-[0.35em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.25)" }}>
-              {modalRole === "COACH" ? "Registro de entrenador" : "Registro de deportista"}
+              {modalRole === "COACH" ? "Registro de entrenador" : modalRole === "PARENT" ? "Registro de padre / tutor" : "Registro de deportista"}
             </p>
             <h1 className="text-3xl font-black tracking-tight text-white">
               {clubName ?? "Registro"}
@@ -269,34 +284,56 @@ export default function RegisterClient() {
           )}
         </div>
 
+        {/* PARENT — player banner */}
+        {modalRole === "PARENT" && invite?.playerName && (
+          <div
+            className="rounded-2xl px-4 py-3 flex items-center gap-3 mb-6"
+            style={{ background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.20)" }}
+          >
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(52,211,153,0.15)" }}>
+              <span className="text-base">👶</span>
+            </div>
+            <div>
+              <p className="text-xs font-bold" style={{ color: "#34D399" }}>Vinculando a</p>
+              <p className="text-sm font-black text-white">{invite.playerName}</p>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <SectionLabel>Datos principales</SectionLabel>
 
           <SpaceInput label="Nombre completo" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Tu nombre completo" required />
           <SpaceInput label="Correo electrónico" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="tu@email.com" required />
-          <SpaceInput label="Número de documento" value={form.documentNumber} onChange={(e) => setForm({ ...form, documentNumber: e.target.value })} placeholder="Cédula / pasaporte" required />
-          <SpaceInput label="Teléfono / WhatsApp" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+57 300 000 0000" />
+          {modalRole !== "PARENT" && (
+            <SpaceInput label="Número de documento" value={form.documentNumber} onChange={(e) => setForm({ ...form, documentNumber: e.target.value })} placeholder="Cédula / pasaporte" required />
+          )}
+          {modalRole !== "PARENT" && (
+            <SpaceInput label="Teléfono / WhatsApp" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+57 300 000 0000" />
+          )}
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold tracking-[0.25em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
-              Fecha de nacimiento
-            </label>
-            <input
-              type="date"
-              value={form.dateOfBirth}
-              onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
-              required
-              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.85)", colorScheme: "dark" }}
-              onFocus={(e) => { e.target.style.borderColor = "rgba(139,92,246,0.45)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.09)"; }}
-            />
-            {isMinor && (
-              <p className="text-[11px]" style={{ color: "rgba(251,146,60,0.90)" }}>
-                Menor de edad — datos del acudiente requeridos.
-              </p>
-            )}
-          </div>
+          {modalRole !== "PARENT" && (
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold tracking-[0.25em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+                Fecha de nacimiento
+              </label>
+              <input
+                type="date"
+                value={form.dateOfBirth}
+                onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
+                required
+                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.85)", colorScheme: "dark" }}
+                onFocus={(e) => { e.target.style.borderColor = "rgba(139,92,246,0.45)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.09)"; }}
+              />
+              {isMinor && (
+                <p className="text-[11px]" style={{ color: "rgba(251,146,60,0.90)" }}>
+                  Menor de edad — datos del acudiente requeridos.
+                </p>
+              )}
+            </div>
+          )}
 
           {/* COACH extra fields */}
           {modalRole === "COACH" && (
@@ -315,6 +352,23 @@ export default function RegisterClient() {
               ) : (
                 <SpaceInput label="Sede / Zona" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} placeholder="Ej: NORTE, SUR, CENTRO" />
               )}
+            </>
+          )}
+
+          {/* PARENT extra fields */}
+          {modalRole === "PARENT" && (
+            <>
+              <SectionLabel>Acceso</SectionLabel>
+              <SpaceInput label="Contraseña" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Mínimo 6 caracteres" minLength={6} required />
+              <SpaceInput label="Confirmar contraseña" type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} placeholder="Repite la contraseña" minLength={6} required />
+              <SectionLabel>Información</SectionLabel>
+              <SpaceInput label="Teléfono / WhatsApp" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+57 300 000 0000" />
+              <SpaceSelect label="Relación con el deportista" value={form.parentRelation} onChange={(e) => setForm({ ...form, parentRelation: e.target.value })}>
+                <option value="">Seleccionar relación</option>
+                {["Padre", "Madre", "Abuelo/a", "Tío/a", "Hermano/a", "Acudiente"].map((r) => (
+                  <option key={r} value={r} style={{ background: "#0E0E2C" }}>{r}</option>
+                ))}
+              </SpaceSelect>
             </>
           )}
 

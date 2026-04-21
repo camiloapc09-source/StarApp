@@ -14,6 +14,7 @@ import AdminEditPlayerButton from "@/components/admin/admin-edit-player-button";
 import DeletePlayerButton from "@/components/admin/delete-player-button";
 import ResetPasswordButton from "@/components/admin/reset-password-button";
 import PlayerNotesPanel from "@/components/admin/player-notes-panel";
+import InviteParentButton from "@/components/admin/invite-parent-button";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -200,9 +201,18 @@ export default async function PlayerProfilePage({ params }: Props) {
         </div>
 
         {/* Parent / Guardian */}
-        {player.parentLinks.length > 0 && (
-          <Card className="p-6">
-            <h3 className="text-sm font-semibold mb-4">Acudiente / Tutor</h3>
+        <Card className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-semibold">Acudiente / Tutor</h3>
+            {player.parentLinks.length === 0 && (
+              <InviteParentButton playerId={player.id} playerName={player.user.name} />
+            )}
+          </div>
+          {player.parentLinks.length === 0 ? (
+            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+              Sin acudiente vinculado. Genera un enlace de invitación para que el padre se registre.
+            </p>
+          ) : (
             <div className="space-y-4">
               {player.parentLinks.map((link) => (
                 <div key={link.id}>
@@ -218,8 +228,8 @@ export default async function PlayerProfilePage({ params }: Props) {
                 </div>
               ))}
             </div>
-          </Card>
-        )}
+          )}
+        </Card>
 
         {/* Payments */}
         {player.payments.length > 0 ? (

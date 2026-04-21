@@ -21,6 +21,7 @@ const redeemSchema = z.object({
   parentEmail: z.string().email().optional(),
   parentPhone: z.string().optional(),
   parentRelation: z.string().optional(),
+  relation: z.string().optional(), // for PARENT role self-registration
 });
 
 export async function POST(req: NextRequest) {
@@ -121,6 +122,49 @@ export async function POST(req: NextRequest) {
     return apiOk(user, 201);
   }
 
+  // ── PARENT ──────────────────────────────────────────────────────────────────
+  if (role === "PARENT") {
+    if (!password) return apiError("La contraseña es obligatoria", 400);
+
+    const payload = invite.payload as { playerId?: string } | null;
+    if (!payload?.playerId) return apiError("Invite inválido — sin jugador vinculado", 400);
+
+    const player = await db.player.findFirst({
+      where: { id: payload.playerId, clubId },
+      select: { id: true },
+    });
+    if (!player) return apiError("Jugador no encontrado", 404);
+
+    const hashed = await hash(password, 12);
+
+    const user = await db.user.create({
+      data: {
+        clubId, name, email, password: hashed, role: "PARENT",
+        phone: phone || null,
+      },
+    });
+
+    const parent = await db.parent.create({
+      data: {
+        userId: user.id,
+        phone: phone || null,
+        relation: parsed.data.relation || null,
+      },
+    });
+
+    await db.parentPlayer.create({
+      data: { parentId: parent.id, playerId: player.id },
+    });
+
+    await db.invite.update({
+      where: { id: invite.id },
+      data: { used: true, usedBy: user.id, usedAt: new Date() },
+    });
+
+    return apiOk(user, 201);
+  }
+
+  // ── COACH ───────────────────────────────────────────────────────────────────
   if (!password) return apiError("Password is required", 400);
   const hashed = await hash(password, 12);
 

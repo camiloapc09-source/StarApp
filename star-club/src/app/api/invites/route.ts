@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireAdmin, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
 
 const createInviteSchema = z.object({
-  role: z.enum(["PLAYER", "COACH"]).default("PLAYER"),
+  role: z.enum(["PLAYER", "COACH", "PARENT"]).default("PLAYER"),
   payload: z.any().optional(),
   expiresAt: z.string().optional(),
 });
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
   if (code) {
     const invite = await db.invite.findUnique({
       where: { code },
-      select: { id: true, code: true, role: true, used: true, expiresAt: true, clubId: true, club: { select: { name: true, slug: true, logo: true, zonePrices: true } } },
+      select: { id: true, code: true, role: true, used: true, expiresAt: true, clubId: true, payload: true, club: { select: { name: true, slug: true, logo: true, zonePrices: true } } },
     });
     if (!invite) return apiOk(null);
     // Get distinct coach branches for this club (used as sede options in registration)
@@ -34,8 +34,22 @@ export async function GET(req: NextRequest) {
       distinct: ["branch"],
     });
     const branches = coachBranches.map((c) => c.branch!).sort();
+
+    // For PARENT invites, expose the linked player's name
+    let playerName: string | null = null;
+    if (invite.role === "PARENT" && invite.payload) {
+      const p = invite.payload as { playerId?: string };
+      if (p.playerId) {
+        const player = await db.player.findUnique({
+          where: { id: p.playerId },
+          select: { user: { select: { name: true } } },
+        });
+        playerName = player?.user.name ?? null;
+      }
+    }
+
     const { clubId: _cid, ...rest } = invite;
-    return apiOk({ ...rest, branches });
+    return apiOk({ ...rest, branches, playerName });
   }
 
   const session = await requireAdmin();
