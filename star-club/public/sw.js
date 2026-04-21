@@ -1,4 +1,31 @@
-const CACHE_NAME = "star-club-v1";
+const CACHE_NAME = "star-club-v2";
+
+// ─── Push notifications ────────────────────────────────────
+self.addEventListener("push", (event) => {
+  if (!event.data) return;
+  const { title, body, url } = event.data.json();
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "/icons/icon-192x192.png",
+      badge: "/icons/icon-96x96.png",
+      data: { url: url ?? "/" },
+      vibrate: [100, 50, 100],
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = event.notification.data?.url ?? "/";
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((list) => {
+      const existing = list.find((c) => c.url.includes(self.location.origin));
+      if (existing) { existing.focus(); existing.navigate(url); }
+      else clients.openWindow(url);
+    })
+  );
+});
 
 const STATIC_ASSETS = [
   "/",

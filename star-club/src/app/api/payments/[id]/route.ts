@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { requireAdmin, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
+import { sendPaymentConfirmedEmail } from "@/lib/email";
+import { sendPushToUser } from "@/lib/push";
 
 // PATCH /api/payments/[id] — admin confirms payment (full or partial)
 // Body: { paymentMethod?: string, paidAmount?: number }
@@ -82,6 +84,40 @@ export async function PATCH(
       type:    "PAYMENT",
     },
   });
+
+  // Push al usuario del jugador
+  await sendPushToUser(payment.player.userId, {
+    title: isPartial ? "Abono registrado ✓" : "Pago confirmado ✓",
+    body: `$${effectiveAmount.toLocaleString("es-CO")} por "${payment.concept}"`,
+    url: "/dashboard/parent/payments",
+  });
+
+  // Email al padre — solo en pago completo
+  if (!isPartial) {
+    const playerWithParent = await db.player.findUnique({
+      where: { id: existing.playerId },
+      select: {
+        user: { select: { name: true } },
+        parentLinks: {
+          take: 1,
+          include: { parent: { include: { user: { select: { name: true, email: true } } } } },
+        },
+      },
+    });
+    const club = await db.club.findUnique({ where: { id: clubId }, select: { name: true } });
+    const parentLink = playerWithParent?.parentLinks[0]?.parent;
+    if (parentLink?.user?.email) {
+      await sendPaymentConfirmedEmail({
+        to: parentLink.user.email,
+        parentName: parentLink.user.name,
+        playerName: playerWithParent?.user.name ?? "",
+        concept: payment.concept,
+        amountCOP: effectiveAmount,
+        clubName: club?.name ?? "Star Club",
+        appUrl: process.env.NEXTAUTH_URL ?? "https://starapp.onrender.com",
+      });
+    }
+  }
 
   // Auto-generate next month only on full payment
   if (!isPartial) {

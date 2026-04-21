@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { hash } from "bcryptjs";
 import { apiError, apiOk, rateLimit, getClientIp } from "@/lib/api";
+import { sendParentWelcomeEmail } from "@/lib/email";
 
 const redeemSchema = z.object({
   code: z.string().min(4),
@@ -159,6 +160,20 @@ export async function POST(req: NextRequest) {
     await db.invite.update({
       where: { id: invite.id },
       data: { used: true, usedBy: user.id, usedAt: new Date() },
+    });
+
+    // Email de bienvenida al padre
+    const club = await db.club.findUnique({ where: { id: clubId }, select: { name: true } });
+    const linkedPlayer = await db.player.findUnique({
+      where: { id: player.id },
+      select: { user: { select: { name: true } } },
+    });
+    await sendParentWelcomeEmail({
+      to: email,
+      parentName: name,
+      playerName: linkedPlayer?.user.name ?? "",
+      clubName: club?.name ?? "Star Club",
+      appUrl: process.env.NEXTAUTH_URL ?? "https://starapp.onrender.com",
     });
 
     return apiOk(user, 201);

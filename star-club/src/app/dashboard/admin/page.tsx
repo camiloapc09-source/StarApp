@@ -12,6 +12,7 @@ import {
   UserPlus, Calendar, BarChart3, Trophy,
 } from "lucide-react";
 import Link from "next/link";
+import OnboardingWizard from "@/components/admin/onboarding-wizard";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -30,6 +31,7 @@ export default async function AdminDashboard() {
   const [
     totalPlayers, pendingPlayers, completedPayments, pendingPayments,
     categories, recentPlayers, overduePayments, totalSessions, unreadNotifications,
+    categoryCount, playerCount, sessionCount,
   ] = await Promise.all([
     db.player.count({ where: { clubId, status: "ACTIVE" } }),
     db.player.count({ where: { clubId, status: "PENDING" } }),
@@ -43,6 +45,9 @@ export default async function AdminDashboard() {
     db.payment.count({ where: { clubId, status: "OVERDUE" } }),
     db.session.count({ where: { clubId } }),
     db.notification.count({ where: { userId: session.user.id, isRead: false } }),
+    db.category.count({ where: { clubId } }),
+    db.player.count({ where: { clubId } }),
+    db.session.count({ where: { clubId } }),
   ]);
 
   const quickActions = [
@@ -82,6 +87,13 @@ export default async function AdminDashboard() {
               : `Todo al día · ${totalPlayers} jugadores activos en el club.`}
           </p>
         </div>
+
+        {/* Onboarding wizard — solo visible si el club está vacío */}
+        <OnboardingWizard
+          hasCategories={categoryCount > 0}
+          hasPlayers={playerCount > 0}
+          hasSessions={sessionCount > 0}
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

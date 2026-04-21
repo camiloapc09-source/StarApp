@@ -370,6 +370,18 @@ model AccessCode {
   @@index([code])
 }
 
+// ─── PUSH SUBSCRIPTIONS ───────────────────────────────────
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
 // ─── PLAYER NOTES (coach observations, injuries) ──────────
 model PlayerNote {
   id        String   @id @default(cuid())

@@ -2,6 +2,7 @@
 
 import { Bell } from "lucide-react";
 import LanguageToggle from "@/components/language-toggle";
+import PushButton from "@/components/ui/push-button";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -43,8 +44,9 @@ export function Header({ title, subtitle, notificationCount = 0 }: HeaderProps) 
           </div>
         </div>
 
-        {/* Right — language + notifications */}
+        {/* Right — language + push + notifications */}
         <div className="flex items-center gap-2.5">
+          <PushButton />
           <LanguageToggle />
 
           <Link
