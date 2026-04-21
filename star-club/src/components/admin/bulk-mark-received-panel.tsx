@@ -9,7 +9,7 @@ import {
   Loader2, PhoneCall, X, Check,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
-import { PaymentCashButton } from "@/components/admin/payment-actions";
+import RecordPaymentModal from "@/components/admin/record-payment-modal";
 
 const METHOD_LABELS: Record<string, string> = {
   CASH:     "Efectivo",
@@ -186,7 +186,12 @@ export default function BulkMarkReceivedPanel({ payments }: Props) {
                 {/* Actions */}
                 <div className="flex items-center gap-2 flex-wrap pl-[42px]"
                   onClick={(e) => e.stopPropagation()}>
-                  <PaymentCashButton paymentId={payment.id} />
+                  <RecordPaymentModal
+                    paymentId={payment.id}
+                    playerName={payment.player.user.name}
+                    concept={payment.concept}
+                    fullAmount={payment.amount}
+                  />
                   {waHref && (
                     <a href={waHref} target="_blank" rel="noreferrer"
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"

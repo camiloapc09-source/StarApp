@@ -10,12 +10,17 @@ export function PaymentConfirmButton({ paymentId }: { paymentId: string }) {
 
   async function confirm() {
     setLoading(true);
-    await fetch(`/api/payments/${paymentId}`, {
+    const res = await fetch(`/api/payments/${paymentId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
     });
-    router.refresh();
+    if (res.ok) {
+      router.push(`/dashboard/admin/payments/batch-receipt?ids=${paymentId}`);
+    } else {
+      setLoading(false);
+      router.refresh();
+    }
   }
 
   return (
@@ -26,7 +31,7 @@ export function PaymentConfirmButton({ paymentId }: { paymentId: string }) {
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
       style={{ background: "rgba(0,255,135,0.15)", color: "var(--success)", border: "1px solid rgba(0,255,135,0.3)" }}
     >
-      <Check size={13} /> {loading ? "Confirmando..." : "Confirmar"}
+      <Check size={13} /> {loading ? "Confirmando..." : "Confirmar y recibo"}
     </button>
   );
 }
