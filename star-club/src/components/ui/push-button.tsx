@@ -54,16 +54,18 @@ export default function PushButton() {
   return (
     <button
       onClick={toggle}
-      title={state === "subscribed" ? "Desactivar notificaciones" : "Activar notificaciones push"}
-      className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
+      title={state === "subscribed" ? "Desactivar notificaciones" : state === "denied" ? "Notificaciones bloqueadas en el navegador" : "Activar notificaciones"}
+      className="relative p-2.5 rounded-lg transition-all"
       style={{
-        background: state === "subscribed" ? "rgba(52,211,153,0.12)" : "rgba(139,92,246,0.12)",
-        border: `1px solid ${state === "subscribed" ? "rgba(52,211,153,0.25)" : "rgba(139,92,246,0.25)"}`,
-        color: state === "subscribed" ? "#34D399" : state === "denied" ? "var(--text-muted)" : "#A78BFA",
+        background: state === "subscribed" ? "rgba(52,211,153,0.12)" : "rgba(255,255,255,0.04)",
+        border: `1px solid ${state === "subscribed" ? "rgba(52,211,153,0.30)" : "rgba(255,255,255,0.08)"}`,
+        color: state === "subscribed" ? "#34D399" : state === "denied" ? "rgba(255,255,255,0.20)" : "rgba(255,255,255,0.45)",
       }}
     >
-      {state === "subscribed" ? <Bell size={13} /> : <BellOff size={13} />}
-      {state === "subscribed" ? "Notificaciones activas" : state === "denied" ? "Bloqueadas" : "Activar alertas"}
+      {state === "subscribed" ? <Bell size={16} /> : <BellOff size={16} />}
+      {state === "subscribed" && (
+        <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-green-400" />
+      )}
     </button>
   );
 }
