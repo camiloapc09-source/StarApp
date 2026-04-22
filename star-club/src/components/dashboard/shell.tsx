@@ -4,8 +4,8 @@ import { Sidebar } from "./sidebar";
 import { BottomNav } from "./bottom-nav";
 import { DashboardContext } from "./dashboard-context";
 import { NovaWordmark } from "@/components/nova-logo";
-import Link from "next/link";
-import { Bell, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
+import PushButton from "@/components/ui/push-button";
 
 interface DashboardShellProps {
   role: string;
@@ -28,8 +28,6 @@ export function DashboardShell({
   plan = "STARTER",
   children,
 }: DashboardShellProps) {
-  const notifHref = `/dashboard/${role.toLowerCase()}/notifications`;
-
   return (
     <DashboardContext.Provider value={{ clubLogo, clubName, plan }}>
       <div className="min-h-screen bg-[var(--bg-primary)]">
@@ -87,19 +85,9 @@ export function DashboardShell({
               <NovaWordmark dark height={22} showTag={false} />
             </div>
 
-            {/* Right: bell + logout */}
+            {/* Right: push + logout */}
             <div className="flex items-center gap-1">
-              <Link href={notifHref} className="relative p-2 rounded-xl" style={{ color: "rgba(255,255,255,0.45)" }}>
-                <Bell size={18} strokeWidth={1.8} />
-                {notificationCount > 0 && (
-                  <span
-                    className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black text-white"
-                    style={{ background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}
-                  >
-                    {notificationCount > 9 ? "9+" : notificationCount}
-                  </span>
-                )}
-              </Link>
+              <PushButton />
               <form action="/api/auth/signout" method="POST">
                 <button
                   type="submit"
