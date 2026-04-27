@@ -142,7 +142,7 @@ export default function BulkMarkReceivedPanel({ payments }: Props) {
                 ? `Hola ${parentLink?.user?.name || payment.player.user.name}, le informamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" está vencido desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")}. Por favor regularice su situación. Gracias.`
                 : `Hola ${parentLink?.user?.name || payment.player.user.name}, le recordamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" vence el ${format(new Date(payment.dueDate), "dd/MM/yyyy")}. No olvide realizarlo a tiempo.`
             );
-            const waHref = digits ? `https://wa.me/57${digits.replace(/^57/, "")}?text=${waMsg}` : null;
+            const waHref = digits ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${waMsg}` : null;
 
             return (
               <div
