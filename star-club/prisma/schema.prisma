@@ -75,6 +75,7 @@ model Category {
   clubId      String   @default("club-star")
   club        Club     @relation(fields: [clubId], references: [id])
   name        String
+  gender      String?  // "M" | "F" | null (mixed/unisex)
   description String?
   ageMin      Int
   ageMax      Int
@@ -106,6 +107,9 @@ model Player {
   paymentDay    Int?
   monthlyAmount Float?
   position    String?
+  height      Float?   // cm
+  weight      Float?   // kg
+  gender      String?  // "M" | "F"
   jerseyNumber Int?
   status      String   @default("ACTIVE") // ACTIVE | PENDING | INACTIVE
 
