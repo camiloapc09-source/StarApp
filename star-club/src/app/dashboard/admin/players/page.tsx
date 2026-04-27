@@ -13,20 +13,25 @@ import { calculateLevel } from "@/lib/utils";
 import NewInviteForm from "@/components/admin/new-invite-form";
 import AvatarReviewList from "@/components/admin/avatar-review-list";
 
-type Props = { searchParams: Promise<{ categoryId?: string }> };
+type Props = { searchParams: Promise<{ categoryId?: string; gender?: string }> };
 
 export default async function AdminPlayersPage({ searchParams }: Props) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
-  const { categoryId: selectedCategory } = await searchParams;
+  const { categoryId: selectedCategory, gender: selectedGender } = await searchParams;
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const t = await getDictionary();
 
+  const playerWhere: Record<string, unknown> = selectedCategory
+    ? { clubId, categoryId: selectedCategory }
+    : { clubId };
+  if (selectedGender === "F" || selectedGender === "M") playerWhere.gender = selectedGender;
+
   const [players, categories, pendingAvatars] = await Promise.all([
     db.player.findMany({
-      where: selectedCategory ? { clubId, categoryId: selectedCategory } : { clubId },
+      where: playerWhere,
       orderBy: { createdAt: "desc" },
       include: {
         user: true,
@@ -101,37 +106,69 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
         )}
 
         {/* Controls */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Link href="/dashboard/admin/players">
-              <span
-                className="px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer border transition-all"
-                style={!selectedCategory
-                  ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
-                  : { background: "var(--bg-elevated)", color: "var(--text-secondary)", borderColor: "var(--border-primary)" }}
-              >
-                Todos
-              </span>
-            </Link>
-            {categories.map((cat) => (
-              <Link key={cat.id} href={`/dashboard/admin/players?categoryId=${cat.id}`}>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            {/* Category chips */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Link href="/dashboard/admin/players">
                 <span
                   className="px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer border transition-all"
-                  style={selectedCategory === cat.id
+                  style={!selectedCategory
                     ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
                     : { background: "var(--bg-elevated)", color: "var(--text-secondary)", borderColor: "var(--border-primary)" }}
                 >
-                  {cat.name}
+                  Todos
                 </span>
               </Link>
-            ))}
+              {categories.map((cat) => (
+                <Link key={cat.id} href={`/dashboard/admin/players?categoryId=${cat.id}`}>
+                  <span
+                    className="px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer border transition-all"
+                    style={selectedCategory === cat.id
+                      ? { background: "var(--accent)", color: "#000", borderColor: "var(--accent)" }
+                      : { background: "var(--bg-elevated)", color: "var(--text-secondary)", borderColor: "var(--border-primary)" }}
+                  >
+                    {cat.name}
+                  </span>
+                </Link>
+              ))}
+            </div>
+            <Link href="/dashboard/admin/players/new">
+              <Button>
+                <Plus size={16} />
+                {t.common.addPlayer}
+              </Button>
+            </Link>
           </div>
-          <Link href="/dashboard/admin/players/new">
-            <Button>
-              <Plus size={16} />
-              {t.common.addPlayer}
-            </Button>
-          </Link>
+
+          {/* Gender tabs — visible when a category is selected */}
+          {selectedCategory && (
+            <div className="flex items-center gap-1 p-1 rounded-xl w-fit"
+              style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              {[
+                { label: "Todos", value: undefined },
+                { label: "♀ Femenino", value: "F" },
+                { label: "♂ Masculino", value: "M" },
+              ].map(({ label, value }) => {
+                const isActive = (value === undefined && !selectedGender) || selectedGender === value;
+                const href = value
+                  ? `/dashboard/admin/players?categoryId=${selectedCategory}&gender=${value}`
+                  : `/dashboard/admin/players?categoryId=${selectedCategory}`;
+                return (
+                  <Link key={label} href={href}>
+                    <span
+                      className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                      style={isActive
+                        ? { background: "rgba(139,92,246,0.25)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.40)" }
+                        : { color: "rgba(255,255,255,0.40)", border: "1px solid transparent" }}
+                    >
+                      {label}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Players Table */}
