@@ -25,7 +25,7 @@ export default async function PlayerProfilePage({ params }: Props) {
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
-  const [player, categories] = await Promise.all([
+  const [player, categories, club] = await Promise.all([
     db.player.findFirst({
       where: { id, clubId },
       include: {
@@ -43,7 +43,10 @@ export default async function PlayerProfilePage({ params }: Props) {
       },
     }),
     db.category.findMany({ where: { clubId }, orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true } }),
   ]);
+
+  const zones = club?.zonePrices ? Object.keys(club.zonePrices as Record<string, unknown>) : [];
 
   if (!player) redirect("/dashboard/admin/players");
 
@@ -138,6 +141,7 @@ export default async function PlayerProfilePage({ params }: Props) {
               <AdminEditPlayerButton
                 player={{
                   id: player.id,
+                  zone: player.zone,
                   position: player.position,
                   jerseyNumber: player.jerseyNumber,
                   paymentDay: player.paymentDay,
@@ -150,6 +154,7 @@ export default async function PlayerProfilePage({ params }: Props) {
                   user: { name: player.user.name, email: player.user.email },
                 }}
                 categories={categories}
+                zones={zones}
               />
               <DeletePlayerButton playerId={player.id} playerName={player.user.name} />
               <ResetPasswordButton userId={player.user.id} userName={player.user.name} role="PLAYER" />
@@ -168,6 +173,7 @@ export default async function PlayerProfilePage({ params }: Props) {
               {player.documentNumber && <InfoRow label="Documento" value={player.documentNumber} />}
               {player.phone && <InfoRow label="Teléfono / WhatsApp" value={player.phone} />}
               {player.address && <InfoRow label="Dirección" value={player.address} />}
+              {player.zone && <InfoRow label="Sede" value={player.zone} />}
               {player.category && <InfoRow label="Categoría" value={player.category.name} />}
               {player.jerseyNumber != null && <InfoRow label="Camiseta" value={`#${player.jerseyNumber}`} />}
               {player.position && <InfoRow label="Posición" value={player.position} />}

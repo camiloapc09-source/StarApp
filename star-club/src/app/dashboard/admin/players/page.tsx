@@ -13,13 +13,13 @@ import { calculateLevel } from "@/lib/utils";
 import NewInviteForm from "@/components/admin/new-invite-form";
 import AvatarReviewList from "@/components/admin/avatar-review-list";
 
-type Props = { searchParams: Promise<{ categoryId?: string; gender?: string }> };
+type Props = { searchParams: Promise<{ categoryId?: string; gender?: string; zone?: string }> };
 
 export default async function AdminPlayersPage({ searchParams }: Props) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
-  const { categoryId: selectedCategory, gender: selectedGender } = await searchParams;
+  const { categoryId: selectedCategory, gender: selectedGender, zone: selectedZone } = await searchParams;
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const t = await getDictionary();
@@ -28,8 +28,9 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
     ? { clubId, categoryId: selectedCategory }
     : { clubId };
   if (selectedGender === "F" || selectedGender === "M") playerWhere.gender = selectedGender;
+  if (selectedZone) playerWhere.zone = selectedZone;
 
-  const [players, categories, pendingAvatars] = await Promise.all([
+  const [players, categories, pendingAvatars, club] = await Promise.all([
     db.player.findMany({
       where: playerWhere,
       orderBy: { createdAt: "desc" },
@@ -44,9 +45,20 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
       where: { clubId, avatarStatus: "PENDING", avatarPending: { not: null } },
       select: { id: true, name: true, avatarPending: true },
     }),
+    db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true } }),
   ]);
 
+  const zones = club?.zonePrices ? Object.keys(club.zonePrices as Record<string, unknown>) : [];
   const pendingPlayers = players.filter((p) => p.status === "PENDING");
+
+  function buildHref(opts: { categoryId?: string; gender?: string; zone?: string }) {
+    const p = new URLSearchParams();
+    if (opts.categoryId) p.set("categoryId", opts.categoryId);
+    if (opts.gender) p.set("gender", opts.gender);
+    if (opts.zone) p.set("zone", opts.zone);
+    const q = p.toString();
+    return `/dashboard/admin/players${q ? `?${q}` : ""}`;
+  }
 
   return (
     <div>
@@ -110,7 +122,7 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
           <div className="flex items-center justify-between flex-wrap gap-3">
             {/* Category chips */}
             <div className="flex items-center gap-2 flex-wrap">
-              <Link href="/dashboard/admin/players">
+              <Link href={buildHref({ gender: selectedGender, zone: selectedZone })}>
                 <span
                   className="px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer border transition-all"
                   style={!selectedCategory
@@ -121,7 +133,7 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
                 </span>
               </Link>
               {categories.map((cat) => (
-                <Link key={cat.id} href={`/dashboard/admin/players?categoryId=${cat.id}`}>
+                <Link key={cat.id} href={buildHref({ categoryId: cat.id, gender: selectedGender, zone: selectedZone })}>
                   <span
                     className="px-3 py-1.5 rounded-xl text-xs font-medium cursor-pointer border transition-all"
                     style={selectedCategory === cat.id
@@ -141,6 +153,31 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
             </Link>
           </div>
 
+          {/* Sede/zone chips — visible when club has zones */}
+          {zones.length > 0 && (
+            <div className="flex items-center gap-1 p-1 rounded-xl w-fit"
+              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <Link href={buildHref({ categoryId: selectedCategory, gender: selectedGender })}>
+                <span className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                  style={!selectedZone
+                    ? { background: "rgba(52,211,153,0.20)", color: "#6EE7B7", border: "1px solid rgba(52,211,153,0.35)" }
+                    : { color: "rgba(255,255,255,0.40)", border: "1px solid transparent" }}>
+                  Todas las sedes
+                </span>
+              </Link>
+              {zones.map((z) => (
+                <Link key={z} href={buildHref({ categoryId: selectedCategory, gender: selectedGender, zone: z })}>
+                  <span className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
+                    style={selectedZone === z
+                      ? { background: "rgba(52,211,153,0.20)", color: "#6EE7B7", border: "1px solid rgba(52,211,153,0.35)" }
+                      : { color: "rgba(255,255,255,0.40)", border: "1px solid transparent" }}>
+                    {z}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
+
           {/* Gender tabs — visible when a category is selected */}
           {selectedCategory && (
             <div className="flex items-center gap-1 p-1 rounded-xl w-fit"
@@ -151,11 +188,8 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
                 { label: "♂ Masculino", value: "M" },
               ].map(({ label, value }) => {
                 const isActive = (value === undefined && !selectedGender) || selectedGender === value;
-                const href = value
-                  ? `/dashboard/admin/players?categoryId=${selectedCategory}&gender=${value}`
-                  : `/dashboard/admin/players?categoryId=${selectedCategory}`;
                 return (
-                  <Link key={label} href={href}>
+                  <Link key={label} href={buildHref({ categoryId: selectedCategory, gender: value, zone: selectedZone })}>
                     <span
                       className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
                       style={isActive

@@ -7,6 +7,7 @@ import { Pencil, X, Check, Loader2 } from "lucide-react";
 type Props = {
   player: {
     id: string;
+    zone: string | null;
     position: string | null;
     jerseyNumber: number | null;
     paymentDay: number | null;
@@ -19,9 +20,10 @@ type Props = {
     user: { name: string; email: string };
   };
   categories: { id: string; name: string }[];
+  zones?: string[];
 };
 
-export default function AdminEditPlayerButton({ player, categories }: Props) {
+export default function AdminEditPlayerButton({ player, categories, zones = [] }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -30,6 +32,7 @@ export default function AdminEditPlayerButton({ player, categories }: Props) {
 
   const [data, setData] = useState({
     userName: player.user.name,
+    zone: player.zone ?? "",
     categoryId: player.categoryId ?? "",
     position: player.position ?? "",
     jerseyNumber: player.jerseyNumber != null ? String(player.jerseyNumber) : "",
@@ -50,6 +53,7 @@ export default function AdminEditPlayerButton({ player, categories }: Props) {
     setError(null);
     const body: Record<string, unknown> = {
       userName: data.userName,
+      zone: data.zone || null,
       categoryId: data.categoryId || null,
       position: data.position || null,
       jerseyNumber: data.jerseyNumber !== "" ? parseInt(data.jerseyNumber) : null,
@@ -111,22 +115,61 @@ export default function AdminEditPlayerButton({ player, categories }: Props) {
                   <label className="text-xs font-medium block mb-1" style={{ color: "var(--text-muted)" }}>NOMBRE COMPLETO</label>
                   <input value={data.userName} onChange={set("userName")} required className={inputCls} style={inputStyle} />
                 </div>
+
+                {/* Sede → Categoría */}
+                {zones.length > 0 && (
+                  <div className="col-span-2">
+                    <label className="text-xs font-medium block mb-2" style={{ color: "var(--text-muted)" }}>SEDE</label>
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        type="button"
+                        onClick={() => setData((d) => ({ ...d, zone: "" }))}
+                        className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
+                        style={!data.zone
+                          ? { background: "rgba(52,211,153,0.18)", color: "#6EE7B7", borderColor: "rgba(52,211,153,0.35)" }
+                          : { background: "var(--bg-elevated)", color: "var(--text-muted)", borderColor: "var(--border-primary)" }}
+                      >
+                        Sin sede
+                      </button>
+                      {zones.map((z) => (
+                        <button
+                          key={z}
+                          type="button"
+                          onClick={() => setData((d) => ({ ...d, zone: z }))}
+                          className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
+                          style={data.zone === z
+                            ? { background: "rgba(52,211,153,0.18)", color: "#6EE7B7", borderColor: "rgba(52,211,153,0.35)" }
+                            : { background: "var(--bg-elevated)", color: "var(--text-muted)", borderColor: "var(--border-primary)" }}
+                        >
+                          {z}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="col-span-2">
-                  <label className="text-xs font-medium block mb-1" style={{ color: "var(--text-muted)" }}>CATEGORIA</label>
+                  <label className="text-xs font-medium block mb-1" style={{ color: "var(--text-muted)" }}>CATEGORÍA</label>
                   <select value={data.categoryId} onChange={set("categoryId")} className={inputCls} style={inputStyle}>
-                    <option value="">Sin categoria</option>
+                    <option value="">Sin categoría</option>
                     {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
+
                 <div>
-                  <label className="text-xs font-medium block mb-1" style={{ color: "var(--text-muted)" }}>POSICION</label>
+                  <label className="text-xs font-medium block mb-1" style={{ color: "var(--text-muted)" }}>POSICIÓN</label>
                   <select value={data.position} onChange={set("position")} className={inputCls} style={inputStyle}>
-                    <option value="">Sin posicion</option>
-                    <option value="Base">Base (Point Guard)</option>
-                    <option value="Escolta">Escolta (Shooting Guard)</option>
-                    <option value="Alero">Alero (Small Forward)</option>
-                    <option value="Ala-Pivot">Ala-Pivot (Power Forward)</option>
-                    <option value="Pivot">Pivot (Center)</option>
+                    <option value="">Sin posición</option>
+                    <option value="Punta">Punta</option>
+                    <option value="Central">Central</option>
+                    <option value="Líbero">Líbero</option>
+                    <option value="Armador">Armador</option>
+                    <option value="Opuesto">Opuesto</option>
+                    <option value="Base">Base</option>
+                    <option value="Escolta">Escolta</option>
+                    <option value="Alero">Alero</option>
+                    <option value="Ala-Pivot">Ala-Pivot</option>
+                    <option value="Pivot">Pivot</option>
                   </select>
                 </div>
                 <div>
@@ -150,11 +193,11 @@ export default function AdminEditPlayerButton({ player, categories }: Props) {
                   <input value={data.documentNumber} onChange={set("documentNumber")} placeholder="CC / TI" className={inputCls} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="text-xs font-medium block mb-1" style={{ color: "var(--text-muted)" }}>TELEFONO</label>
+                  <label className="text-xs font-medium block mb-1" style={{ color: "var(--text-muted)" }}>TELÉFONO</label>
                   <input value={data.phone} onChange={set("phone")} placeholder="+57..." className={inputCls} style={inputStyle} />
                 </div>
                 <div>
-                  <label className="text-xs font-medium block mb-1" style={{ color: "var(--text-muted)" }}>DIRECCION</label>
+                  <label className="text-xs font-medium block mb-1" style={{ color: "var(--text-muted)" }}>DIRECCIÓN</label>
                   <input value={data.address} onChange={set("address")} placeholder="Calle, barrio..." className={inputCls} style={inputStyle} />
                 </div>
               </div>
