@@ -9,6 +9,7 @@ const createSessionSchema = z.object({
   date: z.string(),
   categoryId: z.string().optional().nullable(),
   coachId: z.string().optional().nullable(),
+  location: z.string().optional().nullable(),
   notes: z.string().optional(),
 });
 

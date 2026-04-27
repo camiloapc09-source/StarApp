@@ -38,7 +38,7 @@ export async function PATCH(
   if (!sess || sess.clubId !== clubId) return apiError("Not found", 404);
   if (session.user.role === "COACH" && sess.coachId !== session.user.id) return apiError("Forbidden", 403);
 
-  const allowed = ["title", "type", "date", "notes", "categoryId", "coachId"] as const;
+  const allowed = ["title", "type", "date", "notes", "categoryId", "coachId", "location"] as const;
   const data: Record<string, unknown> = {};
 
   for (const key of allowed) {

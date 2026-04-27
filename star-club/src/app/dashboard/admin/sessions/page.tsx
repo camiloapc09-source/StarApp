@@ -18,7 +18,7 @@ export default async function AdminSessionsPage() {
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
-  const [sessions, categories, coaches] = await Promise.all([
+  const [sessions, categories, coaches, club] = await Promise.all([
     db.session.findMany({
       where: { clubId },
       orderBy: { date: "desc" },
@@ -31,7 +31,12 @@ export default async function AdminSessionsPage() {
     }),
     db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } }),
     db.user.findMany({ where: { role: "COACH", clubId }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
+    db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true } }),
   ]);
+
+  const locations = club?.zonePrices
+    ? Object.keys(club.zonePrices as Record<string, unknown>)
+    : [];
 
   const typeLabel: Record<string, string> = { TRAINING: "Entrenamiento", MATCH: "Partido", EVENT: "Evento" };
   type BadgeVariant = "default" | "success" | "warning" | "error" | "info" | "accent";
@@ -51,6 +56,7 @@ export default async function AdminSessionsPage() {
             categories={categories.map((c) => ({ id: c.id, name: c.name }))}
             coaches={coaches}
             userRole="ADMIN"
+            locations={locations}
           />
         </Card>
 
@@ -64,6 +70,7 @@ export default async function AdminSessionsPage() {
             categories={categories.map((c) => ({ id: c.id, name: c.name }))}
             coaches={coaches}
             userRole="ADMIN"
+            locations={locations}
           />
         </Card>
 
@@ -103,6 +110,7 @@ export default async function AdminSessionsPage() {
                       <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
                         {format(new Date(s.date), "EE dd MMM yyyy · HH:mm", { locale: es })}
                         {s.category && ` · ${s.category.name}`}
+                        {s.location && ` · ${s.location}`}
                         {s.coach && ` · ${s.coach.name}`}
                       </p>
                     </div>
@@ -112,10 +120,11 @@ export default async function AdminSessionsPage() {
                         {s._count.attendances}
                       </div>
                       <EditSessionButton
-                        session={{ id: s.id, title: s.title, type: s.type, date: s.date.toISOString(), notes: s.notes, categoryId: s.categoryId, coachId: s.coachId }}
+                        session={{ id: s.id, title: s.title, type: s.type, date: s.date.toISOString(), notes: s.notes, categoryId: s.categoryId, coachId: s.coachId, location: s.location }}
                         categories={categories.map((c) => ({ id: c.id, name: c.name }))}
                         coaches={coaches}
                         userRole="ADMIN"
+                        locations={locations}
                       />
                       <DeleteSessionButton sessionId={s.id} sessionTitle={s.title} />
                     </div>

@@ -14,9 +14,10 @@ type Props = {
   categories: { id: string; name: string }[];
   userRole?: string;
   coaches?: { id: string; name: string }[];
+  locations?: string[];
 };
 
-export default function CreateSessionForm({ categories, userRole, coaches = [] }: Props) {
+export default function CreateSessionForm({ categories, userRole, coaches = [], locations = [] }: Props) {
   const TYPE_OPTIONS = ALL_TYPE_OPTIONS.filter((t) => !t.adminOnly || userRole === "ADMIN");
   const router = useRouter();
   const [title, setTitle] = useState("");
@@ -28,6 +29,7 @@ export default function CreateSessionForm({ categories, userRole, coaches = [] }
   });
   const [categoryId, setCategoryId] = useState("");
   const [coachId, setCoachId] = useState("");
+  const [location, setLocation] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -47,12 +49,13 @@ export default function CreateSessionForm({ categories, userRole, coaches = [] }
         date,
         categoryId: categoryId || null,
         coachId: coachId || null,
+        location: location || null,
         notes: notes.trim() || undefined,
       }),
     });
     if (res.ok) {
       setDone(true);
-      setTimeout(() => { router.refresh(); setDone(false); setTitle(""); setNotes(""); }, 1200);
+      setTimeout(() => { router.refresh(); setDone(false); setTitle(""); setNotes(""); setLocation(""); }, 1200);
     } else {
       const data = await res.json();
       setError(data.error ?? "Error al crear sesión");
@@ -69,6 +72,9 @@ export default function CreateSessionForm({ categories, userRole, coaches = [] }
     );
   }
 
+  const inputCls = "w-full rounded-xl px-4 py-3 text-sm outline-none border";
+  const inputStyle = { background: "var(--bg-elevated)", borderColor: "var(--border-primary)", color: "var(--text-primary)" };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -77,16 +83,16 @@ export default function CreateSessionForm({ categories, userRole, coaches = [] }
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Título de la sesión"
           required
-          className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
-          style={{ background: "var(--bg-elevated)", borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
+          className={inputCls}
+          style={inputStyle}
         />
         <input
           type="datetime-local"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           required
-          className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
-          style={{ background: "var(--bg-elevated)", borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
+          className={inputCls}
+          style={inputStyle}
         />
       </div>
 
@@ -112,8 +118,8 @@ export default function CreateSessionForm({ categories, userRole, coaches = [] }
         <select
           value={categoryId}
           onChange={(e) => setCategoryId(e.target.value)}
-          className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
-          style={{ background: "var(--bg-elevated)", borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
+          className={inputCls}
+          style={inputStyle}
         >
           <option value="">Todas las categorías</option>
           {categories.map((c) => (
@@ -122,19 +128,36 @@ export default function CreateSessionForm({ categories, userRole, coaches = [] }
         </select>
       </div>
 
-      {/* Coach selector — admin only */}
-      {userRole === "ADMIN" && coaches.length > 0 && (
-        <select
-          value={coachId}
-          onChange={(e) => setCoachId(e.target.value)}
-          className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
-          style={{ background: "var(--bg-elevated)", borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
-        >
-          <option value="">Sin entrenador asignado</option>
-          {coaches.map((c) => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
+      {/* Location + Coach row */}
+      {(locations.length > 0 || (userRole === "ADMIN" && coaches.length > 0)) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {locations.length > 0 && (
+            <select
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              className={inputCls}
+              style={inputStyle}
+            >
+              <option value="">Sede (todas)</option>
+              {locations.map((loc) => (
+                <option key={loc} value={loc}>{loc}</option>
+              ))}
+            </select>
+          )}
+          {userRole === "ADMIN" && coaches.length > 0 && (
+            <select
+              value={coachId}
+              onChange={(e) => setCoachId(e.target.value)}
+              className={inputCls}
+              style={inputStyle}
+            >
+              <option value="">Sin entrenador asignado</option>
+              {coaches.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          )}
+        </div>
       )}
 
       <div className="flex gap-3 items-start">
@@ -143,7 +166,7 @@ export default function CreateSessionForm({ categories, userRole, coaches = [] }
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Notas opcionales"
           className="flex-1 rounded-xl px-4 py-3 text-sm outline-none border"
-          style={{ background: "var(--bg-elevated)", borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
+          style={inputStyle}
         />
         <button
           type="submit"

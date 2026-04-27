@@ -10,6 +10,7 @@ type Props = {
   categories: { id: string; name: string }[];
   coaches?: { id: string; name: string }[];
   userRole?: string;
+  locations?: string[];
 };
 
 const DAYS_OF_WEEK = [
@@ -30,13 +31,14 @@ function nextOccurrence(from: Date, dayOfWeek: number): Date {
   return d;
 }
 
-export default function RecurringSessionForm({ categories, coaches = [], userRole }: Props) {
+export default function RecurringSessionForm({ categories, coaches = [], userRole, locations = [] }: Props) {
   const router = useRouter();
 
   const [title, setTitle] = useState("");
   const [type, setType] = useState("TRAINING");
   const [categoryId, setCategoryId] = useState("");
   const [coachId, setCoachId] = useState("");
+  const [location, setLocation] = useState("");
   const [time, setTime] = useState("08:00");
   const [startDate, setStartDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [weeks, setWeeks] = useState(4);
@@ -96,6 +98,7 @@ export default function RecurringSessionForm({ categories, coaches = [], userRol
           date: d.toISOString().slice(0, 16),
           categoryId: categoryId || null,
           coachId: coachId || null,
+          location: location || null,
         }),
       });
       if (res.ok) count++;
@@ -163,6 +166,14 @@ export default function RecurringSessionForm({ categories, coaches = [], userRol
           </select>
         )}
       </div>
+
+      {/* Location / sede */}
+      {locations.length > 0 && (
+        <select value={location} onChange={(e) => setLocation(e.target.value)} className={inputCls} style={inputStyle}>
+          <option value="">Sede (todas)</option>
+          {locations.map((loc) => <option key={loc} value={loc}>{loc}</option>)}
+        </select>
+      )}
 
       {/* Days of week */}
       <div>

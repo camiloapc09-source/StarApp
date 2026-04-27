@@ -187,6 +187,7 @@ model Session {
   category    Category? @relation(fields: [categoryId], references: [id])
   coachId     String?
   coach       User?     @relation("CoachSessions", fields: [coachId], references: [id])
+  location    String?   // sede / branch (SUR, CENTRO, NORTE, etc.)
   notes       String?
   createdAt   DateTime  @default(now())
 

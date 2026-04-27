@@ -14,6 +14,7 @@ interface SessionData {
   notes: string | null;
   categoryId: string | null;
   coachId: string | null;
+  location: string | null;
 }
 
 interface Props {
@@ -21,6 +22,7 @@ interface Props {
   categories: Category[];
   coaches?: Coach[];
   userRole?: string;
+  locations?: string[];
 }
 
 const TYPE_OPTIONS_ALL = [
@@ -29,7 +31,7 @@ const TYPE_OPTIONS_ALL = [
   { value: "EVENT",    label: "Evento / Torneo" },
 ];
 
-export default function EditSessionButton({ session, categories, coaches = [], userRole }: Props) {
+export default function EditSessionButton({ session, categories, coaches = [], userRole, locations = [] }: Props) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(session.title);
   const [type, setType]   = useState(session.type);
@@ -42,6 +44,7 @@ export default function EditSessionButton({ session, categories, coaches = [], u
   const [notes,      setNotes]      = useState(session.notes ?? "");
   const [categoryId, setCategoryId] = useState(session.categoryId ?? "");
   const [coachId,    setCoachId]    = useState(session.coachId ?? "");
+  const [location,   setLocation]   = useState(session.location ?? "");
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState<string | null>(null);
   const router = useRouter();
@@ -69,6 +72,7 @@ export default function EditSessionButton({ session, categories, coaches = [], u
         date,
         notes: notes.trim() || null,
         categoryId: categoryId || null,
+        location: location || null,
         ...(userRole === "ADMIN" && { coachId: coachId || null }),
       }),
     });
@@ -161,6 +165,21 @@ export default function EditSessionButton({ session, categories, coaches = [], u
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
+
+              {/* Location / sede */}
+              {locations.length > 0 && (
+                <select
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="w-full rounded-xl px-4 py-3 text-sm outline-none border"
+                  style={{ background: "var(--bg-elevated)", borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
+                >
+                  <option value="">Sede (todas)</option>
+                  {locations.map((loc) => (
+                    <option key={loc} value={loc}>{loc}</option>
+                  ))}
+                </select>
+              )}
 
               {/* Coach — admin only */}
               {userRole === "ADMIN" && coaches.length > 0 && (

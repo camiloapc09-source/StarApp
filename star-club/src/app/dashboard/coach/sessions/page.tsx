@@ -18,14 +18,19 @@ export default async function CoachSessionsPage() {
   if (!userSession?.user || userSession.user.role !== "COACH") redirect("/");
   const clubId = (userSession.user as { clubId?: string }).clubId ?? "club-star";
 
-  const [sessions, categories] = await Promise.all([
+  const [sessions, categories, club] = await Promise.all([
     db.session.findMany({
       where: { coachId: userSession.user.id },
       orderBy: { date: "desc" },
       include: { category: true, _count: { select: { attendances: true } } },
     }),
     db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } }),
+    db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true } }),
   ]);
+
+  const locations = club?.zonePrices
+    ? Object.keys(club.zonePrices as Record<string, unknown>)
+    : [];
 
   const dict = await getDictionary();
 
@@ -41,7 +46,7 @@ export default async function CoachSessionsPage() {
         {/* Create session inline card */}
         <Card className="p-5">
           <h3 className="text-sm font-semibold mb-4">Nueva sesión</h3>
-          <CreateSessionForm categories={categories.map((c) => ({ id: c.id, name: c.name }))} userRole="COACH" />
+          <CreateSessionForm categories={categories.map((c) => ({ id: c.id, name: c.name }))} userRole="COACH" locations={locations} />
         </Card>
 
         {/* Sessions list */}
@@ -62,6 +67,7 @@ export default async function CoachSessionsPage() {
                     <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
                       {format(new Date(s.date), "EEEE dd MMM yyyy · HH:mm", { locale: es })}
                       {s.category && ` · ${s.category.name}`}
+                      {s.location && ` · ${s.location}`}
                     </p>
                   </div>
                   <div className="flex items-center gap-4 flex-shrink-0">
@@ -80,9 +86,10 @@ export default async function CoachSessionsPage() {
                       Pasar lista
                     </Link>
                     <EditSessionButton
-                      session={{ id: s.id, title: s.title, type: s.type, date: s.date.toISOString(), notes: s.notes, categoryId: s.categoryId, coachId: s.coachId }}
+                      session={{ id: s.id, title: s.title, type: s.type, date: s.date.toISOString(), notes: s.notes, categoryId: s.categoryId, coachId: s.coachId, location: s.location }}
                       categories={categories.map((c) => ({ id: c.id, name: c.name }))}
                       userRole="COACH"
+                      locations={locations}
                     />
                     <DeleteSessionButton sessionId={s.id} sessionTitle={s.title} />
                   </div>
