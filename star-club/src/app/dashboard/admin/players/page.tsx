@@ -24,10 +24,14 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
 
   const t = await getDictionary();
 
+  // Determine upfront whether this club uses gender segmentation
+  const genderedCount = await db.player.count({ where: { clubId, gender: { not: null } } });
+  const clubHasGenderedPlayers = genderedCount > 0;
+
   const playerWhere: Record<string, unknown> = selectedCategory
     ? { clubId, categoryId: selectedCategory }
     : { clubId };
-  if (selectedGender === "F" || selectedGender === "M") playerWhere.gender = selectedGender;
+  if (clubHasGenderedPlayers && (selectedGender === "F" || selectedGender === "M")) playerWhere.gender = selectedGender;
   if (selectedZone) playerWhere.zone = selectedZone;
 
   const [players, categories, pendingAvatars, club] = await Promise.all([
@@ -178,8 +182,8 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
             </div>
           )}
 
-          {/* Gender tabs — visible when a category is selected */}
-          {selectedCategory && (
+          {/* Gender tabs — visible only for clubs that use gender segmentation */}
+          {selectedCategory && clubHasGenderedPlayers && (
             <div className="flex items-center gap-1 p-1 rounded-xl w-fit"
               style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
               {[

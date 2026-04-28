@@ -36,9 +36,35 @@ interface Payment {
 
 interface Props {
   payments: Payment[];
+  clubName?: string;
+  billingCycleDay?: number;
+  earlyPaymentDays?: number;
+  earlyPaymentDiscount?: number;
 }
 
-export default function BulkMarkReceivedPanel({ payments }: Props) {
+function getColombiaGreeting() {
+  const hour = parseInt(
+    new Date().toLocaleString("en-US", { timeZone: "America/Bogota", hour: "numeric", hour12: false }),
+    10
+  );
+  if (hour >= 5 && hour < 12) return "Buenos días";
+  if (hour >= 12 && hour < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
+
+function getColombiaDay(): number {
+  return new Date(
+    new Date().toLocaleString("en-US", { timeZone: "America/Bogota" })
+  ).getDate();
+}
+
+export default function BulkMarkReceivedPanel({
+  payments,
+  clubName = "el club",
+  billingCycleDay = 0,
+  earlyPaymentDays = 0,
+  earlyPaymentDiscount = 0,
+}: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [showModal, setShowModal] = useState(false);
@@ -137,10 +163,26 @@ export default function BulkMarkReceivedPanel({ payments }: Props) {
             const digits = phone?.replace(/[^0-9]/g, "");
             const daysLeft = differenceInDays(new Date(payment.dueDate), new Date());
             const isLate = payment.status === "OVERDUE" || daysLeft < 0;
+            const greeting = getColombiaGreeting();
+            const contactName = parentLink?.user?.name || payment.player.user.name;
+            const colombiaDay = getColombiaDay();
+            const earlyWindowEnd = billingCycleDay + earlyPaymentDays;
+            const inEarlyWindow =
+              !isLate &&
+              billingCycleDay > 0 &&
+              earlyPaymentDays > 0 &&
+              earlyPaymentDiscount > 0 &&
+              colombiaDay >= billingCycleDay &&
+              colombiaDay <= earlyWindowEnd;
+
+            const pendingMsg = inEarlyWindow
+              ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El motivo de nuestro contacto es recordarle que el pago de *$${payment.amount.toLocaleString("es-CO")}* de la mensualidad del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* tiene como fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n💰 ¡Aún está a tiempo de aprovechar el *descuento de pronto pago de $${earlyPaymentDiscount.toLocaleString("es-CO")}*! Tiene hasta el día ${earlyWindowEnd} de este mes para pagarlo con descuento.\n\n¡Muchas gracias! 💚`
+              : `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El motivo de nuestro contacto es recordarle que el pago de *$${payment.amount.toLocaleString("es-CO")}* de la mensualidad del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* tiene como fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n⏰ ¡Le recomendamos realizarlo a tiempo para evitar inconvenientes!\n\n¡Muchas gracias! 💚`;
+
             const waMsg = encodeURIComponent(
               isLate
-                ? `Hola ${parentLink?.user?.name || payment.player.user.name}, le informamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" está vencido desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")}. Por favor regularice su situación. Gracias.`
-                : `Hola ${parentLink?.user?.name || payment.player.user.name}, le recordamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" vence el ${format(new Date(payment.dueDate), "dd/MM/yyyy")}. No olvide realizarlo a tiempo.`
+                ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El motivo de nuestro contacto es informarle que el pago de *$${payment.amount.toLocaleString("es-CO")}* de la mensualidad del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* se encuentra *vencido* desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")} 📋.\n\nLe pedimos amablemente ponerse al día con este pago para continuar disfrutando de los servicios del club. 🙏\n\n¡Muchas gracias por su comprensión! 💚`
+                : pendingMsg
             );
             const waHref = digits ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${waMsg}` : null;
 

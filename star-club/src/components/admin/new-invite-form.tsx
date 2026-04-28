@@ -7,9 +7,10 @@ import { Copy, Check, RefreshCw, Link2 } from "lucide-react";
 type Props = {
   defaultRole?: "PLAYER" | "COACH";
   hideRoleSelect?: boolean;
+  endpoint?: string;
 };
 
-export default function NewInviteForm({ defaultRole = "PLAYER", hideRoleSelect = false }: Props) {
+export default function NewInviteForm({ defaultRole = "PLAYER", hideRoleSelect = false, endpoint = "/api/invites" }: Props) {
   const [role, setRole] = useState<string>(defaultRole);
   const [result, setResult] = useState<{ code: string; id: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -22,7 +23,7 @@ export default function NewInviteForm({ defaultRole = "PLAYER", hideRoleSelect =
     setError(null);
     setCopied(false);
     try {
-      const res = await fetch("/api/invites", {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role }),

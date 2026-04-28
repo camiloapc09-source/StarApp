@@ -98,6 +98,11 @@ export default async function AdminPaymentsPage() {
     }
   }
 
+  const club = await db.club.findUnique({
+    where: { id: clubId },
+    select: { name: true, billingCycleDay: true, earlyPaymentDays: true, earlyPaymentDiscount: true },
+  });
+
   const payments = await db.payment.findMany({
     where: { clubId },
     orderBy: { dueDate: "asc" },
@@ -139,6 +144,23 @@ export default async function AdminPaymentsPage() {
     pendingAmt: [...pending, ...overdue].reduce((s, p) => s + p.amount, 0),
     overdueAmt: overdue.reduce((s, p) => s + p.amount, 0),
   };
+
+  const clubName = club?.name ?? "el club";
+  const colombiaLocale = new Date().toLocaleString("en-US", { timeZone: "America/Bogota" });
+  const colombiaHour = parseInt(
+    new Date().toLocaleString("en-US", { timeZone: "America/Bogota", hour: "numeric", hour12: false }),
+    10
+  );
+  const colombiaDay = new Date(colombiaLocale).getDate();
+  const greeting =
+    colombiaHour >= 5 && colombiaHour < 12 ? "Buenos días" :
+    colombiaHour >= 12 && colombiaHour < 19 ? "Buenas tardes" :
+    "Buenas noches";
+
+  const bcd = club?.billingCycleDay ?? 0;
+  const epd = club?.earlyPaymentDays ?? 0;
+  const epdiscount = club?.earlyPaymentDiscount ?? 0;
+  const earlyWindowEnd = bcd + epd;
 
   const dict = await getDictionary();
 
@@ -337,6 +359,10 @@ export default async function AdminPaymentsPage() {
                   : null,
               };
             })}
+            clubName={clubName}
+            billingCycleDay={club?.billingCycleDay}
+            earlyPaymentDays={club?.earlyPaymentDays}
+            earlyPaymentDiscount={club?.earlyPaymentDiscount}
           />
         )}
 
@@ -355,8 +381,14 @@ export default async function AdminPaymentsPage() {
                 const phone = parentLink?.phone || parentLink?.user?.phone;
                 const digits = phone?.replace?.(/[^0-9]/g, "");
                 const daysLeft = differenceInDays(new Date(payment.dueDate), new Date());
+                const contactName = parentLink?.user?.name || payment.player.user.name;
+                const inEarlyWindow =
+                  bcd > 0 && epd > 0 && epdiscount > 0 &&
+                  colombiaDay >= bcd && colombiaDay <= earlyWindowEnd;
                 const waMsg = encodeURIComponent(
-                  `Hola ${parentLink?.user?.name || payment.player.user.name}, le recordamos que el pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" vence el ${format(new Date(payment.dueDate), "dd/MM/yyyy")}. No olvide realizarlo a tiempo.`
+                  inEarlyWindow
+                    ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El motivo de nuestro contacto es recordarle que el pago de *$${payment.amount.toLocaleString("es-CO")}* de la mensualidad del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* tiene como fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n💰 ¡Aún está a tiempo de aprovechar el *descuento de pronto pago de $${epdiscount.toLocaleString("es-CO")}*! Tiene hasta el día ${earlyWindowEnd} de este mes.\n\n¡Muchas gracias! 💚`
+                    : `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El motivo de nuestro contacto es recordarle que el pago de *$${payment.amount.toLocaleString("es-CO")}* de la mensualidad del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* tiene como fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n⏰ ¡Le recomendamos realizarlo a tiempo para evitar inconvenientes!\n\n¡Muchas gracias! 💚`
                 );
                 const waHref = digits ? `https://wa.me/${digits}?text=${waMsg}` : null;
                 return (

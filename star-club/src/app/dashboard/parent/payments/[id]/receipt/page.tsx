@@ -3,9 +3,9 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, ArrowLeft, Printer } from "lucide-react";
+import { CheckCircle2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import PrintButton from "./print-button";
+import ShareReceiptButton from "./print-button";
 
 const METHOD_LABELS: Record<string, string> = {
   TRANSFER: "Transferencia bancaria",
@@ -69,7 +69,7 @@ export default async function PaymentReceiptPage({ params }: { params: { id: str
         >
           <ArrowLeft size={16} /> Volver
         </Link>
-        <PrintButton />
+        <ShareReceiptButton receiptNo={receiptNo} />
       </div>
 
       {/* Receipt card */}

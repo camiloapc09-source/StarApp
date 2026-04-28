@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import {
   Settings, Building2, MapPin, Mail, Activity, CreditCard,
-  Percent, DollarSign, Upload, Check, Loader2, Image as ImageIcon,
+  Percent, DollarSign, Upload, Check, Loader2, Image as ImageIcon, Shield,
 } from "lucide-react";
 
 interface ZonePrices {
@@ -26,6 +26,7 @@ interface ClubSettingsFormProps {
     earlyPaymentDays: number;
     earlyPaymentDiscount: number;
     zonePrices: unknown;
+    coachCanInvite: boolean;
   };
 }
 
@@ -53,6 +54,7 @@ export default function ClubSettingsForm({ club }: ClubSettingsFormProps) {
   const [earlyDays, setEarlyDays]             = useState(club.earlyPaymentDays);
   const [earlyDiscount, setEarlyDiscount]     = useState(club.earlyPaymentDiscount);
   const [zonePrices, setZonePrices]           = useState<ZonePrices>(parseZonePrices(club.zonePrices));
+  const [coachCanInvite, setCoachCanInvite]   = useState(club.coachCanInvite);
   const [logoPreview, setLogoPreview]         = useState<string | null>(club.logo);
   const [logoFile, setLogoFile]               = useState<File | null>(null);
   const [saved, setSaved]     = useState(false);
@@ -97,6 +99,7 @@ export default function ClubSettingsForm({ club }: ClubSettingsFormProps) {
           earlyPaymentDays: earlyDays,
           earlyPaymentDiscount: earlyDiscount,
           zonePrices,
+          coachCanInvite,
         }),
       });
 
@@ -274,6 +277,46 @@ export default function ClubSettingsForm({ club }: ClubSettingsFormProps) {
               </div>
             </div>
           ))}
+        </div>
+      </Card>
+
+      {/* Permissions */}
+      <Card>
+        <div className="flex items-center gap-2.5 mb-4">
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center"
+            style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.20)" }}>
+            <Shield size={15} style={{ color: "#FDE68A" }} />
+          </div>
+          <div>
+            <h2 className="font-bold text-[15px]">Permisos de entrenadores</h2>
+          </div>
+        </div>
+
+        <div
+          className="flex items-center justify-between p-4 rounded-xl"
+          style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+        >
+          <div>
+            <p className="text-sm font-semibold">Generar códigos de invitación</p>
+            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.38)" }}>
+              Permite a los entrenadores crear códigos para registrar nuevos deportistas
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setCoachCanInvite((v) => !v)}
+            className="relative w-11 h-6 rounded-full transition-all flex-shrink-0 ml-4"
+            style={{
+              background: coachCanInvite
+                ? "rgba(52,211,153,0.80)"
+                : "rgba(255,255,255,0.12)",
+            }}
+          >
+            <span
+              className="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform"
+              style={{ transform: coachCanInvite ? "translateX(20px)" : "translateX(0)" }}
+            />
+          </button>
         </div>
       </Card>
 

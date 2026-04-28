@@ -27,6 +27,7 @@ const settingsSchema = z.object({
     })
     .optional()
     .nullable(),
+  coachCanInvite: z.boolean().optional(),
 });
 
 export async function GET() {

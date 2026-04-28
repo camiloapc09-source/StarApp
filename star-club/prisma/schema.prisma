@@ -23,6 +23,7 @@ model Club {
   earlyPaymentDays     Int   @default(0)   // days after cycle start to get discount
   earlyPaymentDiscount Float @default(0)   // discount amount in COP
   zonePrices           Json?               // { "SUR": 80000, "CENTRO": 90000, "NORTE": 100000 }
+  coachCanInvite       Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
