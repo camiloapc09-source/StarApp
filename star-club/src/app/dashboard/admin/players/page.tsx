@@ -49,10 +49,11 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
       where: { clubId, avatarStatus: "PENDING", avatarPending: { not: null } },
       select: { id: true, name: true, avatarPending: true },
     }),
-    db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true } }),
+    db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true, name: true } }),
   ]);
 
   const zones = club?.zonePrices ? Object.keys(club.zonePrices as Record<string, unknown>) : [];
+  const clubName = club?.name ?? "el club";
   const pendingPlayers = players.filter((p) => p.status === "PENDING");
 
   function buildHref(opts: { categoryId?: string; gender?: string; zone?: string }) {
@@ -96,27 +97,44 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
               <h3 className="text-sm font-semibold">Deportistas pendientes de activación ({pendingPlayers.length})</h3>
             </div>
             <div className="space-y-3">
-              {pendingPlayers.map((p) => (
-                <div key={p.id} className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl"
-                  style={{ background: "rgba(255,184,0,0.05)", border: "1px solid rgba(255,184,0,0.15)" }}>
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
-                      style={{ background: "rgba(255,184,0,0.15)", color: "var(--warning)" }}>
-                      {p.user.name.charAt(0).toUpperCase()}
+              {pendingPlayers.map((p) => {
+                const phone = p.phone || p.user.phone;
+                const digits = phone?.replace(/[^0-9]/g, "");
+                const waMsg = encodeURIComponent(
+                  `Hola, te escribimos desde *${clubName}* 🏆\n\nQueremos recordarte que la inscripción de *${p.user.name}* está pendiente de pago para poder activar su cuenta en la plataforma.\n\n¡Quedamos atentos! 😊`
+                );
+                const waHref = digits ? `https://wa.me/${digits}?text=${waMsg}` : null;
+                return (
+                  <div key={p.id} className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl"
+                    style={{ background: "rgba(255,184,0,0.05)", border: "1px solid rgba(255,184,0,0.15)" }}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                        style={{ background: "rgba(255,184,0,0.15)", color: "var(--warning)" }}>
+                        {p.user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate">{p.user.name}</p>
+                        <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{p.user.email}</p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold truncate">{p.user.name}</p>
-                      <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{p.user.email}</p>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {waHref && (
+                        <a href={waHref} target="_blank" rel="noreferrer"
+                          className="text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition-all hover:opacity-80"
+                          style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}>
+                          💬 Recordar
+                        </a>
+                      )}
+                      <Link href={`/dashboard/admin/players/${p.id}`} className="relative z-10">
+                        <span className="text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition-all hover:opacity-80"
+                          style={{ background: "var(--accent)", color: "#000" }}>
+                          Activar →
+                        </span>
+                      </Link>
                     </div>
                   </div>
-                  <Link href={`/dashboard/admin/players/${p.id}`} className="relative z-10">
-                    <span className="text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition-all hover:opacity-80"
-                      style={{ background: "var(--accent)", color: "#000" }}>
-                      Activar →
-                    </span>
-                  </Link>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </Card>
         )}
