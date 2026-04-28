@@ -6,7 +6,9 @@
       "Bash(npx tsx *)",
       "Bash(npx tsc *)",
       "Bash(npx next *)",
-      "Bash(awk -F'\\(' '{print $1}')"
+      "Bash(awk -F'\\(' '{print $1}')",
+      "Read(//c/Users/Usuario/Downloads/**)",
+      "Bash(node -e ' *)"
     ]
   }
 }

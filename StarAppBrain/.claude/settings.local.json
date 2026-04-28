@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh repo *)",
+      "Read(//c/Users/Usuario/Desktop/Star App/**)",
+      "WebFetch(domain:github.com)"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Usuario\\Desktop\\Star App\\StarAppBrain"
+    ]
+  }
+}
