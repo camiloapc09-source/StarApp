@@ -156,3 +156,25 @@ export async function PATCH(
 
   return apiOk({ ...payment, balancePaymentId });
 }
+
+// DELETE /api/payments/[id] — admin deletes a payment record
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const session = await requireAdmin();
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
+
+  const { id } = await params;
+
+  const existing = await db.payment.findUnique({
+    where: { id },
+    select: { clubId: true },
+  });
+  if (!existing || existing.clubId !== clubId) return apiError("Not found", 404);
+
+  await db.payment.delete({ where: { id } });
+
+  return apiOk({ deleted: true });
+}

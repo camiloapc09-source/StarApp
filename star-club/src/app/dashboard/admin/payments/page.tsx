@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { format, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, Clock, AlertTriangle, Eye, Banknote, MessageCircle, ImageOff, PhoneCall, FileSpreadsheet } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, Eye, Banknote, MessageCircle, ImageOff, PhoneCall, FileSpreadsheet, UserPlus } from "lucide-react";
 import { getDictionary } from "@/lib/dict";
 import Link from "next/link";
-import { PaymentConfirmButton, PaymentRejectButton } from "@/components/admin/payment-actions";
+import { PaymentConfirmButton, PaymentRejectButton, PaymentDeleteButton } from "@/components/admin/payment-actions";
 import BulkPaymentButton from "@/components/admin/bulk-payment-button";
 import MarkOverdueButton from "@/components/admin/mark-overdue-button";
 import ProofViewer from "@/components/admin/proof-viewer";
@@ -256,6 +256,18 @@ export default async function AdminPaymentsPage() {
         <div className="flex flex-wrap items-center gap-3">
           <BulkPaymentButton />
           <MarkOverdueButton />
+          <Link
+            href="/dashboard/admin/payments/visitor"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:opacity-80"
+            style={{
+              background: "rgba(255,255,255,0.05)",
+              color: "rgba(255,255,255,0.70)",
+              border: "1px solid rgba(255,255,255,0.09)",
+            }}
+          >
+            <UserPlus size={14} />
+            Pago visitante
+          </Link>
         </div>
 
         {/* POR VERIFICAR */}
@@ -327,6 +339,7 @@ export default async function AdminPaymentsPage() {
                     <div className="flex items-center gap-2">
                       <PaymentConfirmButton paymentId={payment.id} />
                       <PaymentRejectButton paymentId={payment.id} />
+                      <PaymentDeleteButton paymentId={payment.id} playerName={payment.player.user.name} />
                     </div>
                   </div>
                 );
@@ -447,6 +460,7 @@ export default async function AdminPaymentsPage() {
                       </p>
                     </div>
                     <Badge variant="success">Pagado</Badge>
+                    <PaymentDeleteButton paymentId={payment.id} playerName={payment.player.user.name} />
                   </div>
                 ))}
             </div>

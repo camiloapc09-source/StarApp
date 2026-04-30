@@ -14,12 +14,17 @@ export default async function CoachInvitesPage() {
   if (!session?.user || session.user.role !== "COACH") redirect("/");
 
   const clubId = (session.user as { clubId?: string }).clubId ?? "";
-  const club = await db.club.findUnique({
-    where: { id: clubId },
-    select: { coachCanInvite: true },
-  });
+  const [club, coachUser] = await Promise.all([
+    db.club.findUnique({ where: { id: clubId }, select: { coachCanInvite: true } }),
+    db.user.findUnique({ where: { id: session.user.id }, select: { canInvite: true } }),
+  ]);
 
-  if (!club?.coachCanInvite) {
+  const blocked = !club?.coachCanInvite || !coachUser?.canInvite;
+  const reason  = !club?.coachCanInvite
+    ? "Tu administrador no ha habilitado esta función para el club."
+    : "Tu administrador no te ha asignado permiso para crear invitaciones.";
+
+  if (blocked) {
     return (
       <div>
         <Header title="Invitaciones" subtitle="Códigos de registro para deportistas" />
@@ -31,9 +36,9 @@ export default async function CoachInvitesPage() {
             >
               <Lock size={24} style={{ color: "var(--warning)" }} />
             </div>
-            <p className="font-semibold mb-2">Función no habilitada</p>
+            <p className="font-semibold mb-2">Sin permiso</p>
             <p className="text-sm max-w-xs mx-auto" style={{ color: "var(--text-muted)" }}>
-              Tu administrador no ha habilitado la generación de códigos de invitación para entrenadores.
+              {reason}
             </p>
           </Card>
         </div>

@@ -71,13 +71,9 @@ export async function POST(req: NextRequest) {
 
   if (parsed.data.type === "GAME") {
     const words = playerName.trim().split(/\s+/);
-    const validSurnames = words.length >= 3
-      ? [words[words.length - 2], words[words.length - 1]]
-      : [words[words.length - 1]];
-
     const submittedName = parsed.data.nameOnJersey.toLowerCase();
-    if (!validSurnames.some((s) => s.toLowerCase() === submittedName)) {
-      return apiError(`Para el uniforme de juego el nombre debe ser un apellido del deportista: ${validSurnames.join(" o ")}`, 400);
+    if (!words.some((w) => w.toLowerCase() === submittedName)) {
+      return apiError(`El nombre en la camiseta debe ser una de las palabras del nombre del deportista (${playerName}).`, 400);
     }
 
     if (parsed.data.numberOnJersey == null) {

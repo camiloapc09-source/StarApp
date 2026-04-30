@@ -14,6 +14,12 @@ interface ZonePrices {
   NORTE: number;
 }
 
+interface CoachEntry {
+  id: string;
+  name: string;
+  canInvite: boolean;
+}
+
 interface ClubSettingsFormProps {
   club: {
     id: string;
@@ -28,6 +34,7 @@ interface ClubSettingsFormProps {
     zonePrices: unknown;
     coachCanInvite: boolean;
   };
+  coaches: CoachEntry[];
 }
 
 function parseZonePrices(raw: unknown): ZonePrices {
@@ -42,7 +49,7 @@ function parseZonePrices(raw: unknown): ZonePrices {
   return { SUR: 0, CENTRO: 0, NORTE: 0 };
 }
 
-export default function ClubSettingsForm({ club }: ClubSettingsFormProps) {
+export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -55,6 +62,10 @@ export default function ClubSettingsForm({ club }: ClubSettingsFormProps) {
   const [earlyDiscount, setEarlyDiscount]     = useState(club.earlyPaymentDiscount);
   const [zonePrices, setZonePrices]           = useState<ZonePrices>(parseZonePrices(club.zonePrices));
   const [coachCanInvite, setCoachCanInvite]   = useState(club.coachCanInvite);
+  const [coachPerms, setCoachPerms] = useState<Record<string, boolean>>(
+    Object.fromEntries(coaches.map((c) => [c.id, c.canInvite]))
+  );
+  const [togglingCoach, setTogglingCoach] = useState<string | null>(null);
   const [logoPreview, setLogoPreview]         = useState<string | null>(club.logo);
   const [logoFile, setLogoFile]               = useState<File | null>(null);
   const [saved, setSaved]     = useState(false);
@@ -68,6 +79,19 @@ export default function ClubSettingsForm({ club }: ClubSettingsFormProps) {
     const reader = new FileReader();
     reader.onload = (ev) => setLogoPreview(ev.target?.result as string);
     reader.readAsDataURL(file);
+  }
+
+  async function toggleCoachPerm(coachId: string, current: boolean) {
+    setTogglingCoach(coachId);
+    const res = await fetch(`/api/admin/coaches/${coachId}/permissions`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ canInvite: !current }),
+    });
+    if (res.ok) {
+      setCoachPerms((prev) => ({ ...prev, [coachId]: !current }));
+    }
+    setTogglingCoach(null);
   }
 
   async function save() {
@@ -318,6 +342,45 @@ export default function ClubSettingsForm({ club }: ClubSettingsFormProps) {
             />
           </button>
         </div>
+
+        {/* Per-coach permissions — only shown when master switch is ON */}
+        {coachCanInvite && coaches.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <p className="text-xs font-semibold mb-2" style={{ color: "rgba(255,255,255,0.45)" }}>
+              Entrenadores con acceso a invitaciones
+            </p>
+            {coaches.map((coach) => {
+              const enabled = coachPerms[coach.id] ?? false;
+              const loading = togglingCoach === coach.id;
+              return (
+                <div
+                  key={coach.id}
+                  className="flex items-center justify-between px-4 py-3 rounded-xl"
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <p className="text-sm font-medium">{coach.name}</p>
+                  <button
+                    type="button"
+                    onClick={() => toggleCoachPerm(coach.id, enabled)}
+                    disabled={loading}
+                    className="relative w-10 h-5 rounded-full transition-all flex-shrink-0 disabled:opacity-60"
+                    style={{ background: enabled ? "rgba(52,211,153,0.80)" : "rgba(255,255,255,0.12)" }}
+                  >
+                    <span
+                      className="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform"
+                      style={{ transform: enabled ? "translateX(20px)" : "translateX(0)" }}
+                    />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {coachCanInvite && coaches.length === 0 && (
+          <p className="mt-3 text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>
+            No hay entrenadores registrados en este club.
+          </p>
+        )}
       </Card>
 
       {/* Save */}

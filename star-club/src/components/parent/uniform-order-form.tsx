@@ -19,7 +19,7 @@ export default function UniformOrderForm({
   const [open, setOpen]                   = useState(false);
   const [jerseySize, setJerseySize]       = useState("M");
   const [shortsSize, setShortsSize]       = useState("M");
-  const [nameOnJersey, setNameOnJersey]   = useState(type === "GAME" ? playerSurnames[0] : "");
+  const [nameOnJersey, setNameOnJersey]   = useState("");
   const [numberOnJersey, setNumberOnJersey] = useState("");
   const [notes, setNotes]                 = useState("");
   const [loading, setLoading]             = useState(false);
@@ -122,47 +122,21 @@ export default function UniformOrderForm({
           <label className="block text-xs font-medium mb-1" style={{ color: "var(--text-secondary)" }}>
             Nombre en camiseta
           </label>
-          {isGame && playerSurnames.length > 1 ? (
-            <>
-              <div className="flex gap-2">
-                {playerSurnames.map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setNameOnJersey(s)}
-                    className="flex-1 rounded-xl px-3 py-2 text-sm font-semibold border transition-colors"
-                    style={{
-                      background: nameOnJersey === s ? "var(--accent)" : "var(--bg-card)",
-                      color: nameOnJersey === s ? "#000" : "var(--text-primary)",
-                      borderColor: nameOnJersey === s ? "var(--accent)" : "var(--border-primary)",
-                    }}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
+          <>
+            <input
+              type="text"
+              value={nameOnJersey}
+              onChange={(e) => setNameOnJersey(e.target.value)}
+              placeholder={isGame ? "Escribe el primer apellido..." : "Nombre o apodo..."}
+              className={inputCls}
+              style={inputStyle}
+            />
+            {isGame && playerSurnames.length > 0 && (
               <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                Selecciona el apellido que irá en la camiseta
+                Apellidos detectados: {playerSurnames.join(", ")} — escribe el primer apellido
               </p>
-            </>
-          ) : (
-            <>
-              <input
-                type="text"
-                value={nameOnJersey}
-                onChange={(e) => setNameOnJersey(e.target.value)}
-                readOnly={isGame}
-                placeholder={isGame ? playerSurnames[0] : "Nombre o apodo..."}
-                className={inputCls}
-                style={isGame ? { ...inputStyle, opacity: 0.7 } : inputStyle}
-              />
-              {isGame && (
-                <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                  Solo el apellido del deportista
-                </p>
-              )}
-            </>
-          )}
+            )}
+          </>
         </div>
 
         {/* Number */}

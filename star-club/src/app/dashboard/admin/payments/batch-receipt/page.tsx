@@ -3,8 +3,9 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import ReceiptShareButton from "./receipt-share-button";
 
 const METHOD_LABELS: Record<string, string> = {
   TRANSFER: "Transferencia bancaria",
@@ -65,12 +66,10 @@ export default async function BatchReceiptPage({
       </div>
 
       {/* Receipts */}
-      <div className="space-y-4 max-w-2xl mx-auto">
+      <div className="space-y-6 max-w-sm mx-auto">
         {payments.map((payment) => {
           const receiptNo = payment.id.slice(-8).toUpperCase();
-          const parentPhone = payment.player.parentLinks?.[0]?.parent?.phone;
-          const phone = parentPhone || payment.player.phone;
-          const digits = phone?.replace(/[^0-9]/g, "");
+          const parentPhone = payment.player.parentLinks?.[0]?.parent?.phone ?? null;
           const methodLabel = payment.paymentMethod
             ? (METHOD_LABELS[payment.paymentMethod] ?? payment.paymentMethod)
             : "—";
@@ -78,94 +77,19 @@ export default async function BatchReceiptPage({
             ? format(new Date(payment.paidAt), "d 'de' MMMM yyyy", { locale: es })
             : "—";
 
-          const waText =
-            `✅ *Pago confirmado — ${club?.name ?? "Club"}*\n\n` +
-            `👤 ${payment.player.user.name}\n` +
-            `📋 ${payment.concept}\n` +
-            `💵 $${payment.amount.toLocaleString("es-CO")}\n` +
-            `💳 ${methodLabel}\n` +
-            `📅 ${dateLabel}\n` +
-            `🔖 Ref: ${receiptNo}\n\n` +
-            `¡Gracias por su pago! 🙌`;
-
-          const waHref = digits
-            ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${encodeURIComponent(waText)}`
-            : null;
-
           return (
-            <div
+            <ReceiptShareButton
               key={payment.id}
-              className="rounded-2xl overflow-hidden"
-              style={{ background: "var(--bg-card)", border: "1px solid var(--border-primary)" }}
-            >
-              {/* Header */}
-              <div
-                className="px-5 py-4 flex items-center gap-3"
-                style={{
-                  background: "linear-gradient(135deg, rgba(139,92,246,0.20) 0%, rgba(49,46,129,0.12) 100%)",
-                  borderBottom: "1px solid var(--border-primary)",
-                }}
-              >
-                <CheckCircle2 size={22} style={{ color: "#34D399" }} className="flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="font-black text-[15px] truncate">{payment.player.user.name}</p>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.45)" }}>
-                    Comprobante #{receiptNo}
-                  </p>
-                </div>
-                <p className="text-xl font-black flex-shrink-0" style={{ color: "#34D399" }}>
-                  ${payment.amount.toLocaleString("es-CO")}
-                </p>
-              </div>
-
-              {/* Details */}
-              <div className="px-5 py-4 space-y-2">
-                {[
-                  { label: "Concepto",      value: payment.concept },
-                  { label: "Categoría",     value: payment.player.category?.name ?? "—" },
-                  { label: "Método",        value: methodLabel },
-                  { label: "Fecha de pago", value: dateLabel },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex items-center justify-between gap-3">
-                    <span className="text-xs flex-shrink-0" style={{ color: "var(--text-muted)" }}>{label}</span>
-                    <span className="text-xs font-semibold text-right truncate">{value}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* WhatsApp CTA */}
-              <div
-                className="px-5 pb-4 pt-1"
-                style={{ borderTop: "1px solid var(--border-primary)" }}
-              >
-                {waHref ? (
-                  <a
-                    href={waHref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-                    style={{ background: "rgba(37,211,102,0.15)", color: "#25D366", border: "1px solid rgba(37,211,102,0.30)" }}
-                  >
-                    <MessageCircle size={15} />
-                    Enviar comprobante por WhatsApp
-                  </a>
-                ) : (
-                  <p className="mt-3 text-xs text-center" style={{ color: "var(--text-muted)" }}>
-                    Sin teléfono registrado — no se puede enviar por WhatsApp
-                  </p>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div
-                className="px-5 py-2 text-center border-t"
-                style={{ borderColor: "var(--border-primary)" }}
-              >
-                <p className="text-[9px]" style={{ color: "var(--text-muted)" }}>
-                  {club?.name} · ID: {payment.id}
-                </p>
-              </div>
-            </div>
+              paymentId={payment.id}
+              playerName={payment.player.user.name}
+              amount={payment.amount}
+              concept={payment.concept}
+              methodLabel={methodLabel}
+              dateLabel={dateLabel}
+              receiptNo={receiptNo}
+              clubName={club?.name ?? "Club"}
+              parentPhone={parentPhone}
+            />
           );
         })}
       </div>

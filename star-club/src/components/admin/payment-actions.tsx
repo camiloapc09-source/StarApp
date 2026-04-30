@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Banknote, X } from "lucide-react";
+import { Check, Banknote, X, Trash2 } from "lucide-react";
 
 export function PaymentConfirmButton({ paymentId }: { paymentId: string }) {
   const [loading, setLoading] = useState(false);
@@ -83,6 +83,35 @@ export function PaymentRejectButton({ paymentId }: { paymentId: string }) {
       style={{ background: "rgba(255,71,87,0.1)", color: "var(--error)", border: "1px solid rgba(255,71,87,0.25)" }}
     >
       <X size={13} /> {loading ? "..." : "Rechazar"}
+    </button>
+  );
+}
+
+export function PaymentDeleteButton({ paymentId, playerName }: { paymentId: string; playerName: string }) {
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
+  async function deletePayment() {
+    if (!confirm(`¿Eliminar este registro de pago de ${playerName}? Esta acción no se puede deshacer.`)) return;
+    setLoading(true);
+    const res = await fetch(`/api/payments/${paymentId}`, { method: "DELETE" });
+    if (res.ok) {
+      router.refresh();
+    } else {
+      alert("Error al eliminar el pago.");
+      setLoading(false);
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={deletePayment}
+      disabled={loading}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all disabled:opacity-50"
+      style={{ background: "rgba(255,71,87,0.06)", color: "var(--error)", border: "1px solid rgba(255,71,87,0.2)" }}
+    >
+      <Trash2 size={13} /> {loading ? "Eliminando..." : "Eliminar"}
     </button>
   );
 }

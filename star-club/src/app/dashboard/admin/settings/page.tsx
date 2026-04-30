@@ -9,12 +9,16 @@ export default async function AdminSettingsPage() {
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
-  const club = await db.club.findUnique({ where: { id: clubId } });
+  const [club, coaches, unreadNotifications] = await Promise.all([
+    db.club.findUnique({ where: { id: clubId } }),
+    db.user.findMany({
+      where: { clubId, role: "COACH" },
+      select: { id: true, name: true, canInvite: true },
+      orderBy: { name: "asc" },
+    }),
+    db.notification.count({ where: { userId: session.user.id, isRead: false } }),
+  ]);
   if (!club) redirect("/dashboard/admin");
-
-  const unreadNotifications = await db.notification.count({
-    where: { userId: session.user.id, isRead: false },
-  });
 
   return (
     <div>
@@ -24,7 +28,7 @@ export default async function AdminSettingsPage() {
         notificationCount={unreadNotifications}
       />
       <div className="p-4 md:p-8 max-w-3xl">
-        <ClubSettingsForm club={club} />
+        <ClubSettingsForm club={club} coaches={coaches} />
       </div>
     </div>
   );
