@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, CreditCard, BarChart3, Target, Trophy,
   User, Calendar, Bell, Shirt, UserCheck, Tag, FileImage,
-  Grid3X3, X, type LucideIcon,
+  Grid3X3, X, Settings, type LucideIcon,
 } from "lucide-react";
 
 interface TabItem {
@@ -36,6 +36,7 @@ const ADMIN_MORE: MoreItem[] = [
   { href: "/dashboard/admin/evidence",     icon: FileImage,      label: "Evidencias",    color: "#A78BFA", bg: "rgba(139,92,246,0.12)" },
   { href: "/dashboard/admin/reports",      icon: BarChart3,      label: "Reportes",      color: "#FB923C", bg: "rgba(251,146,60,0.12)" },
   { href: "/dashboard/admin/notifications",icon: Bell,           label: "Notificaciones",color: "#F87171", bg: "rgba(239,68,68,0.12)" },
+  { href: "/dashboard/admin/settings",     icon: Settings,       label: "Configuración", color: "#94A3B8", bg: "rgba(148,163,184,0.12)" },
 ];
 
 const ROLE_TABS: Record<string, (notif: number) => TabItem[]> = {
