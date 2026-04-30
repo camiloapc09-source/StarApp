@@ -1,10 +1,11 @@
 "use client";
 
+import Link from "next/link";
 import { Sidebar } from "./sidebar";
 import { BottomNav } from "./bottom-nav";
 import { DashboardContext } from "./dashboard-context";
 import { NovaWordmark } from "@/components/nova-logo";
-import { LogOut } from "lucide-react";
+import { LogOut, Bell } from "lucide-react";
 import PushButton from "@/components/ui/push-button";
 
 interface DashboardShellProps {
@@ -85,9 +86,26 @@ export function DashboardShell({
               <NovaWordmark dark height={22} showTag={false} />
             </div>
 
-            {/* Right: push + logout */}
+            {/* Right: push + notif bell (player/parent only) + logout */}
             <div className="flex items-center gap-1">
               <PushButton />
+              {(role === "player" || role === "parent") && (
+                <Link
+                  href={`/dashboard/${role}/notifications`}
+                  className="relative p-2 rounded-xl transition-colors"
+                  style={{ color: "rgba(255,255,255,0.28)" }}
+                >
+                  <Bell size={17} strokeWidth={1.8} />
+                  {notificationCount > 0 && (
+                    <span
+                      className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black text-white"
+                      style={{ background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}
+                    >
+                      {notificationCount > 9 ? "9+" : notificationCount}
+                    </span>
+                  )}
+                </Link>
+              )}
               <form action="/api/auth/signout" method="POST">
                 <button
                   type="submit"
