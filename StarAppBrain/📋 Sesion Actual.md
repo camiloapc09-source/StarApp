@@ -4,16 +4,33 @@
 
 ---
 
-## ✅ Completado (esta sesión / reciente)
+## ✅ Completado (sesión 2026-04-30)
 
 | Tarea | Commit | Estado |
 |---|---|---|
-| Permiso `coachCanInvite` — toggle settings + API + página coach | `1cfe3c5` | ✅ En deploy |
-| Mensaje de cobro humanizado + ventana pronto pago Ball Breakers | `1cfe3c5` | ✅ En deploy |
-| Comprobante padre → "Compartir por WhatsApp" (html2canvas) | `1cfe3c5` | ✅ En deploy |
-| Fix gender tabs multi-tenant (solo clubs con `genderedCount > 0`) | `1cfe3c5` | ✅ En deploy |
-| Vault Obsidian: consolidar archivos duplicados BallBreakers | — | ✅ Listo |
-| **Fix crítico**: `prisma db push` en build script — DB se sincroniza sola en cada deploy | `92320ed` | ✅ Producción |
+| Fix uniforme doble faz: campo libre + validación contra cualquier palabra del nombre | `fcb55c8` | ✅ |
+| DELETE /api/payments/[id]: admin puede eliminar pagos erróneos desde la app | `fcb55c8` | ✅ |
+| Pago de visitante: /dashboard/admin/payments/visitor — comprobante sin registro | `fcb55c8` | ✅ |
+| Comprobante WhatsApp: imagen con diseño tipo Nequi (html2canvas + Web Share API) | `fcb55c8` | ✅ |
+| Permisos granulares por coach: User.canInvite + PATCH /api/admin/coaches/[id]/permissions | `fcb55c8` | ✅ |
+| Eliminar pagos falsos de Salomé de la DB directamente (IDs: cmoklc8nt..., cmokldgql...) | DB directo | ✅ |
+
+---
+
+## ✅ Completado (esta sesión)
+
+| Tarea | Commit | Estado |
+|---|---|---|
+| `coachCanInvite`: toggle en Settings, API `/api/coach/invites`, página coach con candado | `1cfe3c5` | ✅ Producción |
+| Mensaje WhatsApp humanizado: saludo Colombia + nombre club + emojis | `1cfe3c5` | ✅ Producción |
+| Mensaje WhatsApp inteligente: detecta ventana de pronto pago de Ball Breakers | `1cfe3c5` | ✅ Producción |
+| Comprobante padre → botón "Compartir por WhatsApp" (html2canvas → PNG) | `1cfe3c5` | ✅ Producción |
+| Fix gender tabs multi-tenant: tabs solo aparecen si `genderedCount > 0` | `1cfe3c5` | ✅ Producción |
+| **Fix raíz DB**: build script ahora incluye `prisma db push` — schema siempre sincronizado | `92320ed` | ✅ Producción |
+| Eliminar scripts Turso (`export-turso.ts`, `import-to-neon.ts`, `turso-backup.json`) | `5f3e20b` | ✅ Producción |
+| Limpiar `@libsql/client` de devDependencies | `92320ed` | ✅ Producción |
+| Limpiar `.env` local: sin Turso, `SUPERADMIN_EMAIL` parseado correctamente | — | ✅ Local |
+| Vault Obsidian: consolidar duplicado BallBreakers, actualizar Stack Tecnológico | — | ✅ Listo |
 
 ---
 
@@ -29,32 +46,57 @@
 
 ## 🧠 Contexto relevante para próxima sesión
 
-### Multi-tenancy y género
+### Fix crítico de DB (el más importante)
 
-- `Player.gender` es `String?` (nullable). Star Club → `null`. Ball Breakers → `"F" | "M"`.
-- Lista de jugadores: hace `db.player.count({ where: { clubId, gender: { not: null } } })` ANTES del resto de queries. Solo aplica filtro de género y muestra tabs si `genderedCount > 0`. Multi-tenant limpio.
+**Causa raíz de todos los crashes de DB:** el build script solo corría `prisma generate` pero nunca `prisma db push`. El cliente TypeScript sabía de las columnas nuevas pero la DB de Neon no las tenía → crash en runtime.
+
+**Solución aplicada** en `package.json`:
+```
+"build": "prisma generate && prisma db push --accept-data-loss && next build"
+```
+A partir del commit `92320ed`, cada deploy sincroniza el schema automáticamente. Ya no se necesita aplicar columnas manualmente con MCP Neon.
+
+### Estado actual de la DB vs Schema
+
+Verificado con MCP Neon — todas las tablas y columnas están 100% sincronizadas:
+- `Club`: incluye `coachCanInvite BOOLEAN DEFAULT false` ✅ (aplicado manualmente en esta sesión vía MCP)
+- `Player`: incluye `gender`, `zone`, `height`, `weight` ✅
+- `Session`: incluye `location` ✅
+- Resto de tablas: sin drift ✅
 
 ### coachCanInvite
 
-- `coachCanInvite Boolean @default(false)` en schema `Club`.
-- Toggle en Settings admin → card "Permisos de entrenadores".
-- API `POST /api/coach/invites` — solo PLAYER role, verifica el flag.
-- Página `/dashboard/coach/invites` — si flag desactivado muestra pantalla con candado.
-- `NewInviteForm` tiene prop opcional `endpoint` (default `/api/invites`). Coach page usa `/api/coach/invites`.
-- Sidebar: `UserPlus` icon en nav del coach.
-- ✅ Ya no necesario: `package.json` build script ahora corre `prisma db push --accept-data-loss` automáticamente en cada deploy.
+- Toggle en `/dashboard/admin/settings` → card "Permisos de entrenadores"
+- API `POST /api/coach/invites`: verifica `club.coachCanInvite`, solo crea invites `role: PLAYER`
+- Página `/dashboard/coach/invites`: si desactivado → pantalla con candado
+- `NewInviteForm` acepta prop `endpoint` (default `/api/invites`). Coach usa `/api/coach/invites`
+- Sidebar coach: ítem "Invitaciones" con `UserPlus` icon
 
-### Mensaje de cobro
+### Mensaje de cobro multi-tenant
 
-- `BulkMarkReceivedPanel` recibe: `billingCycleDay`, `earlyPaymentDays`, `earlyPaymentDiscount`, `clubName`.
-- `getColombiaDay()` calcula el día actual en zona Colombia.
-- Si `colombiaDay` entre `billingCycleDay` y `billingCycleDay + earlyPaymentDays` → agrega línea de descuento.
-- Star Club (descuento = 0) → línea nunca aparece.
+- Saludo dinámico: Buenos días (5–11h) / Buenas tardes (12–18h) / Buenas noches (19–4h) — hora Colombia
+- Se identifica el club: `*${clubName}* 🏆`
+- Ventana de pronto pago: si `colombiaDay` entre `billingCycleDay` y `billingCycleDay + earlyPaymentDays` → agrega línea del descuento
+- Clubs sin descuento (`earlyPaymentDiscount = 0`): línea nunca aparece — multi-tenant limpio
+- Aplica tanto en `BulkMarkReceivedPanel` (acción requerida) como en pagos programados en `payments/page.tsx`
+
+### Gender tabs multi-tenant
+
+- `db.player.count({ where: { clubId, gender: { not: null } } })` corre ANTES del query principal
+- Star Club (todos `gender = null`) → `genderedCount = 0` → sin tabs, sin filtro de género
+- Ball Breakers (`gender = "F"|"M"`) → tabs activas normalmente
 
 ### Vault Obsidian
 
-- Nota canónica: `Ball Breakers - Info Completa.md` (con espacio, conectada al grafo).
-- `BallBreakers - Info Completa.md` (sin espacio) → solo redirect, no borrar o Obsidian rompe los backlinks internos que tenga.
+- Nota canónica de Ball Breakers: `Ball Breakers - Info Completa.md` (con espacio)
+- `BallBreakers - Info Completa.md` (sin espacio) → solo redirect, no borrar
+- `Stack Tecnológico.md` actualizado con el build script correcto y la historia de Turso
+
+### Credenciales superadmin (Star Club)
+
+- Email: `admin@starclub.com`
+- Contraseña: `admin123`
+- SUPERADMIN no es un rol en DB — es quien tenga el email que coincida con `SUPERADMIN_EMAIL` en env vars
 
 ---
 

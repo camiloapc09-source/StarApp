@@ -1,6 +1,8 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY!);
+}
 const FROM = process.env.RESEND_FROM ?? "Nova <noreply@resend.dev>";
 
 function base(content: string) {
@@ -65,7 +67,7 @@ export async function sendOverduePaymentEmail({
     ${body("Sube el comprobante de pago desde la app para que el administrador lo confirme.")}
     ${btn("Ver pagos →", `${appUrl}/dashboard/parent/payments`)}
   `);
-  await resend.emails.send({ from: FROM, to, subject: `⚠️ Pago vencido — ${playerName}`, html }).catch(console.error);
+  await getResend().emails.send({ from: FROM, to, subject: `⚠️ Pago vencido — ${playerName}`, html }).catch(console.error);
 }
 
 // ─── Pago confirmado → al padre ───────────────────────────────────────────────
@@ -84,7 +86,7 @@ export async function sendPaymentConfirmedEmail({
     ${body("Gracias por mantenerte al día. Puedes ver el historial completo en la app.")}
     ${btn("Ver historial →", `${appUrl}/dashboard/parent/payments`)}
   `);
-  await resend.emails.send({ from: FROM, to, subject: `✓ Pago confirmado — ${playerName}`, html }).catch(console.error);
+  await getResend().emails.send({ from: FROM, to, subject: `✓ Pago confirmado — ${playerName}`, html }).catch(console.error);
 }
 
 // ─── Bienvenida al padre ──────────────────────────────────────────────────────
@@ -102,7 +104,7 @@ export async function sendParentWelcomeEmail({
     ${btn("Ir a la app →", `${appUrl}/dashboard/parent`)}
     <p style="margin:20px 0 0;font-size:13px;color:rgba(255,255,255,0.30);">Si tienes dudas, contacta al administrador del club.</p>
   `);
-  await resend.emails.send({ from: FROM, to, subject: `Bienvenido/a a ${clubName} — Nova`, html }).catch(console.error);
+  await getResend().emails.send({ from: FROM, to, subject: `Bienvenido/a a ${clubName} — Nova`, html }).catch(console.error);
 }
 
 // ─── Evidencia aprobada → al jugador ─────────────────────────────────────────
@@ -120,5 +122,5 @@ export async function sendEvidenceApprovedEmail({
     ${body("Sigue así — cada misión completada te acerca al siguiente nivel.")}
     ${btn("Ver mis misiones →", `${appUrl}/dashboard/player/missions`)}
   `);
-  await resend.emails.send({ from: FROM, to, subject: `+${xpReward} XP — Misión aprobada`, html }).catch(console.error);
+  await getResend().emails.send({ from: FROM, to, subject: `+${xpReward} XP — Misión aprobada`, html }).catch(console.error);
 }
