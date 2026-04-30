@@ -179,14 +179,18 @@ function MoreSheet({
   );
 }
 
-export function BottomNav({ role, notificationCount = 0 }: { role: string; notificationCount?: number }) {
+export function BottomNav({ role, notificationCount = 0, coachCanInvite = false }: {
+  role: string; notificationCount?: number; coachCanInvite?: boolean;
+}) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const roleKey = role.toLowerCase();
   const isAdmin = roleKey === "admin";
   const isCoach = roleKey === "coach";
   const hasMore = isAdmin || isCoach;
-  const moreItems = isAdmin ? ADMIN_MORE : COACH_MORE;
+  const moreItems = isAdmin
+    ? ADMIN_MORE
+    : COACH_MORE.filter(item => item.href !== "/dashboard/coach/invites" || coachCanInvite);
 
   const tabsFn = ROLE_TABS[roleKey];
   if (!tabsFn) return null;

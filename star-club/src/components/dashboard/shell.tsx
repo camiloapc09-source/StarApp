@@ -16,6 +16,7 @@ interface DashboardShellProps {
   clubName?: string;
   clubLogo?: string | null;
   plan?: string;
+  coachCanInvite?: boolean;
   children: React.ReactNode;
 }
 
@@ -27,6 +28,7 @@ export function DashboardShell({
   clubName = "StarApp",
   clubLogo,
   plan = "STARTER",
+  coachCanInvite = false,
   children,
 }: DashboardShellProps) {
   return (
@@ -123,7 +125,7 @@ export function DashboardShell({
         </main>
 
         {/* Mobile bottom nav */}
-        <BottomNav role={role} notificationCount={notificationCount} />
+        <BottomNav role={role} notificationCount={notificationCount} coachCanInvite={coachCanInvite} />
       </div>
     </DashboardContext.Provider>
   );

@@ -18,13 +18,19 @@ export default async function DashboardLayout({
   let clubName = "StarApp";
   let clubLogo: string | null = null;
   let clubPlan = "STARTER";
+  let coachCanInvite = false;
   try {
-    const [count, club] = await Promise.all([
+    const isCoach = session.user.role === "COACH";
+    const [count, club, coachUser] = await Promise.all([
       db.notification.count({ where: { userId: session.user.id, isRead: false } }),
-      db.club.findUnique({ where: { id: session.user.clubId }, select: { name: true, logo: true, plan: true } }),
+      db.club.findUnique({ where: { id: session.user.clubId }, select: { name: true, logo: true, plan: true, coachCanInvite: true } }),
+      isCoach
+        ? db.user.findUnique({ where: { id: session.user.id }, select: { canInvite: true } })
+        : null,
     ]);
     unreadCount = count;
     if (club) { clubName = club.name; clubLogo = club.logo; clubPlan = club.plan; }
+    if (club?.coachCanInvite && coachUser?.canInvite) coachCanInvite = true;
   } catch {
     // DB unavailable — continue without notification count
   }
@@ -37,6 +43,7 @@ export default async function DashboardLayout({
       clubName={clubName}
       clubLogo={clubLogo}
       plan={clubPlan}
+      coachCanInvite={coachCanInvite}
     >
       {children}
     </DashboardShell>
