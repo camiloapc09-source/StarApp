@@ -11,10 +11,14 @@
             "id": "da9446d7e2e0eb95",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Vista gráfica"
+              "type": "markdown",
+              "state": {
+                "file": "IA Admin/Tareas Automatizables.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Tareas Automatizables"
             }
           }
         ]

@@ -34,6 +34,17 @@
 
 ---
 
+## ✅ Completado (sesión 2026-05-02)
+
+| Tarea | Commit | Estado |
+|---|---|---|
+| Becas 50%/100%: campo `scholarshipPct` en Prisma + PATCH API + edit modal + badge en player detail | pendiente commit | ✅ |
+| Indicador de descuento por pronto pago (activo/inactivo) en `/admin/payments` | pendiente commit | ✅ |
+| Foto del deportista: endpoint `POST /api/admin/players/[id]/photo` (sin aprobación) + `AdminPlayerPhotoButton` | pendiente commit | ✅ |
+| Reset contraseña: nueva opción "resetear al número de documento" en botón y API | pendiente commit | ✅ |
+
+---
+
 ## 🔜 Pendientes
 
 | Tarea | Prioridad | Notas |

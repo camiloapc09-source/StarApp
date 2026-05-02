@@ -252,6 +252,36 @@ export default async function AdminPaymentsPage() {
           </div>
         </div>
 
+        {/* Early payment discount indicator */}
+        {epdiscount > 0 && epd > 0 && (() => {
+          const inWindow = colombiaDay >= bcd && colombiaDay < earlyWindowEnd;
+          return (
+            <div
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
+              style={inWindow
+                ? { background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.25)" }
+                : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+            >
+              <div
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ background: inWindow ? "#34D399" : "rgba(255,255,255,0.20)" }}
+              />
+              {inWindow ? (
+                <span style={{ color: "#6EE7B7" }}>
+                  <span className="font-bold">Descuento por pronto pago activo</span>
+                  {" · "}${epdiscount.toLocaleString("es-CO")} de descuento · válido hasta el día {earlyWindowEnd - 1} de este mes
+                </span>
+              ) : (
+                <span style={{ color: "rgba(255,255,255,0.40)" }}>
+                  Descuento por pronto pago <span className="font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>${epdiscount.toLocaleString("es-CO")}</span>
+                  {" · "} próxima ventana: del <span className="font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>día {bcd}</span> al <span className="font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>día {earlyWindowEnd - 1}</span> de cada mes
+                  {" · "}<span style={{ color: "rgba(255,255,255,0.30)" }}>Hoy: día {colombiaDay}</span>
+                </span>
+              )}
+            </div>
+          );
+        })()}
+
         {/* Action tools */}
         <div className="flex flex-wrap items-center gap-3">
           <BulkPaymentButton />

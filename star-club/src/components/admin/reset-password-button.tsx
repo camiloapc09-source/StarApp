@@ -7,31 +7,32 @@ interface Props {
   userId: string;
   userName: string;
   role?: string; // "PLAYER" | "PARENT"
+  hasDocument?: boolean;
 }
 
-export default function ResetPasswordButton({ userId, userName, role = "PLAYER" }: Props) {
+export default function ResetPasswordButton({ userId, userName, role = "PLAYER", hasDocument = false }: Props) {
   const [open, setOpen]           = useState(false);
-  const [loading, setLoading]     = useState(false);
-  const [result, setResult]       = useState<{ tempPassword: string; loginEmail: string } | null>(null);
+  const [loading, setLoading]     = useState<"random" | "document" | null>(null);
+  const [result, setResult]       = useState<{ tempPassword: string; loginEmail: string; resetToDocument?: boolean } | null>(null);
   const [error, setError]         = useState<string | null>(null);
   const [copied, setCopied]       = useState<"password" | "email" | null>(null);
 
-  async function reset() {
-    setLoading(true);
+  async function reset(resetToDocument: boolean) {
+    setLoading(resetToDocument ? "document" : "random");
     setError(null);
     try {
       const res = await fetch("/api/admin/players/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, resetToDocument }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al resetear");
-      setResult({ tempPassword: data.tempPassword, loginEmail: data.loginEmail });
+      setResult({ tempPassword: data.tempPassword, loginEmail: data.loginEmail, resetToDocument: data.resetToDocument });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error");
     } finally {
-      setLoading(false);
+      setLoading(null);
     }
   }
 
@@ -73,7 +74,7 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER" 
             {!result ? (
               <>
                 <p className="text-sm" style={{ color: "var(--text-secondary)" }}>
-                  Se generará una nueva contraseña temporal. La actual quedará inactiva de inmediato.
+                  La contraseña actual quedará inactiva de inmediato. Elige cómo resetear:
                 </p>
 
                 {error && (
@@ -83,16 +84,39 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER" 
                   </p>
                 )}
 
-                <div className="flex gap-2">
-                  <button onClick={() => setOpen(false)}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-medium border hover:opacity-70"
-                    style={{ borderColor: "var(--border-primary)", color: "var(--text-secondary)" }}>
-                    Cancelar
+                <div className="space-y-2">
+                  {/* Option 1: reset to document number (only for players with document) */}
+                  {role === "PLAYER" && hasDocument && (
+                    <button
+                      onClick={() => reset(true)}
+                      disabled={loading !== null}
+                      className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      style={{ background: "rgba(52,211,153,0.12)", color: "#34D399", border: "1px solid rgba(52,211,153,0.25)" }}
+                    >
+                      {loading === "document"
+                        ? <><Loader2 size={14} className="animate-spin" /> Reseteando…</>
+                        : "Resetear al número de documento"}
+                    </button>
+                  )}
+
+                  {/* Option 2: random temp password */}
+                  <button
+                    onClick={() => reset(false)}
+                    disabled={loading !== null}
+                    className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    style={{ background: "rgba(251,191,36,0.15)", color: "#FCD34D", border: "1px solid rgba(251,191,36,0.25)" }}
+                  >
+                    {loading === "random"
+                      ? <><Loader2 size={14} className="animate-spin" /> Reseteando…</>
+                      : "Generar contraseña aleatoria"}
                   </button>
-                  <button onClick={reset} disabled={loading}
-                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50"
-                    style={{ background: "rgba(251,191,36,0.15)", color: "#FCD34D", border: "1px solid rgba(251,191,36,0.25)" }}>
-                    {loading ? <span className="flex items-center justify-center gap-2"><Loader2 size={14} className="animate-spin" /> Reseteando…</span> : "Confirmar reset"}
+
+                  <button
+                    onClick={() => setOpen(false)}
+                    className="w-full py-2.5 rounded-xl text-sm font-medium border hover:opacity-70"
+                    style={{ borderColor: "var(--border-primary)", color: "var(--text-secondary)" }}
+                  >
+                    Cancelar
                   </button>
                 </div>
               </>
@@ -135,7 +159,9 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER" 
                   </div>
 
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    Compártela por WhatsApp y pídele que la cambie en su perfil.
+                    {result.resetToDocument
+                      ? "La contraseña es su número de documento. Pídele que la cambie en su perfil."
+                      : "Compártela por WhatsApp y pídele que la cambie en su perfil."}
                   </p>
                 </div>
 

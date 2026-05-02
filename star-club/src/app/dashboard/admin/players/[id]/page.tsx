@@ -11,6 +11,7 @@ import { es } from "date-fns/locale";
 import { calculateLevel } from "@/lib/utils";
 import PlayerActivateButton from "@/components/admin/player-activate-button";
 import AdminEditPlayerButton from "@/components/admin/admin-edit-player-button";
+import AdminPlayerPhotoButton from "@/components/admin/admin-player-photo-button";
 import DeletePlayerButton from "@/components/admin/delete-player-button";
 import ResetPasswordButton from "@/components/admin/reset-password-button";
 import PlayerNotesPanel from "@/components/admin/player-notes-panel";
@@ -46,7 +47,8 @@ export default async function PlayerProfilePage({ params }: Props) {
     db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true } }),
   ]);
 
-  const zones = club?.zonePrices ? Object.keys(club.zonePrices as Record<string, unknown>) : [];
+  const zonePrices = (club?.zonePrices as Record<string, number> | null) ?? {};
+  const zones = Object.keys(zonePrices);
 
   if (!player) redirect("/dashboard/admin/players");
 
@@ -138,6 +140,11 @@ export default async function PlayerProfilePage({ params }: Props) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
+              <AdminPlayerPhotoButton
+                playerId={player.id}
+                playerName={player.user.name}
+                currentPhoto={player.user.avatar ?? null}
+              />
               <AdminEditPlayerButton
                 player={{
                   id: player.id,
@@ -146,6 +153,7 @@ export default async function PlayerProfilePage({ params }: Props) {
                   jerseyNumber: player.jerseyNumber,
                   paymentDay: player.paymentDay,
                   monthlyAmount: player.monthlyAmount,
+                  scholarshipPct: player.scholarshipPct,
                   dateOfBirth: player.dateOfBirth?.toISOString() ?? null,
                   documentNumber: player.documentNumber,
                   address: player.address,
@@ -155,9 +163,10 @@ export default async function PlayerProfilePage({ params }: Props) {
                 }}
                 categories={categories}
                 zones={zones}
+                zonePrices={zonePrices}
               />
               <DeletePlayerButton playerId={player.id} playerName={player.user.name} />
-              <ResetPasswordButton userId={player.user.id} userName={player.user.name} role="PLAYER" />
+              <ResetPasswordButton userId={player.user.id} userName={player.user.name} role="PLAYER" hasDocument={!!player.documentNumber} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-x-4 gap-y-3">
@@ -180,13 +189,20 @@ export default async function PlayerProfilePage({ params }: Props) {
               {player.joinDate && (
                 <InfoRow label="Fecha de ingreso" value={format(player.joinDate, "dd/MM/yyyy", { locale: es })} />
               )}
-              {player.paymentDay != null && !( player.monthlyAmount === 0) && <InfoRow label="Dia de pago" value={`Dia ${player.paymentDay}`} />}
-              {player.monthlyAmount === 0 ? (
+              {player.paymentDay != null && player.monthlyAmount !== 0 && <InfoRow label="Dia de pago" value={`Dia ${player.paymentDay}`} />}
+              {player.scholarshipPct != null || player.monthlyAmount === 0 ? (
                 <div className="flex items-center justify-between py-2 border-b" style={{ borderColor: "var(--border-subtle)" }}>
                   <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>Mensualidad</span>
-                  <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: "rgba(139,92,246,0.15)", color: "var(--accent)", border: "1px solid rgba(139,92,246,0.3)" }}>
-                    BECADO
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {player.monthlyAmount != null && player.monthlyAmount > 0 && (
+                      <span className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                        ${player.monthlyAmount.toLocaleString("es-CO")}
+                      </span>
+                    )}
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA", border: "1px solid rgba(139,92,246,0.3)" }}>
+                      {player.scholarshipPct === 100 || player.monthlyAmount === 0 ? "BECA 100%" : "BECA 50%"}
+                    </span>
+                  </div>
                 </div>
               ) : player.monthlyAmount != null ? (
                 <InfoRow label="Monto mensual" value={`$${player.monthlyAmount.toLocaleString("es-CO")}`} />

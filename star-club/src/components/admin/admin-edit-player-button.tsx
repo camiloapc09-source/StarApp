@@ -12,6 +12,7 @@ type Props = {
     jerseyNumber: number | null;
     paymentDay: number | null;
     monthlyAmount: number | null;
+    scholarshipPct: number | null;
     dateOfBirth: string | null;
     documentNumber: string | null;
     address: string | null;
@@ -21,9 +22,10 @@ type Props = {
   };
   categories: { id: string; name: string }[];
   zones?: string[];
+  zonePrices?: Record<string, number>;
 };
 
-export default function AdminEditPlayerButton({ player, categories, zones = [] }: Props) {
+export default function AdminEditPlayerButton({ player, categories, zones = [], zonePrices = {} }: Props) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -38,11 +40,22 @@ export default function AdminEditPlayerButton({ player, categories, zones = [] }
     jerseyNumber: player.jerseyNumber != null ? String(player.jerseyNumber) : "",
     paymentDay: player.paymentDay != null ? String(player.paymentDay) : "",
     monthlyAmount: player.monthlyAmount != null ? String(player.monthlyAmount) : "",
+    scholarshipPct: player.scholarshipPct != null ? String(player.scholarshipPct) : "",
     dateOfBirth: player.dateOfBirth ? player.dateOfBirth.slice(0, 10) : "",
     documentNumber: player.documentNumber ?? "",
     address: player.address ?? "",
     phone: player.phone ?? "",
   });
+
+  function applyScholarship(pct: "" | "50" | "100") {
+    setData((d) => {
+      const baseZonePrice = d.zone ? (zonePrices[d.zone] ?? null) : null;
+      let newAmount = d.monthlyAmount;
+      if (pct === "100") newAmount = "0";
+      else if (pct === "50" && baseZonePrice != null) newAmount = String(baseZonePrice * 0.5);
+      return { ...d, scholarshipPct: pct, monthlyAmount: newAmount };
+    });
+  }
 
   const set = (k: keyof typeof data) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setData((d) => ({ ...d, [k]: e.target.value }));
@@ -59,6 +72,7 @@ export default function AdminEditPlayerButton({ player, categories, zones = [] }
       jerseyNumber: data.jerseyNumber !== "" ? parseInt(data.jerseyNumber) : null,
       paymentDay: data.paymentDay !== "" ? parseInt(data.paymentDay) : null,
       monthlyAmount: data.monthlyAmount !== "" ? parseFloat(data.monthlyAmount) : null,
+      scholarshipPct: data.scholarshipPct !== "" ? parseInt(data.scholarshipPct) : null,
       dateOfBirth: data.dateOfBirth || null,
       documentNumber: data.documentNumber || null,
       address: data.address || null,
@@ -183,6 +197,35 @@ export default function AdminEditPlayerButton({ player, categories, zones = [] }
                 <div>
                   <label className="text-xs font-medium block mb-1" style={{ color: "var(--text-muted)" }}>MONTO MENSUAL ($)</label>
                   <input type="number" min="0" step="1000" value={data.monthlyAmount} onChange={set("monthlyAmount")} placeholder="Ej: 80000" className={inputCls} style={inputStyle} />
+                </div>
+
+                {/* Beca */}
+                <div className="col-span-2">
+                  <label className="text-xs font-medium block mb-2" style={{ color: "var(--text-muted)" }}>BECA</label>
+                  <div className="flex gap-2">
+                    {(["", "50", "100"] as const).map((opt) => {
+                      const label = opt === "" ? "Sin beca" : opt === "50" ? "Beca 50%" : "Beca 100%";
+                      const active = data.scholarshipPct === opt;
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => applyScholarship(opt)}
+                          className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
+                          style={active
+                            ? { background: "rgba(139,92,246,0.18)", color: "#A78BFA", borderColor: "rgba(139,92,246,0.4)" }
+                            : { background: "var(--bg-elevated)", color: "var(--text-muted)", borderColor: "var(--border-primary)" }}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {data.scholarshipPct === "50" && !data.zone && (
+                    <p className="text-xs mt-1" style={{ color: "var(--warning)" }}>
+                      Selecciona una sede para auto-calcular el 50%. O ajusta el monto manualmente.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="text-xs font-medium block mb-1" style={{ color: "var(--text-muted)" }}>FECHA DE NACIMIENTO</label>

@@ -94,6 +94,19 @@ Punta · Central · Líbero · Armador · Opuesto
 
 ---
 
+## Becas
+
+Ball Breakers maneja becas para algunos jugadores:
+
+| Tipo | Descripción | En sistema |
+|---|---|---|
+| Beca 50% | Paga la mitad del precio de su sede | `scholarshipPct = 50`, `monthlyAmount = zona * 0.5` |
+| Beca 100% | No paga mensualidad | `scholarshipPct = 100`, `monthlyAmount = 0` |
+
+El admin (Karen) puede aplicar la beca desde el modal de edición del jugador. El sistema auto-calcula el 50% si la zona está configurada.
+
+---
+
 ## Estado actual (Abril 2026)
 
 - 64 jugadores importados desde base de datos de formulario Google
