@@ -36,7 +36,8 @@ export async function UpcomingSessionsCard({ categoryId, limit = 5 }: Props) {
     },
     orderBy: { date: "asc" },
     take: limit,
-    include: {
+    select: {
+      id: true, title: true, date: true, type: true, location: true, notes: true,
       coach: { select: { name: true } },
       category: { select: { name: true } },
     },
@@ -92,9 +93,22 @@ export async function UpcomingSessionsCard({ categoryId, limit = 5 }: Props) {
                   <p className="text-xs mt-1 capitalize" style={{ color: "var(--text-muted)" }}>
                     {dateStr}
                   </p>
+                  {s.location && (
+                    <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      Sede: {s.location}
+                    </p>
+                  )}
                   {s.coach && (
                     <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
                       Entrenador: {s.coach.name}
+                    </p>
+                  )}
+                  {s.notes && (
+                    <p
+                      className="text-xs mt-1.5 px-2.5 py-1.5 rounded-lg italic"
+                      style={{ background: "rgba(255,255,255,0.04)", color: "var(--text-muted)", borderLeft: "2px solid var(--accent)" }}
+                    >
+                      {s.notes}
                     </p>
                   )}
                 </div>

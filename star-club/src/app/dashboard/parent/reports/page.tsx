@@ -12,11 +12,16 @@ import { es } from "date-fns/locale";
 import { getDictionary } from "@/lib/dict";
 import Link from "next/link";
 
-export default async function ParentReportsPage() {
+export default async function ParentReportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ child?: string }>;
+}) {
   const session = await auth();
   if (!session?.user || session.user.role !== "PARENT") redirect("/");
 
   const dict = await getDictionary();
+  const { child: childParam } = await searchParams;
 
   const parent = await db.parent.findUnique({
     where: { userId: session.user.id },
@@ -56,7 +61,10 @@ export default async function ParentReportsPage() {
     );
   }
 
-  const { player } = parent.children[0];
+  const selectedChild = childParam
+    ? parent.children.find((c) => c.playerId === childParam) ?? parent.children[0]
+    : parent.children[0];
+  const { player } = selectedChild;
 
   // Payment stats
   const payments         = player.payments;
@@ -111,6 +119,27 @@ export default async function ParentReportsPage() {
         subtitle={`Historial de pagos y asistencia de ${player.user.name}`}
       />
       <div className="p-4 md:p-8 space-y-6">
+
+        {/* Child selector (only shown when multiple children) */}
+        {parent.children.length > 1 && (
+          <div className="flex gap-2 flex-wrap">
+            {parent.children.map((c) => (
+              <Link
+                key={c.playerId}
+                href={`/dashboard/parent/reports?child=${c.playerId}`}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold border transition-all"
+                style={
+                  c.playerId === selectedChild.playerId
+                    ? { background: "rgba(0,255,135,0.10)", color: "var(--accent)", borderColor: "rgba(0,255,135,0.25)" }
+                    : { background: "var(--bg-elevated)", color: "var(--text-muted)", borderColor: "var(--border-primary)" }
+                }
+              >
+                <Avatar name={c.player.user.name} src={c.player.user.avatar} size="sm" />
+                {c.player.user.name.split(" ")[0]}
+              </Link>
+            ))}
+          </div>
+        )}
 
         {/* Child header */}
         <Card className="flex items-center gap-4">

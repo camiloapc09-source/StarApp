@@ -21,7 +21,6 @@ export default function PaymentSubmitForm({ paymentId }: { paymentId: string }) 
   const [note, setNote] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [uploadingImg, setUploadingImg] = useState(false);
   const [proofUrl, setProofUrl] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -36,26 +35,28 @@ export default function PaymentSubmitForm({ paymentId }: { paymentId: string }) 
     reader.readAsDataURL(f);
   }
 
-  async function uploadProof() {
-    if (!file) return;
-    setUploadingImg(true);
+  async function uploadProof(): Promise<boolean> {
+    if (!file) return true;
+    setError(null);
     const fd = new FormData();
     fd.append("file", file);
     const res = await fetch(`/api/payments/${paymentId}/upload`, { method: "POST", body: fd });
     if (res.ok) {
       const d = await res.json();
       setProofUrl(d.url);
+      return true;
     }
-    setUploadingImg(false);
+    setError("No se pudo subir el comprobante. Verifica el archivo e intenta de nuevo.");
+    return false;
   }
 
   async function submit() {
     setSubmitting(true);
     setError(null);
 
-    // Upload proof image first if not yet uploaded
     if (file && !proofUrl) {
-      await uploadProof();
+      const ok = await uploadProof();
+      if (!ok) { setSubmitting(false); return; }
     }
 
     const res = await fetch(`/api/payments/${paymentId}/submit`, {

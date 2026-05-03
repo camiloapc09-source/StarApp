@@ -47,13 +47,18 @@ export default function AdminEditPlayerButton({ player, categories, zones = [], 
     phone: player.phone ?? "",
   });
 
-  function applyScholarship(pct: "" | "50" | "100") {
+  function applyScholarship(pct: "" | number) {
     setData((d) => {
       const baseZonePrice = d.zone ? (zonePrices[d.zone] ?? null) : null;
       let newAmount = d.monthlyAmount;
-      if (pct === "100") newAmount = "0";
-      else if (pct === "50" && baseZonePrice != null) newAmount = String(baseZonePrice * 0.5);
-      return { ...d, scholarshipPct: pct, monthlyAmount: newAmount };
+      if (pct === "") {
+        // sin beca: no tocar el monto
+      } else if (pct === 100) {
+        newAmount = "0";
+      } else if (baseZonePrice != null) {
+        newAmount = String(Math.round(baseZonePrice * (pct / 100)));
+      }
+      return { ...d, scholarshipPct: pct === "" ? "" : String(pct), monthlyAmount: newAmount };
     });
   }
 
@@ -202,13 +207,12 @@ export default function AdminEditPlayerButton({ player, categories, zones = [], 
                 {/* Beca */}
                 <div className="col-span-2">
                   <label className="text-xs font-medium block mb-2" style={{ color: "var(--text-muted)" }}>BECA</label>
-                  <div className="flex gap-2">
-                    {(["", "50", "100"] as const).map((opt) => {
-                      const label = opt === "" ? "Sin beca" : opt === "50" ? "Beca 50%" : "Beca 100%";
-                      const active = data.scholarshipPct === opt;
+                  <div className="flex gap-2 flex-wrap">
+                    {([["", "Sin beca"], [50, "50%"], [100, "100%"]] as [""| number, string][]).map(([opt, label]) => {
+                      const active = opt === "" ? !data.scholarshipPct : data.scholarshipPct === String(opt);
                       return (
                         <button
-                          key={opt}
+                          key={String(opt)}
                           type="button"
                           onClick={() => applyScholarship(opt)}
                           className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
@@ -221,9 +225,28 @@ export default function AdminEditPlayerButton({ player, categories, zones = [], 
                       );
                     })}
                   </div>
-                  {data.scholarshipPct === "50" && !data.zone && (
+                  {data.scholarshipPct && (
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-xs" style={{ color: "var(--text-muted)" }}>Porcentaje:</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={data.scholarshipPct}
+                        onChange={(e) => {
+                          const num = parseInt(e.target.value);
+                          if (!e.target.value) { applyScholarship(""); return; }
+                          if (num >= 1 && num <= 100) applyScholarship(num);
+                        }}
+                        className="w-16 rounded-xl px-2 py-1.5 text-xs outline-none border text-center font-bold"
+                        style={{ background: "var(--bg-elevated)", borderColor: "rgba(139,92,246,0.4)", color: "#A78BFA" }}
+                      />
+                      <span className="text-xs font-semibold" style={{ color: "#A78BFA" }}>%</span>
+                    </div>
+                  )}
+                  {data.scholarshipPct && !data.zone && (
                     <p className="text-xs mt-1" style={{ color: "var(--warning)" }}>
-                      Selecciona una sede para auto-calcular el 50%. O ajusta el monto manualmente.
+                      Selecciona una sede para auto-calcular el monto. O ajusta manualmente.
                     </p>
                   )}
                 </div>

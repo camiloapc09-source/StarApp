@@ -1,3 +1,4 @@
+import React from "react";
 import { calculateLevel, LEVEL_TITLES } from "@/lib/utils";
 import { Zap } from "lucide-react";
 
@@ -10,6 +11,8 @@ interface LeaderboardPlayer {
 interface Props {
   players: LeaderboardPlayer[];
   currentPlayerId: string;
+  /** True global rank of the current player (may be outside the top-20 slice) */
+  trueRank?: number;
 }
 
 const MEDALS = ["🥇", "🥈", "🥉"];
@@ -24,16 +27,19 @@ const RANK_COLORS = [
   { ring: "#FB923C", bg: "rgba(251,146,60,0.10)"  },
 ];
 
-export function Leaderboard({ players, currentPlayerId }: Props) {
+export function Leaderboard({ players, currentPlayerId, trueRank }: Props) {
   const sorted   = [...players].sort((a, b) => b.xp - a.xp);
-  const myRank   = sorted.findIndex((p) => p.id === currentPlayerId) + 1;
+  const myIndexInList = sorted.findIndex((p) => p.id === currentPlayerId);
+  const myRank   = trueRank ?? (myIndexInList >= 0 ? myIndexInList + 1 : 0);
+  // Player is appended after top-20 when trueRank > 20
+  const playerIsAppended = myIndexInList >= 20;
 
   return (
     <div className="space-y-1.5">
       {/* Current player rank summary */}
       <div className="flex items-center justify-between mb-4 px-1">
         <p className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.30)" }}>
-          {sorted.length} jugadores
+          {sorted.length <= 20 ? sorted.length : "20+"} jugadores
         </p>
         {myRank > 0 && (
           <p className="text-xs font-bold" style={{ color: "#A78BFA" }}>
@@ -43,16 +49,26 @@ export function Leaderboard({ players, currentPlayerId }: Props) {
       </div>
 
       {sorted.map((player, index) => {
-        const rank    = index + 1;
+        const rank    = trueRank && player.id === currentPlayerId ? trueRank : index + 1;
         const level   = calculateLevel(player.xp);
         const title   = LEVEL_TITLES[level] ?? "";
         const isMe    = player.id === currentPlayerId;
-        const medal   = MEDALS[index];
+        const medal   = index < 3 ? MEDALS[index] : undefined;
         const colors  = RANK_COLORS[index];
 
+        // Show separator before the appended player
+        const showSeparator = playerIsAppended && isMe;
+
         return (
+          <React.Fragment key={player.id}>
+          {showSeparator && (
+            <div className="flex items-center gap-2 py-1 px-2">
+              <div className="flex-1 border-t border-dashed" style={{ borderColor: "rgba(255,255,255,0.08)" }} />
+              <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.20)" }}>···</span>
+              <div className="flex-1 border-t border-dashed" style={{ borderColor: "rgba(255,255,255,0.08)" }} />
+            </div>
+          )}
           <div
-            key={player.id}
             className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all"
             style={{
               background: isMe
@@ -105,6 +121,7 @@ export function Leaderboard({ players, currentPlayerId }: Props) {
               </span>
             </div>
           </div>
+          </React.Fragment>
         );
       })}
     </div>

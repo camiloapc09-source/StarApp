@@ -24,11 +24,35 @@ export default async function SessionAttendancePage({ params }: { params: Promis
 
   if (userSession.user.role === "COACH" && sess.coachId !== userSession.user.id) redirect("/dashboard/coach");
 
-  let players: PlayerWithUser[] = [];
-  if (sess.categoryId) {
-    players = await db.player.findMany({ where: { clubId, categoryId: sess.categoryId, status: "ACTIVE" }, include: { user: true } });
+  // Build player filter: category + zone (sede) when available
+  let players: PlayerWithUser[] = await db.player.findMany({
+    where: {
+      clubId,
+      status: "ACTIVE",
+      ...(sess.categoryId ? { categoryId: sess.categoryId } : {}),
+      ...(sess.location   ? { zone: sess.location }          : {}),
+    },
+    include: { user: true },
+  });
+
+  // If zone+category combo returns nothing, relax to category only
+  if (players.length === 0 && sess.location && sess.categoryId) {
+    players = await db.player.findMany({
+      where: { clubId, status: "ACTIVE", categoryId: sess.categoryId },
+      include: { user: true },
+    });
   }
-  if (!players || players.length === 0) {
+
+  // Last resort: zone only (no category on session)
+  if (players.length === 0 && sess.location) {
+    players = await db.player.findMany({
+      where: { clubId, status: "ACTIVE", zone: sess.location },
+      include: { user: true },
+    });
+  }
+
+  // Absolute fallback: all active players (session has neither category nor zone)
+  if (players.length === 0 && !sess.categoryId && !sess.location) {
     players = await db.player.findMany({ where: { clubId, status: "ACTIVE" }, include: { user: true }, take: 100 });
   }
 

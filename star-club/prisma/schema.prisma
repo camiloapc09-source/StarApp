@@ -108,7 +108,7 @@ model Player {
   joinDate      DateTime?
   paymentDay    Int?
   monthlyAmount Float?
-  scholarshipPct Int?    // 50 | 100 — porcentaje de beca; null = sin beca
+  scholarshipPct Int?    // 1-100 — porcentaje de beca; null = sin beca
   position    String?
   height      Float?   // cm
   weight      Float?   // kg

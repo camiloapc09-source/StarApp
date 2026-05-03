@@ -96,21 +96,23 @@ Punta · Central · Líbero · Armador · Opuesto
 
 ## Becas
 
-Ball Breakers maneja becas para algunos jugadores:
+Ball Breakers maneja becas para algunos jugadores. Karen (admin) puede asignar **cualquier porcentaje de 1 a 100** — el sistema calcula el monto automáticamente.
 
 | Tipo | Descripción | En sistema |
 |---|---|---|
+| Beca parcial | Karen elige el % (ej: 30%, 70%) | `scholarshipPct = N`, `monthlyAmount = zona × (N/100)` |
 | Beca 50% | Paga la mitad del precio de su sede | `scholarshipPct = 50`, `monthlyAmount = zona * 0.5` |
 | Beca 100% | No paga mensualidad | `scholarshipPct = 100`, `monthlyAmount = 0` |
 
-El admin (Karen) puede aplicar la beca desde el modal de edición del jugador. El sistema auto-calcula el 50% si la zona está configurada.
+**Cómo aplicarla:** Modal de edición del jugador → sección BECA → botones rápidos (50% / 100%) o input numérico libre (1–100).
+
+Ver también: [[Becas]]
 
 ---
 
-## Estado actual (Abril 2026)
+## Estado actual (Mayo 2026)
 
 - 64 jugadores importados desde base de datos de formulario Google
-- Todos con pago OVERDUE del ciclo 15 abr – 14 may 2026
 - El admin (Karen) va marcando pagos a medida que los padres cancelan
 - Al marcar un pago como pagado, el sistema auto-genera el siguiente ciclo
 
@@ -119,7 +121,6 @@ El admin (Karen) puede aplicar la beca desde el modal de edición del jugador. E
 - 2 jugadores sin número de documento real (Kyran Arias, María Alejandra Rodriguez) → doc ficticio `TIKYRANARIAS2011` y `TIMARIARODRIGUEZ2012`
 - Aileen Sánchez tenía documento `000000` → corregido a `000000AILEEN`
 - DOB de Salomé Meza tenía año 2026 (error tipeo) → corregido a 2016
-- Pesos/alturas normalizados (metros → cm, string → float)
 
 ---
 
@@ -130,10 +131,11 @@ Ball Breakers ilustra que el sistema es **completamente flexible**:
 - Precios por zona geográfica dentro del mismo club
 - Ciclos de pago configurables (no día 1 del mes)
 - Descuentos por pronto pago configurables
+- Becas de porcentaje libre (no solo 50/100)
 - Tabla de géneros activa solo cuando `genderedCount > 0` (multi-tenant limpio)
 
 La IA debe respetar la configuración de **cada club por separado** y nunca asumir que todos funcionan igual que Star Club.
 
 ---
 
-Ver también: [[Schema Completo]] → `Club.zonePrices`, `billingCycleDay`, `earlyPaymentDays`, `coachCanInvite` | [[Ciclo de Pagos]] | [[Roles y Permisos]] | [[Star Club - Info Completa]]
+Ver también: [[Schema Completo]] | [[Ciclo de Pagos]] | [[Becas]] | [[Roles y Permisos]] | [[Star Club - Info Completa]]

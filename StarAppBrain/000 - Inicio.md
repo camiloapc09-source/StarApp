@@ -25,8 +25,10 @@ El producto está construido para administradores de clubes que necesitan contro
 - [[Gestión de Jugadores]]
 - [[Sesiones y Asistencia]]
 - [[Pagos y Facturación]]
+- [[Becas]] ← porcentaje libre 1–100%, cálculo automático por zona
 - [[Gamificación]]
 - [[Notificaciones y Push]]
+- [[UX Audit y Mejoras]] ← issues encontrados y resueltos (audit 2026-05-03)
 
 ### 📋 Reglas de Negocio
 - [[Ciclo de Pagos]]
@@ -44,8 +46,11 @@ El producto está construido para administradores de clubes que necesitan contro
 - [[Protocolo de Identificación de Contacto]]
 - [[Flujo de Prospecto Nuevo]]
 - [[Star Club - Info Completa]] ← info real del club (horarios, tarifas, pagos)
-- [[Ball Breakers - Info Completa]] ← ejemplo de cliente SaaS con ciclo configurable
+- [[Ball Breakers - Info Completa]] ← cliente SaaS con sedes, ciclo configurable y becas parciales
 - [[Modelo de Negocio SaaS]]
+
+### 🛠️ Herramientas Dev
+- [[Playwright MCP]] ← browser automation para auditar y testear la app (CLI only)
 
 ---
 

@@ -13,24 +13,6 @@
 | Pago de visitante: /dashboard/admin/payments/visitor — comprobante sin registro | `fcb55c8` | ✅ |
 | Comprobante WhatsApp: imagen con diseño tipo Nequi (html2canvas + Web Share API) | `fcb55c8` | ✅ |
 | Permisos granulares por coach: User.canInvite + PATCH /api/admin/coaches/[id]/permissions | `fcb55c8` | ✅ |
-| Eliminar pagos falsos de Salomé de la DB directamente (IDs: cmoklc8nt..., cmokldgql...) | DB directo | ✅ |
-
----
-
-## ✅ Completado (esta sesión)
-
-| Tarea | Commit | Estado |
-|---|---|---|
-| `coachCanInvite`: toggle en Settings, API `/api/coach/invites`, página coach con candado | `1cfe3c5` | ✅ Producción |
-| Mensaje WhatsApp humanizado: saludo Colombia + nombre club + emojis | `1cfe3c5` | ✅ Producción |
-| Mensaje WhatsApp inteligente: detecta ventana de pronto pago de Ball Breakers | `1cfe3c5` | ✅ Producción |
-| Comprobante padre → botón "Compartir por WhatsApp" (html2canvas → PNG) | `1cfe3c5` | ✅ Producción |
-| Fix gender tabs multi-tenant: tabs solo aparecen si `genderedCount > 0` | `1cfe3c5` | ✅ Producción |
-| **Fix raíz DB**: build script ahora incluye `prisma db push` — schema siempre sincronizado | `92320ed` | ✅ Producción |
-| Eliminar scripts Turso (`export-turso.ts`, `import-to-neon.ts`, `turso-backup.json`) | `5f3e20b` | ✅ Producción |
-| Limpiar `@libsql/client` de devDependencies | `92320ed` | ✅ Producción |
-| Limpiar `.env` local: sin Turso, `SUPERADMIN_EMAIL` parseado correctamente | — | ✅ Local |
-| Vault Obsidian: consolidar duplicado BallBreakers, actualizar Stack Tecnológico | — | ✅ Listo |
 
 ---
 
@@ -38,10 +20,26 @@
 
 | Tarea | Commit | Estado |
 |---|---|---|
-| Becas 50%/100%: campo `scholarshipPct` en Prisma + PATCH API + edit modal + badge en player detail | pendiente commit | ✅ |
-| Indicador de descuento por pronto pago (activo/inactivo) en `/admin/payments` | pendiente commit | ✅ |
-| Foto del deportista: endpoint `POST /api/admin/players/[id]/photo` (sin aprobación) + `AdminPlayerPhotoButton` | pendiente commit | ✅ |
-| Reset contraseña: nueva opción "resetear al número de documento" en botón y API | pendiente commit | ✅ |
+| Becas 50%/100%: campo `scholarshipPct` en Prisma + PATCH API + edit modal + badge en player detail | f7b17a4 | ✅ Producción |
+| Indicador de descuento por pronto pago (activo/inactivo) en `/admin/payments` | f7b17a4 | ✅ Producción |
+| Foto del deportista: endpoint `POST /api/admin/players/[id]/photo` + `AdminPlayerPhotoButton` | f7b17a4 | ✅ Producción |
+| Reset contraseña por número de documento | f7b17a4 | ✅ Producción |
+
+---
+
+## ✅ Completado (sesión 2026-05-03 — esta sesión)
+
+| Tarea | Archivo(s) | Estado |
+|---|---|---|
+| **Playwright MCP**: instalado y conectado (`npx @playwright/mcp@latest`) | `.claude.json` | ✅ Listo |
+| **Becas % libre (1–100%)**: Karen puede dar cualquier porcentaje, no solo 50% o 100% | `api/players/[id]/route.ts` · `admin-edit-player-button.tsx` · `player/[id]/page.tsx` · `schema.prisma` | ✅ |
+| **Bug crítico asistencia por sede**: coach veía TODOS los jugadores del club, ahora filtra por `sess.location` + `sess.categoryId` | `coach/attendance/[id]/page.tsx` | ✅ |
+| **Búsqueda en asistencia**: input de búsqueda por nombre + botón "Todos excusados" | `attendance-form.tsx` | ✅ |
+| **Página de pagos para jugador**: antes era redirect vacío, ahora muestra KPIs + pendientes + historial | `player/payments/page.tsx` | ✅ |
+| **Leaderboard con posición real**: jugador siempre visible aunque no esté en top 20; separador `···` | `player/stats/page.tsx` · `leaderboard.tsx` | ✅ |
+| **Selector de hijo en parent/reports**: padres con 2+ hijos pueden cambiar entre ellos (`?child=playerId`) | `parent/reports/page.tsx` | ✅ |
+| **Notas y sede en sesiones próximas**: `UpcomingSessionsCard` ahora muestra `notes` y `location` | `upcoming-sessions-card.tsx` | ✅ |
+| **Fix error silencioso en upload de comprobante**: padre ve el error si falla la subida y no puede enviar sin resolver | `payment-submit-form.tsx` | ✅ |
 
 ---
 
@@ -52,62 +50,58 @@
 | Landing page / website para StarApp | Alta | Necesaria para verificación de Meta (WhatsApp Business API) |
 | WhatsApp IA para cobros (asistente de cobranza) | Alta | Bloqueado por verificación Meta |
 | VAPID_EMAIL en Render → cambiar a email starshine | Baja | Actualmente usa email personal |
+| Historial de asistencia para coaches (`/coach/attendance` index) | Media | Actualmente redirige a sessions — ver audit |
+| Push notifications para jugadores/padres | Media | Endpoint existe, falta automatización |
+| Notificación cuando se cancela una sesión | Media | Al eliminar sesión → crear notifs para jugadores + padres |
+| Filtros y búsqueda en `/admin/payments` | Media | Página de 512 líneas sin search |
 
 ---
 
 ## 🧠 Contexto relevante para próxima sesión
 
-### Fix crítico de DB (el más importante)
+### Fix DB (el más importante — ya resuelto)
 
-**Causa raíz de todos los crashes de DB:** el build script solo corría `prisma generate` pero nunca `prisma db push`. El cliente TypeScript sabía de las columnas nuevas pero la DB de Neon no las tenía → crash en runtime.
-
-**Solución aplicada** en `package.json`:
+**Build script** en `package.json`:
 ```
 "build": "prisma generate && prisma db push --accept-data-loss && next build"
 ```
-A partir del commit `92320ed`, cada deploy sincroniza el schema automáticamente. Ya no se necesita aplicar columnas manualmente con MCP Neon.
+Cada deploy sincroniza el schema automáticamente. No se necesita aplicar columnas manualmente.
 
-### Estado actual de la DB vs Schema
+### Playwright MCP
 
-Verificado con MCP Neon — todas las tablas y columnas están 100% sincronizadas:
-- `Club`: incluye `coachCanInvite BOOLEAN DEFAULT false` ✅ (aplicado manualmente en esta sesión vía MCP)
-- `Player`: incluye `gender`, `zone`, `height`, `weight` ✅
-- `Session`: incluye `location` ✅
-- Resto de tablas: sin drift ✅
+Instalado globalmente para el proyecto Star App:
+- Comando: `npx @playwright/mcp@latest`
+- Chromium instalado en `C:\Users\Usuario\AppData\Local\ms-playwright\chromium-1217`
+- **IMPORTANTE**: Las herramientas de Playwright MCP solo están disponibles en el CLI de Claude Code (`claude` en terminal), NO en la extensión de VSCode. Si el usuario quiere auditar la app con Playwright, debe usar el CLI.
+- Dev server: `npm run dev` en `star-club/` → localhost:3000
 
-### coachCanInvite
+### Becas (ahora con % libre)
 
-- Toggle en `/dashboard/admin/settings` → card "Permisos de entrenadores"
-- API `POST /api/coach/invites`: verifica `club.coachCanInvite`, solo crea invites `role: PLAYER`
-- Página `/dashboard/coach/invites`: si desactivado → pantalla con candado
-- `NewInviteForm` acepta prop `endpoint` (default `/api/invites`). Coach usa `/api/coach/invites`
-- Sidebar coach: ítem "Invitaciones" con `UserPlus` icon
+El sistema de becas ahora acepta **cualquier entero de 1 a 100** (antes solo 50 o 100).
+- API: `z.number().int().min(1).max(100).optional().nullable()`
+- UI: botones rápidos (Sin beca / 50% / 100%) + input editable que aparece cuando hay beca activa
+- Cálculo: `Math.round(precioZona × (pct / 100))` — funciona para cualquier porcentaje
+- Badge en player detail: muestra `BECA {pct}%` (antes hardcodeado a 50% o 100%)
+- DB: `Player.scholarshipPct Int?` — campo ya existía, no se necesita migración
 
-### Mensaje de cobro multi-tenant
+### Bug de asistencia por sede (resuelto)
 
-- Saludo dinámico: Buenos días (5–11h) / Buenas tardes (12–18h) / Buenas noches (19–4h) — hora Colombia
-- Se identifica el club: `*${clubName}* 🏆`
-- Ventana de pronto pago: si `colombiaDay` entre `billingCycleDay` y `billingCycleDay + earlyPaymentDays` → agrega línea del descuento
-- Clubs sin descuento (`earlyPaymentDiscount = 0`): línea nunca aparece — multi-tenant limpio
-- Aplica tanto en `BulkMarkReceivedPanel` (acción requerida) como en pagos programados en `payments/page.tsx`
-
-### Gender tabs multi-tenant
-
-- `db.player.count({ where: { clubId, gender: { not: null } } })` corre ANTES del query principal
-- Star Club (todos `gender = null`) → `genderedCount = 0` → sin tabs, sin filtro de género
-- Ball Breakers (`gender = "F"|"M"`) → tabs activas normalmente
-
-### Vault Obsidian
-
-- Nota canónica de Ball Breakers: `Ball Breakers - Info Completa.md` (con espacio)
-- `BallBreakers - Info Completa.md` (sin espacio) → solo redirect, no borrar
-- `Stack Tecnológico.md` actualizado con el build script correcto y la historia de Turso
+**Causa**: `coach/attendance/[id]/page.tsx` filtraba por `categoryId` pero ignoraba `sess.location`.
+**Solución**: filtro en cascada:
+1. `categoryId + zone` (más específico)
+2. Solo `categoryId` si el combo anterior da 0
+3. Solo `zone` si no hay categoría
+4. Fallback: todos los activos (solo si sesión sin categoría Y sin sede)
 
 ### Credenciales superadmin (Star Club)
 
 - Email: `admin@starclub.com`
 - Contraseña: `admin123`
-- SUPERADMIN no es un rol en DB — es quien tenga el email que coincida con `SUPERADMIN_EMAIL` en env vars
+- Slug: `star-club`
+
+### Estado DB vs Schema
+
+Todas las columnas sincronizadas. Cambios de esta sesión son solo en lógica/UI, no en schema — no se requiere migración.
 
 ---
 

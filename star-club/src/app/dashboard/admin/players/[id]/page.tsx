@@ -200,7 +200,7 @@ export default async function PlayerProfilePage({ params }: Props) {
                       </span>
                     )}
                     <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA", border: "1px solid rgba(139,92,246,0.3)" }}>
-                      {player.scholarshipPct === 100 || player.monthlyAmount === 0 ? "BECA 100%" : "BECA 50%"}
+                      {`BECA ${player.scholarshipPct ?? 100}%`}
                     </span>
                   </div>
                 </div>

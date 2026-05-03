@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Check, X, Clock } from "lucide-react";
+import { Check, X, Clock, Search } from "lucide-react";
 
 type Player = { id: string; user: { name: string; avatar?: string | null } };
 
@@ -32,6 +32,7 @@ export default function AttendanceForm({
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   function setStatus(playerId: string, status: string) {
     setStatuses((s) => ({ ...s, [playerId]: status }));
@@ -68,6 +69,11 @@ export default function AttendanceForm({
     setSaved(false);
   }
 
+  const filteredPlayers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q ? players.filter((p) => p.user.name.toLowerCase().includes(q)) : players;
+  }, [players, search]);
+
   const presentCount = players.filter((p) => statuses[p.id] === "PRESENT").length;
   const lateCount    = players.filter((p) => statuses[p.id] === "LATE").length;
   const absentCount  = players.filter((p) => !statuses[p.id] || statuses[p.id] === "ABSENT").length;
@@ -82,6 +88,19 @@ export default function AttendanceForm({
         </Card>
       ) : (
         <>
+          {/* Search */}
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--text-muted)" }} />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar deportista..."
+              className="w-full rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none border transition-colors focus:border-[var(--accent)]"
+              style={{ background: "var(--bg-card)", borderColor: "var(--border-primary)", color: "var(--text-primary)" }}
+            />
+          </div>
+
           {/* Bulk actions + summary */}
           <div className="flex items-center gap-2 flex-wrap">
             <button
@@ -98,6 +117,13 @@ export default function AttendanceForm({
             >
               <X size={12} strokeWidth={2.5} /> Todos ausentes
             </button>
+            <button
+              onClick={() => markAll("EXCUSED")}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+              style={{ background: "rgba(56,189,248,0.10)", color: "#38bdf8", border: "1px solid rgba(56,189,248,0.20)" }}
+            >
+              <Clock size={12} strokeWidth={2.5} /> Todos excusados
+            </button>
             <div className="ml-auto flex gap-2 text-xs font-semibold">
               <span className="px-2.5 py-1 rounded-xl" style={{ background: "rgba(52,211,153,0.10)", color: "#34D399" }}>✓ {presentCount}</span>
               <span className="px-2.5 py-1 rounded-xl" style={{ background: "rgba(251,191,36,0.10)", color: "#FCD34D" }}>⏰ {lateCount}</span>
@@ -107,7 +133,12 @@ export default function AttendanceForm({
 
           {/* Player rows */}
           <div className="space-y-2">
-            {players.map((p) => {
+            {filteredPlayers.length === 0 && search ? (
+              <p className="text-sm text-center py-4" style={{ color: "var(--text-muted)" }}>
+                No hay deportistas que coincidan con "{search}".
+              </p>
+            ) : null}
+            {filteredPlayers.map((p) => {
               const current = statuses[p.id] || "ABSENT";
               return (
                 <div

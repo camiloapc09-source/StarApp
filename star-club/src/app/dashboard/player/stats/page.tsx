@@ -37,16 +37,24 @@ export default async function PlayerStatsPage() {
     );
   }
 
-  // Leaderboard: top 20 players in same club by XP
-  const leaderboardPlayers = await db.player.findMany({
-    where: { clubId: player.clubId, status: "ACTIVE" },
-    select: { id: true, xp: true, user: { select: { name: true } } },
-    orderBy: { xp: "desc" },
-    take: 20,
-  });
+  // Leaderboard: top 20 + always include current player
+  const [top20, myTrueRank, totalActivePlayers] = await Promise.all([
+    db.player.findMany({
+      where: { clubId: player.clubId, status: "ACTIVE" },
+      select: { id: true, xp: true, user: { select: { name: true } } },
+      orderBy: { xp: "desc" },
+      take: 20,
+    }),
+    db.player.count({ where: { clubId: player.clubId, status: "ACTIVE", xp: { gt: player.xp } } }).then((n) => n + 1),
+    db.player.count({ where: { clubId: player.clubId, status: "ACTIVE" } }),
+  ]);
 
-  const sorted  = [...leaderboardPlayers].sort((a, b) => b.xp - a.xp);
-  const myRank  = sorted.findIndex((p) => p.id === player.id) + 1;
+  const playerInTop20 = top20.some((p) => p.id === player.id);
+  const leaderboardPlayers = playerInTop20
+    ? top20
+    : [...top20, { id: player.id, xp: player.xp, user: { name: player.user.name } }];
+
+  const myRank = myTrueRank;
   const level   = calculateLevel(player.xp);
 
   // Attendance stats
@@ -93,7 +101,7 @@ export default async function PlayerStatsPage() {
           xp={player.xp}
           streak={player.streak}
           rank={myRank > 0 ? myRank : undefined}
-          totalPlayers={leaderboardPlayers.length}
+          totalPlayers={totalActivePlayers}
         />
 
         {/* Attendance stats */}
@@ -144,7 +152,7 @@ export default async function PlayerStatsPage() {
               </span>
             )}
           </div>
-          <Leaderboard players={leaderboardPlayers} currentPlayerId={player.id} />
+          <Leaderboard players={leaderboardPlayers} currentPlayerId={player.id} trueRank={myTrueRank} />
         </Card>
 
         {/* Session history */}
