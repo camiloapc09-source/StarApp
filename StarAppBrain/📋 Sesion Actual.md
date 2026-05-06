@@ -43,6 +43,17 @@
 
 ---
 
+## ✅ Completado (sesión 2026-05-06)
+
+| Tarea | Archivo | Estado |
+|---|---|---|
+| **Fix login Ball Breakers**: deportistas no podían iniciar sesión escribiendo solo su documento | `lib/auth.ts` | ✅ |
+
+**Causa**: el auth buscaba `email = "1046723097"` pero en DB estaba `1046723097@bb.internal`.
+**Solución**: si el input no tiene `@`, buscar con `email: { startsWith: doc.toLowerCase() + "@" }` — funciona para cualquier club con emails internos.
+
+---
+
 ## 🔜 Pendientes
 
 | Tarea | Prioridad | Notas |

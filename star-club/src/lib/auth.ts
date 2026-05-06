@@ -16,8 +16,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
+        const emailInput = (credentials.email as string).trim();
+        const isEmail = emailInput.includes("@");
+
         const user = await db.user.findFirst({
-          where: { email: credentials.email as string },
+          where: isEmail
+            ? { email: emailInput }
+            : { email: { startsWith: emailInput.toLowerCase() + "@" } },
         });
 
         if (!user) return null;
