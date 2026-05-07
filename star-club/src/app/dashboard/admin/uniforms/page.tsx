@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Package, FileSpreadsheet } from "lucide-react";
 import UniformStatusButton from "@/components/admin/uniform-status-button";
+import AdminUniformOrderForm from "@/components/admin/admin-uniform-order-form";
 import Link from "next/link";
 
 const TYPE_NAMES: Record<string, string> = {
@@ -29,14 +30,21 @@ export default async function AdminUniformsPage() {
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
-  const orders = await db.uniformOrder.findMany({
-    where: { player: { clubId } },
-    orderBy: { createdAt: "desc" },
-    include: {
-      player: { include: { user: { select: { name: true, avatar: true } } } },
-      parent: { include: { user: { select: { name: true } } } },
-    },
-  });
+  const [orders, players] = await Promise.all([
+    db.uniformOrder.findMany({
+      where: { player: { clubId } },
+      orderBy: { createdAt: "desc" },
+      include: {
+        player: { include: { user: { select: { name: true, avatar: true } } } },
+        parent: { include: { user: { select: { name: true } } } },
+      },
+    }),
+    db.player.findMany({
+      where: { clubId },
+      include: { user: { select: { name: true } } },
+      orderBy: { user: { name: "asc" } },
+    }),
+  ]);
 
   const pending   = orders.filter((o) => o.status === "PENDING");
   const confirmed = orders.filter((o) => o.status === "CONFIRMED");
@@ -52,6 +60,9 @@ export default async function AdminUniformsPage() {
     <div>
       <Header title="Pedidos de uniformes" subtitle={`${stats.total} pedidos activos`} />
       <div className="p-4 md:p-8 space-y-6">
+
+        {/* Create order */}
+        <AdminUniformOrderForm players={players.map((p) => ({ id: p.id, name: p.user.name }))} />
 
         {/* Stats + export */}
         <div className="space-y-3">
@@ -155,7 +166,7 @@ function OrderRow({
     notes: string | null;
     createdAt: Date;
     player: { user: { name: string; avatar: string | null } };
-    parent: { user: { name: string } };
+    parent: { user: { name: string } } | null;
   };
   compact?: boolean;
 }) {
@@ -172,9 +183,11 @@ function OrderRow({
         <div className="flex items-start justify-between gap-2 flex-wrap">
           <div>
             <p className="font-semibold text-sm">{order.player.user.name}</p>
-            <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-              Padre/Tutor: {order.parent.user.name}
-            </p>
+            {order.parent && (
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                Padre/Tutor: {order.parent.user.name}
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-x-6 mt-2 text-xs">
               <span><span style={{ color: "var(--text-muted)" }}>Tipo:</span> <strong>{typeName}</strong></span>
               <span><span style={{ color: "var(--text-muted)" }}>Nombre:</span> <strong>{order.nameOnJersey}</strong> {order.numberOnJersey != null && <strong>#{order.numberOnJersey}</strong>}</span>

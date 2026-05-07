@@ -344,8 +344,8 @@ model Notification {
 // ─── UNIFORM ORDERS ───────────────────────────────────────
 model UniformOrder {
   id             String   @id @default(cuid())
-  parentId       String
-  parent         Parent   @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  parentId       String?
+  parent         Parent?  @relation(fields: [parentId], references: [id], onDelete: Cascade)
   playerId       String
   player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
   type           String

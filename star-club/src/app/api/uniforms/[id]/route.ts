@@ -32,7 +32,7 @@ export async function PATCH(
     CANCELLED:  "cancelado ❌",
   };
 
-  if (parsed.data.status !== "PENDING" && statusLabels[parsed.data.status]) {
+  if (parsed.data.status !== "PENDING" && statusLabels[parsed.data.status] && order.parent) {
     await db.notification.create({
       data: {
         userId:  order.parent.user.id,
