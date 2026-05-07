@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   const order = await db.uniformOrder.create({
     data: {
       playerId: player.id,
-      parentId: null,
+      parentId: undefined,
       type: parsed.data.type,
       jerseySize: parsed.data.jerseySize,
       shortsSize: parsed.data.shortsSize,

@@ -51,9 +51,6 @@ export default async function ParentUniformsPage() {
       children: {
         include: { player: { include: { user: { select: { name: true } } } } },
       },
-      uniformOrders: {
-        orderBy: { createdAt: "desc" },
-      },
     },
   });
 
@@ -68,11 +65,15 @@ export default async function ParentUniformsPage() {
     );
   }
 
+  const playerId = parent.children[0].player.id;
   const playerName = parent.children[0].player.user.name;
-  // Extract surnames: last two words (paternal + maternal) if available
   const words = playerName.trim().split(/\s+/);
   const playerSurnames = words.length >= 3 ? words.slice(-2) : words.slice(-1);
-  const orders     = parent.uniformOrders;
+
+  const orders = await db.uniformOrder.findMany({
+    where: { playerId },
+    orderBy: { createdAt: "desc" },
+  });
 
   return (
     <div>

@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
     "Talla pantaloneta":   o.shortsSize,
     "Precio":              o.totalPrice,
     "Estado":              STATUS_NAMES[o.status] ?? o.status,
-    "Padre / Tutor":       o.parent.user.name,
+    "Padre / Tutor":       o.parent?.user.name ?? "—",
     "Observaciones":       o.notes ?? "",
     "Fecha pedido":        new Date(o.createdAt).toLocaleDateString("es-CO"),
   }));
