@@ -151,7 +151,7 @@ export default function BulkPaymentButton({ defaultAmount }: { defaultAmount?: n
           <div>
             <p className="font-medium">{result.created} pago{result.created !== 1 ? "s" : ""} generado{result.created !== 1 ? "s" : ""}.</p>
             {result.skipped > 0 && <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{result.skipped} omitido{result.skipped !== 1 ? "s" : ""} (ya tenian pago o sin monto asignado).</p>}
-            {result.noAmount != null && result.noAmount > 0 && <p className="text-xs mt-0.5" style={{ color: "var(--warning)" }}>{result.noAmount} jugador{result.noAmount !== 1 ? "es" : ""} sin monto asignado — editales su perfil para asignar un monto mensual.</p>}
+            {result.noAmount != null && result.noAmount > 0 && <p className="text-xs mt-0.5" style={{ color: "var(--warning)" }}>{result.noAmount} jugador{result.noAmount !== 1 ? "es" : ""} sin monto ni zona asignada — editales su perfil para asignar monto mensual o zona.</p>}
           </div>
         </div>
       )}

@@ -79,9 +79,16 @@ export async function PUT(req: NextRequest) {
   const monthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
   const monthEnd   = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0, 23, 59, 59);
 
+  // Fetch zone prices from club config
+  const club = await db.club.findUnique({
+    where: { id: clubId },
+    select: { zonePrices: true },
+  });
+  const zonePrices = (club?.zonePrices ?? {}) as Record<string, number>;
+
   const players = await db.player.findMany({
     where: { clubId, status: "ACTIVE" },
-    select: { id: true, userId: true, paymentDay: true, monthlyAmount: true },
+    select: { id: true, userId: true, paymentDay: true, monthlyAmount: true, zone: true, scholarshipPct: true },
   });
 
   let created = 0, skipped = 0, noAmount = 0;
@@ -93,7 +100,24 @@ export async function PUT(req: NextRequest) {
 
     if (existing) { skipped++; continue; }
 
-    const amount = player.monthlyAmount ?? (fallbackAmount ? Number(fallbackAmount) : null);
+    // Amount priority:
+    // 1. Player's manually assigned monthlyAmount (already includes any scholarship)
+    // 2. Zone price from club config, with scholarship % applied
+    // 3. Fallback amount provided in the request
+    let amount: number | null = player.monthlyAmount ?? null;
+
+    if (!amount && player.zone && zonePrices[player.zone]) {
+      const base = zonePrices[player.zone];
+      const pct  = player.scholarshipPct ?? 0;
+      amount = pct > 0 ? Math.round(base * (1 - pct / 100)) : base;
+    }
+
+    if (!amount && fallbackAmount) {
+      const base = Number(fallbackAmount);
+      const pct  = player.scholarshipPct ?? 0;
+      amount = pct > 0 ? Math.round(base * (1 - pct / 100)) : base;
+    }
+
     if (!amount || amount <= 0) { noAmount++; skipped++; continue; }
 
     const payDay  = player.paymentDay ?? targetDate.getDate();
