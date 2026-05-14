@@ -167,7 +167,7 @@ export default function BulkPaymentButton({ defaultAmount }: { defaultAmount?: n
         style={{ background: "var(--success)", color: "#000" }}
       >
         {loading ? <Loader2 size={14} className="animate-spin" /> : <Banknote size={14} />}
-        {loading ? "Generando..." : "Generar pagos"}
+        {loading ? "Creando cobros..." : "Crear cobros"}
       </button>
     </div>
   );
