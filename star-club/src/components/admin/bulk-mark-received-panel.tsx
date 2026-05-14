@@ -6,7 +6,7 @@ import { format, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   AlertTriangle, CheckSquare, Square, Banknote,
-  Loader2, PhoneCall, X, Check,
+  Loader2, PhoneCall, X, Check, MessageCircleMore, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import RecordPaymentModal from "@/components/admin/record-payment-modal";
@@ -71,9 +71,51 @@ export default function BulkMarkReceivedPanel({
   const [method, setMethod] = useState<string>("CASH");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showBulkWa, setShowBulkWa] = useState(false);
+  const [bulkWaIdx, setBulkWaIdx] = useState(0);
 
   const allSelected = selected.size === payments.length && payments.length > 0;
   const total = payments.filter((p) => selected.has(p.id)).reduce((s, p) => s + p.amount, 0);
+
+  // Pre-compute WhatsApp contacts for bulk modal
+  const bulkWaContacts = payments
+    .map((payment) => {
+      const parentLink = payment.player.parentLinks?.[0]?.parent;
+      const phone = parentLink?.phone || parentLink?.user?.phone || payment.player.user.phone;
+      const digits = phone?.replace(/[^0-9]/g, "");
+      if (!digits) return null;
+      const daysLeft = differenceInDays(new Date(payment.dueDate), new Date());
+      const isLate = payment.status === "OVERDUE" || daysLeft < 0;
+      const greeting = getColombiaGreeting();
+      const contactName = parentLink?.user?.name || payment.player.user.name;
+      const colombiaDay = getColombiaDay();
+      const earlyWindowEnd = billingCycleDay + earlyPaymentDays;
+      const inEarlyWindow =
+        !isLate &&
+        billingCycleDay > 0 &&
+        earlyPaymentDays > 0 &&
+        earlyPaymentDiscount > 0 &&
+        colombiaDay >= billingCycleDay &&
+        colombiaDay <= earlyWindowEnd;
+      const msgText = isLate
+        ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El motivo de nuestro contacto es informarle que el pago de *$${payment.amount.toLocaleString("es-CO")}* de la mensualidad del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* se encuentra *vencido* desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")} 📋.\n\nLe pedimos amablemente ponerse al día con este pago para continuar disfrutando de los servicios del club. 🙏\n\n¡Muchas gracias por su comprensión! 💚`
+        : inEarlyWindow
+        ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El motivo de nuestro contacto es recordarle que el pago de *$${payment.amount.toLocaleString("es-CO")}* de la mensualidad del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* tiene como fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n💰 ¡Aún está a tiempo de aprovechar el *descuento de pronto pago de $${earlyPaymentDiscount.toLocaleString("es-CO")}*! Tiene hasta el día ${earlyWindowEnd} de este mes para pagarlo con descuento.\n\n¡Muchas gracias! 💚`
+        : `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El motivo de nuestro contacto es recordarle que el pago de *$${payment.amount.toLocaleString("es-CO")}* de la mensualidad del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* tiene como fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n⏰ ¡Le recomendamos realizarlo a tiempo para evitar inconvenientes!\n\n¡Muchas gracias! 💚`;
+      const waHref = `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${encodeURIComponent(msgText)}`;
+      return {
+        id: payment.id,
+        playerName: payment.player.user.name,
+        contactName,
+        amount: payment.amount,
+        concept: payment.concept,
+        dueDate: payment.dueDate,
+        isLate,
+        daysLeft,
+        waHref,
+      };
+    })
+    .filter((x): x is { id: string; playerName: string; contactName: string; amount: number; concept: string; dueDate: string | Date; isLate: boolean; daysLeft: number; waHref: string } => x !== null);
 
   function toggleAll() {
     if (allSelected) setSelected(new Set());
@@ -125,7 +167,16 @@ export default function BulkMarkReceivedPanel({
             </h2>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Bulk WhatsApp cobro */}
+            <button
+              onClick={() => { setBulkWaIdx(0); setShowBulkWa(true); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+              style={{ background: "rgba(37,211,102,0.12)", border: "1px solid rgba(37,211,102,0.25)", color: "#25D366" }}
+            >
+              <MessageCircleMore size={13} /> Cobrar a todos por WhatsApp
+            </button>
+
             {/* Select all toggle */}
             <button
               onClick={toggleAll}
@@ -247,6 +298,119 @@ export default function BulkMarkReceivedPanel({
           })}
         </div>
       </div>
+
+      {/* Bulk WhatsApp cobro modal */}
+      {showBulkWa && bulkWaContacts.length > 0 && (() => {
+        const contact = bulkWaContacts[bulkWaIdx];
+        const total = bulkWaContacts.length;
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "rgba(0,0,0,0.80)", backdropFilter: "blur(6px)" }}>
+            <div className="w-full max-w-md rounded-2xl overflow-hidden"
+              style={{ background: "var(--bg-card)", border: "1px solid rgba(37,211,102,0.25)" }}>
+
+              {/* Header */}
+              <div className="px-5 py-4 flex items-center justify-between border-b"
+                style={{ borderColor: "rgba(37,211,102,0.15)", background: "rgba(37,211,102,0.05)" }}>
+                <div className="flex items-center gap-2">
+                  <MessageCircleMore size={16} style={{ color: "#25D366" }} />
+                  <span className="font-semibold text-sm" style={{ color: "#25D366" }}>
+                    Cobro masivo por WhatsApp
+                  </span>
+                </div>
+                <button onClick={() => setShowBulkWa(false)} className="p-1 rounded-lg hover:opacity-70">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Progress */}
+              <div className="px-5 pt-4 pb-2">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium" style={{ color: "var(--text-muted)" }}>
+                    Contacto {bulkWaIdx + 1} de {total}
+                  </span>
+                  <span className="text-xs" style={{ color: contact.isLate ? "var(--error)" : "var(--warning)" }}>
+                    {contact.isLate ? `Vencido ${Math.abs(contact.daysLeft)}d` : `Vence ${format(new Date(contact.dueDate), "dd MMM", { locale: es })}`}
+                  </span>
+                </div>
+                <div className="w-full rounded-full h-1.5" style={{ background: "rgba(255,255,255,0.08)" }}>
+                  <div className="h-1.5 rounded-full transition-all"
+                    style={{ width: `${((bulkWaIdx + 1) / total) * 100}%`, background: "#25D366" }} />
+                </div>
+              </div>
+
+              {/* Contact card */}
+              <div className="px-5 py-4 space-y-3">
+                <div className="flex items-center gap-3">
+                  <Avatar name={contact.playerName} size="md" />
+                  <div>
+                    <p className="font-semibold text-sm">{contact.playerName}</p>
+                    <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      Acudiente: {contact.contactName}
+                    </p>
+                  </div>
+                  <div className="ml-auto text-right">
+                    <p className="text-lg font-black">${contact.amount.toLocaleString("es-CO")}</p>
+                    <p className="text-xs" style={{ color: "var(--text-muted)" }}>{contact.concept}</p>
+                  </div>
+                </div>
+
+                <a
+                  href={contact.waHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => {
+                    if (bulkWaIdx < total - 1) setTimeout(() => setBulkWaIdx((i) => i + 1), 600);
+                    else setShowBulkWa(false);
+                  }}
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
+                  style={{ background: "rgba(37,211,102,0.15)", color: "#25D366", border: "1px solid rgba(37,211,102,0.30)" }}
+                >
+                  <PhoneCall size={15} />
+                  Abrir WhatsApp y cobrar
+                </a>
+              </div>
+
+              {/* Navigation */}
+              <div className="px-5 pb-5 flex items-center gap-2">
+                <button
+                  onClick={() => setBulkWaIdx((i) => Math.max(0, i - 1))}
+                  disabled={bulkWaIdx === 0}
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all disabled:opacity-30"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.60)" }}
+                >
+                  <ChevronLeft size={13} /> Anterior
+                </button>
+                <div className="flex-1 text-center">
+                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    {bulkWaIdx + 1} / {total} con teléfono
+                    {payments.length - bulkWaContacts.length > 0 && (
+                      <> · <span style={{ color: "var(--warning)" }}>{payments.length - bulkWaContacts.length} sin teléfono</span></>
+                    )}
+                  </span>
+                </div>
+                {bulkWaIdx < total - 1 ? (
+                  <button
+                    onClick={() => setBulkWaIdx((i) => i + 1)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:opacity-80"
+                    style={{ background: "rgba(37,211,102,0.10)", border: "1px solid rgba(37,211,102,0.20)", color: "#25D366" }}
+                  >
+                    Siguiente <ChevronRight size={13} />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => setShowBulkWa(false)}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium transition-all hover:opacity-80"
+                    style={{ background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.25)", color: "#34D399" }}
+                  >
+                    <Check size={13} /> Listo
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Bulk confirm modal */}
       {showModal && (
