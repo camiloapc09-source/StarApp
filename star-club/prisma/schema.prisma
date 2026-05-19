@@ -35,6 +35,7 @@ model Club {
   rewards    Reward[]
   invites    Invite[]
   players    Player[]
+  raffles    Raffle[]
 }
 
 // ─── USER & AUTH ──────────────────────────────────────────
@@ -66,6 +67,8 @@ model User {
   parentProfile  Parent?
   notifications  Notification[]
   verifiedEvidences Evidence[]
+  takenRaffleTickets    RaffleTicket[] @relation("RaffleTickets")
+  verifiedRaffleTickets RaffleTicket[] @relation("RaffleTicketsVerified")
 
   @@unique([email, clubId])
   @@index([clubId])
@@ -362,6 +365,46 @@ model UniformOrder {
 
   @@index([parentId])
   @@index([playerId])
+}
+
+// ─── RIFAS ────────────────────────────────────────────────
+model Raffle {
+  id          String   @id @default(cuid())
+  clubId      String
+  club        Club     @relation(fields: [clubId], references: [id])
+  title       String
+  description String?
+  prize       String?
+  ticketPrice Float
+  status      String   @default("OPEN") // OPEN | CLOSED | FINISHED
+  drawDate    DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tickets RaffleTicket[]
+
+  @@index([clubId])
+  @@index([status])
+}
+
+model RaffleTicket {
+  id           String   @id @default(cuid())
+  raffleId     String
+  raffle       Raffle   @relation(fields: [raffleId], references: [id], onDelete: Cascade)
+  number       Int      // 0-99
+  takenById    String?  // userId of parent or player
+  takenBy      User?    @relation("RaffleTickets", fields: [takenById], references: [id])
+  ownerName    String?
+  status       String   @default("TAKEN") // TAKEN | PAID | CANCELLED
+  proofUrl     String?
+  takenAt      DateTime @default(now())
+  paidAt       DateTime?
+  verifiedById String?
+  verifiedBy   User?    @relation("RaffleTicketsVerified", fields: [verifiedById], references: [id])
+
+  @@unique([raffleId, number])
+  @@index([raffleId])
+  @@index([takenById])
 }
 
 // ─── ACCESS CODES (SaaS club registration gate) ───────────

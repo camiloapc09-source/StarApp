@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Calendar, CreditCard, Trophy, Bell,
   BarChart3, Target, UserCheck, Tag, FileImage, User, Shirt, LogOut, Settings,
-  Lock, UserPlus,
+  Lock, UserPlus, Ticket,
   type LucideIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -34,6 +34,7 @@ const roleNavigationIds: Record<string, SidebarLink[]> = {
     { key: "gamification", href: "/dashboard/admin/gamification", icon: Trophy,    planFeature: "gamification" },
     { key: "evidence",     href: "/dashboard/admin/evidence",     icon: FileImage, planFeature: "evidence" },
     { key: "uniforms",     href: "/dashboard/admin/uniforms",     icon: Shirt,     planFeature: "uniforms" },
+    { key: "rifas",        href: "/dashboard/admin/rifas",        icon: Ticket },
     { key: "reports",      href: "/dashboard/admin/reports",      icon: BarChart3 },
     { key: "settings",     href: "/dashboard/admin/settings",     icon: Settings },
   ],
@@ -57,6 +58,7 @@ const roleNavigationIds: Record<string, SidebarLink[]> = {
     { key: "dashboard", href: "/dashboard/parent",             icon: LayoutDashboard },
     { key: "payments",  href: "/dashboard/parent/payments",    icon: CreditCard },
     { key: "uniforms",  href: "/dashboard/parent/uniforms",    icon: Shirt,     planFeature: "uniforms" },
+    { key: "rifas",     href: "/dashboard/parent/rifas",       icon: Ticket },
     { key: "reports",   href: "/dashboard/parent/reports",     icon: BarChart3 },
     { key: "profile",   href: "/dashboard/parent/profile",     icon: User },
   ],

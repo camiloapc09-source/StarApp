@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Users, CreditCard, BarChart3, Target, Trophy,
   User, Calendar, Bell, Shirt, UserCheck, Tag, FileImage,
-  Grid3X3, X, Settings, UserPlus, type LucideIcon,
+  Grid3X3, X, Settings, UserPlus, Ticket, type LucideIcon,
 } from "lucide-react";
 
 interface TabItem {
@@ -32,6 +32,7 @@ const ADMIN_MORE: MoreItem[] = [
   { href: "/dashboard/admin/sessions",     icon: Calendar,   label: "Sesiones",       color: "#34D399", bg: "rgba(52,211,153,0.12)" },
   { href: "/dashboard/admin/categories",   icon: Tag,        label: "Categorías",     color: "#F472B6", bg: "rgba(244,114,182,0.12)" },
   { href: "/dashboard/admin/uniforms",     icon: Shirt,      label: "Uniformes",      color: "#FB923C", bg: "rgba(251,146,60,0.12)" },
+  { href: "/dashboard/admin/rifas",        icon: Ticket,     label: "Rifas",          color: "#DEC4FF", bg: "rgba(139,92,246,0.12)" },
   { href: "/dashboard/admin/gamification", icon: Trophy,     label: "Gamificación",   color: "#FCD34D", bg: "rgba(251,191,36,0.12)" },
   { href: "/dashboard/admin/evidence",     icon: FileImage,  label: "Evidencias",     color: "#A78BFA", bg: "rgba(139,92,246,0.12)" },
   { href: "/dashboard/admin/reports",      icon: BarChart3,  label: "Reportes",       color: "#FB923C", bg: "rgba(251,146,60,0.12)" },
@@ -68,8 +69,8 @@ const ROLE_TABS: Record<string, (notif: number) => TabItem[]> = {
   parent: (_notif) => [
     { href: "/dashboard/parent",          icon: LayoutDashboard, label: "Inicio" },
     { href: "/dashboard/parent/payments", icon: CreditCard,      label: "Pagos",     matchPrefix: "/dashboard/parent/payments" },
+    { href: "/dashboard/parent/rifas",    icon: Ticket,          label: "Rifas",     matchPrefix: "/dashboard/parent/rifas" },
     { href: "/dashboard/parent/uniforms", icon: Shirt,           label: "Uniformes" },
-    { href: "/dashboard/parent/reports",  icon: BarChart3,       label: "Reportes" },
     { href: "/dashboard/parent/profile",  icon: User,            label: "Perfil" },
   ],
 };
