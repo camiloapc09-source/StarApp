@@ -54,6 +54,21 @@
 
 ---
 
+## ✅ Completado (sesión 2026-05-19)
+
+| Tarea | Commit | Estado |
+|---|---|---|
+| **Módulo de Rifas completo**: cartón 100 números, multi-tenant, admin crea/gestiona, padre elige/paga | `df14621` | ✅ Producción |
+| Schema: modelos `Raffle` + `RaffleTicket` + relaciones en `Club` y `User` | `df14621` | ✅ |
+| API: CRUD rifas, claim/release tickets, upload comprobante (base64), verify pago | `df14621` | ✅ |
+| Cartón 10×10 (00–99): colores por estado, logo del club, interactivo en admin y padre | `df14621` | ✅ |
+| Admin: lista de rifas con stats + detalle con participantes + verificar pagos | `df14621` | ✅ |
+| Padre: elegir números, subir comprobante, liberar número | `df14621` | ✅ |
+| Navegación: sidebar + bottom-nav para admin y padre | `df14621` | ✅ |
+| Vault actualizado: [[Rifas]], [[Rutas API]], [[000 - Inicio]] | — | ✅ |
+
+---
+
 ## 🔜 Pendientes
 
 | Tarea | Prioridad | Notas |

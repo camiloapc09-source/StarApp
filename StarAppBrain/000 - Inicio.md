@@ -27,6 +27,7 @@ El producto está construido para administradores de clubes que necesitan contro
 - [[Pagos y Facturación]]
 - [[Becas]] ← porcentaje libre 1–100%, cálculo automático por zona
 - [[Gamificación]]
+- [[Rifas]] ← cartón 100 números, multi-tenant, comprobante + verificación admin
 - [[Notificaciones y Push]]
 - [[UX Audit y Mejoras]] ← issues encontrados y resueltos (audit 2026-05-03)
 
@@ -66,6 +67,7 @@ El producto está construido para administradores de clubes que necesitan contro
 | Push Notifications (VAPID) | ✅ Producción |
 | Email (Resend) | ✅ Producción |
 | Uniformes | ✅ Producción |
+| Rifas (100 números) | ✅ Producción |
 | IA Admin Autónoma | 🔜 Roadmap |
 
 ---

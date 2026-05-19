@@ -109,6 +109,18 @@ Todos los endpoints viven en `/api/`. Requieren sesión autenticada salvo los de
 | GET/POST | `/api/uniforms` | Listar / crear pedidos de uniformes |
 | GET/PATCH | `/api/uniforms/[id]` | Ver / actualizar pedido |
 
+## Rifas
+
+| Método | Ruta | Descripción |
+|---|---|---|
+| GET/POST | `/api/rifas` | Listar / crear rifas del club |
+| GET/PUT/DELETE | `/api/rifas/[id]` | Ver / actualizar estado / eliminar |
+| POST | `/api/rifas/[id]/tickets` | Reclamar uno o más números |
+| POST | `/api/rifas/[id]/tickets/[num]/upload` | Subir comprobante (base64, 5MB) |
+| POST | `/api/rifas/[id]/tickets/[num]/verify` | Admin: marcar número como PAID |
+| DELETE | `/api/rifas/[id]/tickets/[num]/verify` | Admin: revertir PAID → TAKEN |
+| DELETE | `/api/rifas/[id]/tickets/[num]/release` | Liberar número (owner o admin) |
+
 ## Clubes y Acceso (SaaS)
 
 | Método | Ruta | Descripción |
