@@ -6,13 +6,26 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, Clock, AlertTriangle, CreditCard, FileText } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, CreditCard, FileText, Users } from "lucide-react";
 import PaymentSubmitForm from "@/components/parent/payment-submit-form";
 import Link from "next/link";
 
-export default async function ParentPaymentsPage() {
+const statusMeta: Record<string, { label: string; variant: "success" | "warning" | "error" | "default" }> = {
+  COMPLETED: { label: "Pagado",       variant: "success" },
+  PENDING:   { label: "Pendiente",    variant: "warning" },
+  OVERDUE:   { label: "Vencido",      variant: "error"   },
+  SUBMITTED: { label: "En revisión",  variant: "default" },
+};
+
+export default async function ParentPaymentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ playerId?: string }>;
+}) {
   const session = await auth();
   if (!session?.user || session.user.role !== "PARENT") redirect("/");
+
+  const { playerId: selectedPlayerId } = await searchParams;
 
   const parent = await db.parent.findUnique({
     where: { userId: session.user.id },
@@ -44,19 +57,14 @@ export default async function ParentPaymentsPage() {
     );
   }
 
-  const { player } = parent.children[0];
+  const allChildren = parent.children;
+  const activeChild = allChildren.find((c) => c.player.id === selectedPlayerId) ?? allChildren[0];
+  const { player } = activeChild;
   const payments = player.payments;
 
-  const pending  = payments.filter((p) => p.status === "PENDING" || p.status === "OVERDUE");
+  const pending   = payments.filter((p) => p.status === "PENDING" || p.status === "OVERDUE");
   const submitted = payments.filter((p) => p.status === "SUBMITTED");
   const completed = payments.filter((p) => p.status === "COMPLETED");
-
-  const statusMeta: Record<string, { label: string; variant: "success" | "warning" | "error" | "default" }> = {
-    COMPLETED: { label: "Pagado",       variant: "success" },
-    PENDING:   { label: "Pendiente",    variant: "warning" },
-    OVERDUE:   { label: "Vencido",      variant: "error"   },
-    SUBMITTED: { label: "En revisión",  variant: "default" },
-  };
 
   return (
     <div>
@@ -65,6 +73,30 @@ export default async function ParentPaymentsPage() {
         subtitle={`Cuenta de ${player.user.name}`}
       />
       <div className="p-4 md:p-8 space-y-6 max-w-2xl">
+
+        {/* Multi-child selector */}
+        {allChildren.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {allChildren.map((child) => {
+              const isActive = child.player.id === player.id;
+              return (
+                <Link
+                  key={child.player.id}
+                  href={`/dashboard/parent/payments?playerId=${child.player.id}`}
+                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold flex-shrink-0 transition-all"
+                  style={{
+                    background: isActive ? "rgba(139,92,246,0.18)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${isActive ? "rgba(139,92,246,0.40)" : "rgba(255,255,255,0.07)"}`,
+                    color: isActive ? "#C4B5FD" : "rgba(255,255,255,0.50)",
+                  }}
+                >
+                  <Users size={13} />
+                  {child.player.user.name.split(" ")[0]}
+                </Link>
+              );
+            })}
+          </div>
+        )}
 
         {/* Pending / Overdue — with submit form */}
         {pending.length > 0 && (
@@ -97,7 +129,6 @@ export default async function ParentPaymentsPage() {
                       </Badge>
                     </div>
                   </div>
-                  {/* Inline submit form */}
                   <PaymentSubmitForm paymentId={payment.id} />
                 </div>
               ))}

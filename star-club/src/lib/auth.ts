@@ -10,19 +10,31 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Credentials({
       name: "credentials",
       credentials: {
-        email:    { label: "Email",    type: "email" },
+        email:    { label: "Email",    type: "text" },
         password: { label: "Password", type: "password" },
+        clubSlug: { label: "Club",     type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const emailInput = (credentials.email as string).trim();
-        const isEmail = emailInput.includes("@");
+        const emailInput = (credentials.email as string).trim().toLowerCase();
+        const clubSlug   = (credentials.clubSlug as string | undefined)?.trim();
+
+        // Resolve clubId from slug when provided
+        let clubId: string | undefined;
+        if (clubSlug) {
+          const club = await db.club.findUnique({
+            where: { slug: clubSlug },
+            select: { id: true },
+          });
+          clubId = club?.id ?? undefined;
+        }
 
         const user = await db.user.findFirst({
-          where: isEmail
-            ? { email: emailInput }
-            : { email: { startsWith: emailInput.toLowerCase() + "@" } },
+          where: {
+            email: emailInput,
+            ...(clubId ? { clubId } : {}),
+          },
         });
 
         if (!user) return null;

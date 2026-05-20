@@ -70,30 +70,30 @@ export async function POST(req: NextRequest) {
       include: { playerProfile: true },
     });
 
-    if (parentName) {
-      // Parent login: email = player's documentNumber, password = player's documentNumber
-      const parentLoginId = documentNumber;
-      let parentUser = await db.user.findFirst({ where: { email: parentLoginId, clubId } });
+    if (parentName && parsed.data.parentEmail) {
+      // Create or find parent by their real email (never use documentNumber as credentials)
+      let parentUser = await db.user.findFirst({ where: { email: parsed.data.parentEmail, clubId } });
       if (!parentUser) {
-        const parentHashed = await hash(documentNumber, 12);
+        const { randomBytes } = await import("crypto");
+        const tempPassword = randomBytes(6).toString("hex");
+        const parentHashed = await hash(tempPassword, 12);
         parentUser = await db.user.create({
-          data: { clubId, name: parentName, email: parentLoginId, password: parentHashed, role: "PARENT" },
+          data: { clubId, name: parentName, email: parsed.data.parentEmail, password: parentHashed, role: "PARENT",
+                  phone: parentPhone || null },
         });
       }
 
-      const parent = await db.parent.upsert({
-        where: { userId: parentUser.id },
-        create: { userId: parentUser.id, phone: parentPhone || null, relation: null },
-        update: { phone: parentPhone || null, relation: null },
-      });
+      let parent = await db.parent.findUnique({ where: { userId: parentUser.id } });
+      if (!parent) {
+        parent = await db.parent.create({
+          data: { userId: parentUser.id, phone: parentPhone || null, relation: parsed.data.parentRelation || null },
+        });
+      }
 
       try {
         const playerProfileId = user.playerProfile?.id;
         if (playerProfileId) {
           await db.parentPlayer.create({ data: { parentId: parent.id, playerId: playerProfileId } });
-        }
-        if (parsed.data.parentRelation) {
-          await db.parent.update({ where: { id: parent.id }, data: { relation: parsed.data.parentRelation } });
         }
       } catch {
         // ignore duplicate relation errors

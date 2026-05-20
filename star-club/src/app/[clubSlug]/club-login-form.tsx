@@ -34,7 +34,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const result = await signIn("credentials", { email, password, redirect: false });
+    const result = await signIn("credentials", { email, password, clubSlug: club.slug, redirect: false });
     setLoading(false);
     if (result?.error) {
       setError("Correo o contraseña incorrectos.");
