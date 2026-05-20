@@ -1,16 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { KeyRound, Copy, Check, Loader2, X } from "lucide-react";
+import { KeyRound, Copy, Check, Loader2, X, MessageCircle } from "lucide-react";
 
 interface Props {
   userId: string;
   userName: string;
   role?: string; // "PLAYER" | "PARENT"
   hasDocument?: boolean;
+  phone?: string;
+  clubSlug?: string;
 }
 
-export default function ResetPasswordButton({ userId, userName, role = "PLAYER", hasDocument = false }: Props) {
+export default function ResetPasswordButton({ userId, userName, role = "PLAYER", hasDocument = false, phone, clubSlug }: Props) {
   const [open, setOpen]           = useState(false);
   const [loading, setLoading]     = useState<"random" | "document" | null>(null);
   const [result, setResult]       = useState<{ tempPassword: string; loginEmail: string; resetToDocument?: boolean } | null>(null);
@@ -164,6 +166,30 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
                       : "Compártela por WhatsApp y pídele que la cambie en su perfil."}
                   </p>
                 </div>
+
+                {/* WhatsApp button */}
+                {phone && (() => {
+                  const digits = phone.replace(/[^0-9]/g, "");
+                  if (!digits) return null;
+                  const appUrl = clubSlug
+                    ? `${typeof window !== "undefined" ? window.location.origin : ""}/${clubSlug}`
+                    : (typeof window !== "undefined" ? window.location.origin : "");
+                  const msg = result.resetToDocument
+                    ? `Hola ${userName}! 👋\n\nLe informamos que su acceso al portal de acudientes está listo.\n\n👤 *Usuario:* documento de su hijo/a: *${result.tempPassword}*\n🔑 *Contraseña temporal:* *${result.tempPassword}*\n\nIngrese en: ${appUrl}\n\nAl entrar, el sistema le pedirá configurar su correo y una contraseña personal.\n\n¡Gracias! 🏆`
+                    : `Hola ${userName}! 👋\n\nSu contraseña en el portal del club ha sido reseteada.\n\n📧 *Usuario:* ${result.loginEmail}\n🔑 *Contraseña temporal:* *${result.tempPassword}*\n\nIngrese en: ${appUrl} y cambie su contraseña desde el perfil.\n\n¡Gracias! 🏆`;
+                  return (
+                    <a
+                      href={`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-80"
+                      style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}
+                    >
+                      <MessageCircle size={15} />
+                      Enviar credenciales por WhatsApp
+                    </a>
+                  );
+                })()}
 
                 <button onClick={() => setOpen(false)}
                   className="w-full py-2.5 rounded-xl text-sm font-semibold hover:opacity-80 transition-all"

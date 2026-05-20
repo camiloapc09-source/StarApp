@@ -26,7 +26,8 @@ export default async function PlayerProfilePage({ params }: Props) {
 
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
-  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
+  const clubId   = (session.user as { clubId?: string; clubSlug?: string }).clubId   ?? "club-star";
+  const clubSlug = (session.user as { clubId?: string; clubSlug?: string }).clubSlug ?? "";
 
   const [player, categories, club] = await Promise.all([
     db.player.findFirst({
@@ -261,7 +262,13 @@ export default async function PlayerProfilePage({ params }: Props) {
                           currentEmail={link.parent.user.email}
                         />
                       )}
-                      <ResetPasswordButton userId={link.parent.user.id} userName={link.parent.user.name} role="PARENT" />
+                      <ResetPasswordButton
+                        userId={link.parent.user.id}
+                        userName={link.parent.user.name}
+                        role="PARENT"
+                        phone={link.parent.phone ?? link.parent.user.phone ?? undefined}
+                        clubSlug={clubSlug}
+                      />
                     </div>
                   </div>
                 );
