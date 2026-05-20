@@ -85,8 +85,8 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
                 )}
 
                 <div className="space-y-2">
-                  {/* Option 1: reset to document number (only for players with document) */}
-                  {role === "PLAYER" && hasDocument && (
+                  {/* Option 1: reset to document (player: own doc / parent: child's doc) */}
+                  {((role === "PLAYER" && hasDocument) || role === "PARENT") && (
                     <button
                       onClick={() => reset(true)}
                       disabled={loading !== null}
@@ -95,7 +95,7 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
                     >
                       {loading === "document"
                         ? <><Loader2 size={14} className="animate-spin" /> Reseteando…</>
-                        : "Resetear al número de documento"}
+                        : role === "PARENT" ? "Resetear al documento del hijo" : "Resetear al número de documento"}
                     </button>
                   )}
 

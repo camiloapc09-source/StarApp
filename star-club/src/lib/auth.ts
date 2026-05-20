@@ -53,6 +53,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
         }
 
+        // Fallback: parent logging in with their child's document number as username
+        if (!user && !emailInput.includes("@")) {
+          const link = await db.parentPlayer.findFirst({
+            where: {
+              player: {
+                documentNumber: emailInput,
+                ...(clubId ? { clubId } : {}),
+              },
+            },
+            select: { parent: { select: { user: true } } },
+          });
+          if (link?.parent?.user) user = link.parent.user;
+        }
+
         if (!user) return null;
 
         const isValid = await compare(

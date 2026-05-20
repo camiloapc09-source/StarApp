@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, Check, RefreshCw, Link2 } from "lucide-react";
 
 type Props = {
-  defaultRole?: "PLAYER" | "COACH";
+  defaultRole?: "PLAYER" | "COACH" | "PARENT";
   hideRoleSelect?: boolean;
   endpoint?: string;
 };

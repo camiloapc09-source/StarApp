@@ -75,7 +75,14 @@ export async function POST(req: NextRequest) {
   }
 
   const hashed = await hash(newPassword, 12);
-  await db.user.update({ where: { id: userId }, data: { password: hashed } });
+  await db.user.update({
+    where: { id: userId },
+    data: {
+      password: hashed,
+      // Force parent back through /setup so they can set a real email + password
+      ...(resetToDocument && user.role === "PARENT" ? { setupCompleted: false } : {}),
+    },
+  });
 
   await db.notification.create({
     data: {
