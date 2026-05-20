@@ -16,6 +16,8 @@ import DeletePlayerButton from "@/components/admin/delete-player-button";
 import ResetPasswordButton from "@/components/admin/reset-password-button";
 import PlayerNotesPanel from "@/components/admin/player-notes-panel";
 import InviteParentButton from "@/components/admin/invite-parent-button";
+import LinkExistingParentButton from "@/components/admin/link-existing-parent-button";
+import FixParentEmailButton from "@/components/admin/fix-parent-email-button";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -226,29 +228,44 @@ export default async function PlayerProfilePage({ params }: Props) {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">Acudiente / Tutor</h3>
-            {player.parentLinks.length === 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <LinkExistingParentButton playerId={player.id} playerName={player.user.name} />
               <InviteParentButton playerId={player.id} playerName={player.user.name} />
-            )}
+            </div>
           </div>
           {player.parentLinks.length === 0 ? (
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              Sin acudiente vinculado. Genera un enlace de invitación para que el padre se registre.
+              Sin acudiente vinculado. Vincula uno existente o genera un enlace de invitación.
             </p>
           ) : (
-            <div className="space-y-4">
-              {player.parentLinks.map((link) => (
-                <div key={link.id}>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
-                    <InfoRow label="Nombre" value={link.parent.user.name} />
-                    <InfoRow label="Email" value={link.parent.user.email} />
-                    {link.parent.phone && <InfoRow label="Teléfono / WhatsApp" value={link.parent.phone} />}
-                    {link.parent.relation && <InfoRow label="Relación" value={link.parent.relation} />}
+            <div className="space-y-5">
+              {player.parentLinks.map((link) => {
+                const emailBroken = !link.parent.user.email.includes("@");
+                return (
+                  <div key={link.id} className="rounded-xl p-4 space-y-3"
+                    style={{
+                      background: emailBroken ? "rgba(239,68,68,0.04)" : "var(--bg-elevated)",
+                      border: `1px solid ${emailBroken ? "rgba(239,68,68,0.20)" : "var(--border-subtle)"}`,
+                    }}>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
+                      <InfoRow label="Nombre" value={link.parent.user.name} />
+                      <InfoRow label="Email" value={link.parent.user.email} />
+                      {link.parent.phone && <InfoRow label="Teléfono / WhatsApp" value={link.parent.phone} />}
+                      {link.parent.relation && <InfoRow label="Relación" value={link.parent.relation} />}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {emailBroken && (
+                        <FixParentEmailButton
+                          userId={link.parent.user.id}
+                          userName={link.parent.user.name}
+                          currentEmail={link.parent.user.email}
+                        />
+                      )}
+                      <ResetPasswordButton userId={link.parent.user.id} userName={link.parent.user.name} role="PARENT" />
+                    </div>
                   </div>
-                  <div className="mt-3">
-                    <ResetPasswordButton userId={link.parent.user.id} userName={link.parent.user.name} role="PARENT" />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </Card>
