@@ -7,6 +7,7 @@ declare module "next-auth" {
       role: string;
       clubId: string;
       clubSlug: string;
+      setupCompleted: boolean;
     } & DefaultSession["user"];
   }
 
@@ -14,6 +15,7 @@ declare module "next-auth" {
     role?: string;
     clubId?: string;
     clubSlug?: string;
+    setupCompleted?: boolean;
   }
 }
 
@@ -23,5 +25,6 @@ declare module "next-auth/jwt" {
     id?: string;
     clubId?: string;
     clubSlug?: string;
+    setupCompleted?: boolean;
   }
 }

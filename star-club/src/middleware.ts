@@ -33,12 +33,11 @@ export default auth((req) => {
       return NextResponse.redirect(new URL(allowedPath, req.nextUrl));
     }
 
-    // Parents with temporary @bb.internal / @acudiente.bb.internal emails must
-    // complete account setup before accessing anything else
+    // All parents must complete account setup (email, password, link children) once
     if (
       role === "parent" &&
       !pathname.startsWith("/dashboard/parent/setup") &&
-      (req.auth?.user?.email ?? "").endsWith(".internal")
+      !(req.auth?.user as any)?.setupCompleted
     ) {
       return NextResponse.redirect(new URL("/dashboard/parent/setup", req.nextUrl));
     }

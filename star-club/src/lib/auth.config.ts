@@ -9,20 +9,22 @@ export const authConfig = {
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        const u = user as { id?: string; role?: string; clubId?: string; clubSlug?: string };
-        if (u.role)     token.role     = u.role;
-        if (u.id)       token.id       = u.id;
-        if (u.clubId)   token.clubId   = u.clubId;
-        if (u.clubSlug) token.clubSlug = u.clubSlug;
+        const u = user as { id?: string; role?: string; clubId?: string; clubSlug?: string; setupCompleted?: boolean };
+        if (u.role)                    token.role           = u.role;
+        if (u.id)                      token.id             = u.id;
+        if (u.clubId)                  token.clubId         = u.clubId;
+        if (u.clubSlug)                token.clubSlug       = u.clubSlug;
+        if (u.setupCompleted !== undefined) token.setupCompleted = u.setupCompleted;
       }
       return token;
     },
     session({ session, token }) {
       if (session.user) {
-        (session.user as any).role     = token.role;
-        (session.user as any).id       = token.id ?? token.sub;
-        (session.user as any).clubId   = token.clubId ?? "club-star";
-        (session.user as any).clubSlug = token.clubSlug ?? "";
+        (session.user as any).role           = token.role;
+        (session.user as any).id             = token.id ?? token.sub;
+        (session.user as any).clubId         = token.clubId ?? "club-star";
+        (session.user as any).clubSlug       = token.clubSlug ?? "";
+        (session.user as any).setupCompleted = token.setupCompleted ?? false;
       }
       return session;
     },
