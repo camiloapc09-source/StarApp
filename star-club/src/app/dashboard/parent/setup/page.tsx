@@ -11,11 +11,12 @@ type Player = { id: string; name: string; category: string | null; linked: boole
 
 export default function ParentSetupPage() {
   // Credentials
-  const [email, setEmail]       = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm]   = useState("");
-  const [showPw, setShowPw]     = useState(false);
-  const [clubSlug, setClubSlug] = useState("");
+  const [email, setEmail]             = useState("");
+  const [documentNumber, setDocument] = useState("");
+  const [password, setPassword]       = useState("");
+  const [confirm, setConfirm]         = useState("");
+  const [showPw, setShowPw]           = useState(false);
+  const [clubSlug, setClubSlug]       = useState("");
 
   // Children
   const [players, setPlayers]         = useState<Player[]>([]);
@@ -73,7 +74,7 @@ export default function ParentSetupPage() {
       const res = await fetch("/api/parent/setup", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, playerIds: [...selected] }),
+        body: JSON.stringify({ email, password, documentNumber: documentNumber || undefined, playerIds: [...selected] }),
       });
       const data = await res.json();
       if (!res.ok) { setError(data.error ?? "Error al guardar"); return; }
@@ -161,6 +162,26 @@ export default function ParentSetupPage() {
                   placeholder="tu@correo.com"
                   required
                   autoComplete="email"
+                  className="flex-1 bg-transparent outline-none text-sm"
+                  style={{ color: "rgba(255,255,255,0.88)", caretColor: "#8B5CF6" }}
+                />
+              </div>
+            </div>
+
+            {/* Document number */}
+            <div>
+              <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: "rgba(255,255,255,0.35)" }}>
+                Número de documento (para recuperar cuenta)
+              </label>
+              <div className="flex items-center gap-3 rounded-2xl px-4 py-3.5"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.10)" }}>
+                <ShieldCheck size={15} style={{ color: "rgba(255,255,255,0.30)" }} />
+                <input
+                  type="text"
+                  value={documentNumber}
+                  onChange={(e) => setDocument(e.target.value)}
+                  placeholder="Tu cédula o documento de identidad"
+                  autoComplete="off"
                   className="flex-1 bg-transparent outline-none text-sm"
                   style={{ color: "rgba(255,255,255,0.88)", caretColor: "#8B5CF6" }}
                 />

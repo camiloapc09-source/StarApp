@@ -412,6 +412,7 @@ export default function RegisterClient() {
           {modalRole === "PARENT" && (
             <>
               <SectionLabel>Acceso</SectionLabel>
+              <SpaceInput label="Tu número de documento (cédula)" value={form.documentNumber} onChange={(e) => setForm({ ...form, documentNumber: e.target.value })} placeholder="Para recuperar tu cuenta si olvidas la clave" required />
               <SpaceInput label="Contraseña" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Mínimo 6 caracteres" minLength={6} required />
               <SpaceInput label="Confirmar contraseña" type="password" value={form.confirmPassword} onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })} placeholder="Repite la contraseña" minLength={6} required />
               <SectionLabel>Información</SectionLabel>

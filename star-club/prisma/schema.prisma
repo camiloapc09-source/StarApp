@@ -58,6 +58,7 @@ model User {
   coachCategory    Category? @relation("CoachCategory", fields: [coachCategoryId], references: [id])
   coachCategoryIds String    @default("[]")
   canInvite        Boolean   @default(false) // coach-level permission to create player invites
+  documentNumber String?   // used for identity verification & password reset (PARENT / COACH)
   setupCompleted Boolean   @default(false)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

@@ -44,9 +44,10 @@ export async function GET() {
 }
 
 const schema = z.object({
-  email:     z.string().email("Ingresa un correo electrónico válido"),
-  password:  z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
-  playerIds: z.array(z.string()).min(1, "Selecciona al menos un jugador"),
+  email:          z.string().email("Ingresa un correo electrónico válido"),
+  password:       z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
+  playerIds:      z.array(z.string()).min(1, "Selecciona al menos un jugador"),
+  documentNumber: z.string().optional(),
 });
 
 // PATCH /api/parent/setup — update credentials + link children + mark setupCompleted
@@ -63,7 +64,7 @@ export async function PATCH(req: NextRequest) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
-  const { email, password, playerIds } = parsed.data;
+  const { email, password, playerIds, documentNumber } = parsed.data;
 
   // Validate email not taken by another user in this club
   const existing = await db.user.findFirst({
@@ -91,7 +92,7 @@ export async function PATCH(req: NextRequest) {
   await db.$transaction([
     db.user.update({
       where: { id: userId },
-      data: { email, password: hashed, setupCompleted: true },
+      data: { email, password: hashed, setupCompleted: true, ...(documentNumber ? { documentNumber } : {}) },
     }),
     db.parentPlayer.deleteMany({ where: { parentId } }),
     ...playerIds.map((playerId) =>

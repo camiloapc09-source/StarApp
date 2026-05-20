@@ -145,6 +145,7 @@ export async function POST(req: NextRequest) {
       data: {
         clubId, name, email, password: hashed, role: "PARENT",
         phone: phone || null,
+        documentNumber: documentNumber || null,
         setupCompleted: true,
       },
     });
