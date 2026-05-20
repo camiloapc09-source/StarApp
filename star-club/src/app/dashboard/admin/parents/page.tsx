@@ -8,6 +8,7 @@ import ResetPasswordButton from "@/components/admin/reset-password-button";
 import NewInviteForm from "@/components/admin/new-invite-form";
 import { AlertTriangle, CheckCircle2, Users } from "lucide-react";
 import Link from "next/link";
+import { ParentSentBadge } from "@/components/admin/parent-sent-badge";
 
 export default async function AdminParentsPage() {
   const session = await auth();
@@ -112,6 +113,7 @@ export default async function AdminParentsPage() {
                           ) : (
                             <CheckCircle2 size={13} style={{ color: "#34D399" }} />
                           )}
+                          {needsSetup && <ParentSentBadge userId={parent.user.id} />}
                         </div>
                         <p className="text-xs mt-0.5" style={{ color: emailBroken ? "#F87171" : "var(--text-muted)" }}>
                           {emailBroken ? "Usuario temporal: " : ""}{parent.user.email}

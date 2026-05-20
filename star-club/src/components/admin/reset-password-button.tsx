@@ -182,6 +182,10 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
                       href={`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={() => {
+                        localStorage.setItem(`wa_sent_${userId}`, String(Date.now()));
+                        window.dispatchEvent(new CustomEvent("wa-credentials-sent", { detail: { userId } }));
+                      }}
                       className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all hover:opacity-80"
                       style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}
                     >
