@@ -15,7 +15,7 @@ interface Props {
 export default function ResetPasswordButton({ userId, userName, role = "PLAYER", hasDocument = false, phone, clubSlug }: Props) {
   const [open, setOpen]           = useState(false);
   const [loading, setLoading]     = useState<"random" | "document" | null>(null);
-  const [result, setResult]       = useState<{ tempPassword: string; loginEmail: string; resetToDocument?: boolean } | null>(null);
+  const [result, setResult]       = useState<{ tempPassword: string; loginEmail: string; resetToDocument?: boolean; childName?: string } | null>(null);
   const [error, setError]         = useState<string | null>(null);
   const [copied, setCopied]       = useState<"password" | "email" | null>(null);
 
@@ -30,7 +30,11 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al resetear");
-      setResult({ tempPassword: data.tempPassword, loginEmail: data.loginEmail, resetToDocument: data.resetToDocument });
+      // Extract child name from resetInfo e.g. " (documento de Mariana Carolina)"
+      const childName = data.resetInfo
+        ? (data.resetInfo as string).replace(/^\s*\(documento de\s*/i, "").replace(/\)\s*$/, "").trim() || undefined
+        : undefined;
+      setResult({ tempPassword: data.tempPassword, loginEmail: data.loginEmail, resetToDocument: data.resetToDocument, childName });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error");
     } finally {
@@ -131,19 +135,30 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
                   </p>
 
                   <div className="space-y-2">
+                    {/* Usuario */}
                     <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl"
                       style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                      <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>Email</p>
-                        <p className="text-sm font-mono font-semibold mt-0.5">{result.loginEmail}</p>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>
+                          Usuario
+                          {result.resetToDocument && result.childName && (
+                            <span className="ml-1 normal-case font-normal" style={{ color: "rgba(255,255,255,0.25)" }}>
+                              · doc. de {result.childName}
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-sm font-mono font-semibold mt-0.5">
+                          {result.resetToDocument ? result.tempPassword : result.loginEmail}
+                        </p>
                       </div>
-                      <button onClick={() => copy(result.loginEmail, "email")}
+                      <button onClick={() => copy(result.resetToDocument ? result.tempPassword : result.loginEmail, "email")}
                         className="p-1.5 rounded-lg flex-shrink-0 transition-colors"
                         style={{ color: copied === "email" ? "#34D399" : "rgba(255,255,255,0.35)" }}>
                         {copied === "email" ? <Check size={14} /> : <Copy size={14} />}
                       </button>
                     </div>
 
+                    {/* Contraseña */}
                     <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl"
                       style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                       <div>
@@ -162,7 +177,7 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
 
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
                     {result.resetToDocument
-                      ? "La contraseña es su número de documento. Pídele que la cambie en su perfil."
+                      ? `Usuario y contraseña son el mismo número. Al entrar podrá configurar su correo y clave personal.`
                       : "Compártela por WhatsApp y pídele que la cambie en su perfil."}
                   </p>
                 </div>
@@ -174,9 +189,10 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
                   const appUrl = clubSlug
                     ? `${typeof window !== "undefined" ? window.location.origin : ""}/${clubSlug}`
                     : (typeof window !== "undefined" ? window.location.origin : "");
+                  const childLabel = result.childName ? ` (documento de ${result.childName})` : "";
                   const msg = result.resetToDocument
-                    ? `Hola ${userName}! 👋\n\nLe informamos que su acceso al portal de acudientes está listo.\n\n👤 *Usuario:* documento de su hijo/a: *${result.tempPassword}*\n🔑 *Contraseña temporal:* *${result.tempPassword}*\n\nIngrese en: ${appUrl}\n\nAl entrar, el sistema le pedirá configurar su correo y una contraseña personal.\n\n¡Gracias! 🏆`
-                    : `Hola ${userName}! 👋\n\nSu contraseña en el portal del club ha sido reseteada.\n\n📧 *Usuario:* ${result.loginEmail}\n🔑 *Contraseña temporal:* *${result.tempPassword}*\n\nIngrese en: ${appUrl} y cambie su contraseña desde el perfil.\n\n¡Gracias! 🏆`;
+                    ? `Hola ${userName}! 👋\n\nLe informamos que su acceso al portal de acudientes está listo.\n\n👤 *Usuario:* *${result.tempPassword}*${childLabel}\n🔑 *Contraseña temporal:* *${result.tempPassword}*\n\n📱 Ingrese en: ${appUrl}\n\nAl entrar, el sistema le pedirá configurar su correo y una contraseña personal.\n\n¡Gracias! 🏆`
+                    : `Hola ${userName}! 👋\n\nSu contraseña en el portal del club ha sido reseteada.\n\n📧 *Usuario:* ${result.loginEmail}\n🔑 *Contraseña temporal:* *${result.tempPassword}*\n\n📱 Ingrese en: ${appUrl} y cambie su contraseña desde el perfil.\n\n¡Gracias! 🏆`;
                   return (
                     <a
                       href={`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`}
