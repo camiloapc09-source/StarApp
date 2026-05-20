@@ -22,7 +22,9 @@ const redeemSchema = z.object({
   parentEmail: z.string().email().optional(),
   parentPhone: z.string().optional(),
   parentRelation: z.string().optional(),
-  relation: z.string().optional(), // for PARENT role self-registration
+  relation: z.string().optional(),
+  // Additional children's document numbers for PARENT self-registration
+  additionalDocs: z.array(z.string().min(1)).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -130,18 +132,20 @@ export async function POST(req: NextRequest) {
     const payload = invite.payload as { playerId?: string } | null;
     if (!payload?.playerId) return apiError("Invite inválido — sin jugador vinculado", 400);
 
-    const player = await db.player.findFirst({
+    const primaryPlayer = await db.player.findFirst({
       where: { id: payload.playerId, clubId },
       select: { id: true },
     });
-    if (!player) return apiError("Jugador no encontrado", 404);
+    if (!primaryPlayer) return apiError("Jugador no encontrado", 404);
 
     const hashed = await hash(password, 12);
 
+    // Create user with setupCompleted=true — parent sets up their own credentials here
     const user = await db.user.create({
       data: {
         clubId, name, email, password: hashed, role: "PARENT",
         phone: phone || null,
+        setupCompleted: true,
       },
     });
 
@@ -153,9 +157,31 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    // Link the primary child from the invite
     await db.parentPlayer.create({
-      data: { parentId: parent.id, playerId: player.id },
+      data: { parentId: parent.id, playerId: primaryPlayer.id },
     });
+
+    // Link additional children by document number if provided
+    const additionalDocs = parsed.data.additionalDocs ?? [];
+    if (additionalDocs.length > 0) {
+      const extraPlayers = await db.player.findMany({
+        where: {
+          clubId,
+          documentNumber: { in: additionalDocs },
+          // Exclude the primary child to avoid duplicate-key errors
+          NOT: { id: primaryPlayer.id },
+        },
+        select: { id: true },
+      });
+      for (const ep of extraPlayers) {
+        try {
+          await db.parentPlayer.create({ data: { parentId: parent.id, playerId: ep.id } });
+        } catch {
+          // Ignore duplicates silently
+        }
+      }
+    }
 
     await db.invite.update({
       where: { id: invite.id },
@@ -165,7 +191,7 @@ export async function POST(req: NextRequest) {
     // Email de bienvenida al padre
     const club = await db.club.findUnique({ where: { id: clubId }, select: { name: true } });
     const linkedPlayer = await db.player.findUnique({
-      where: { id: player.id },
+      where: { id: primaryPlayer.id },
       select: { user: { select: { name: true } } },
     });
     await sendParentWelcomeEmail({

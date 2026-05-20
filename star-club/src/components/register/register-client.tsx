@@ -80,6 +80,8 @@ export default function RegisterClient() {
   const [invite, setInvite] = useState<{ role: string; branches?: string[]; playerName?: string | null; club?: { name: string; slug: string; logo: string | null; zonePrices?: Record<string, number> | null } } | null>(null);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "", dateOfBirth: "", documentNumber: "", phone: "", address: "", parentName: "", parentEmail: "", parentPhone: "", parentRelation: "", emergencyContact: "", eps: "", branch: "" });
+  // Additional children document numbers (for PARENT registration)
+  const [additionalDocs, setAdditionalDocs] = useState<string[]>([]);
 
   const redirectSlug = invite?.club?.slug || clubSlug || null;
 
@@ -143,7 +145,13 @@ export default function RegisterClient() {
       const payload: Record<string, unknown> = { code, name: form.name, email: form.email, dateOfBirth: form.dateOfBirth, documentNumber: form.documentNumber, phone: form.phone };
       if (modalRole === "COACH") { payload.password = form.password; payload.phone = form.phone || undefined; payload.emergencyContact = form.emergencyContact || undefined; payload.eps = form.eps || undefined; payload.branch = form.branch || undefined; }
       if (modalRole === "PLAYER") { payload.address = form.address || undefined; payload.zone = form.branch || undefined; payload.parentName = form.parentName || undefined; payload.parentPhone = form.parentPhone || undefined; payload.parentRelation = form.parentRelation || undefined; }
-      if (modalRole === "PARENT") { payload.password = form.password; payload.phone = form.phone || undefined; payload.relation = form.parentRelation || undefined; }
+      if (modalRole === "PARENT") {
+        payload.password = form.password;
+        payload.phone = form.phone || undefined;
+        payload.relation = form.parentRelation || undefined;
+        const filledDocs = additionalDocs.map((d) => d.trim()).filter(Boolean);
+        if (filledDocs.length > 0) payload.additionalDocs = filledDocs;
+      }
       const res = await fetch("/api/invites/redeem", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
       const data = await res.json();
       if (res.ok) {
@@ -369,6 +377,47 @@ export default function RegisterClient() {
                   <option key={r} value={r} style={{ background: "#0E0E2C" }}>{r}</option>
                 ))}
               </SpaceSelect>
+
+              {/* Additional children */}
+              <SectionLabel>Más hijos en el club</SectionLabel>
+              <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.30)" }}>
+                ¿Tienes más hijos registrados en el club? Agrega sus números de documento y quedarán vinculados automáticamente.
+              </p>
+              {additionalDocs.map((doc, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <SpaceInput
+                      placeholder={`Documento del hijo ${i + 2}`}
+                      value={doc}
+                      onChange={(e) => {
+                        const next = [...additionalDocs];
+                        next[i] = e.target.value;
+                        setAdditionalDocs(next);
+                      }}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAdditionalDocs(additionalDocs.filter((_, j) => j !== i))}
+                    className="mt-0.5 w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-sm font-bold transition-colors"
+                    style={{ background: "rgba(239,68,68,0.12)", color: "rgba(248,113,113,0.80)", border: "1px solid rgba(239,68,68,0.20)" }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setAdditionalDocs([...additionalDocs, ""])}
+                className="w-full py-2.5 rounded-2xl text-xs font-bold tracking-wide transition-all"
+                style={{
+                  background: "rgba(139,92,246,0.08)",
+                  border: "1.5px dashed rgba(139,92,246,0.30)",
+                  color: "rgba(167,139,250,0.70)",
+                }}
+              >
+                + Agregar otro hijo
+              </button>
             </>
           )}
 
