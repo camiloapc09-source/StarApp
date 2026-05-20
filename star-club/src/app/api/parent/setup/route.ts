@@ -5,13 +5,15 @@ import { z } from "zod";
 import { hash } from "bcryptjs";
 import { apiError, apiOk } from "@/lib/api";
 
-// GET /api/parent/setup — list of players in the club + already-linked ones
+// GET /api/parent/setup — list of players in the club + already-linked ones + current user info
 export async function GET() {
   const session = await auth();
   if (!session?.user || session.user.role !== "PARENT") return apiError("No autorizado", 401);
 
   const userId = (session.user as any).id as string;
   const clubId = (session.user as any).clubId as string;
+  const clubSlug = (session.user as any).clubSlug as string ?? "";
+  const currentEmail = (session.user as any).email as string ?? "";
 
   const parent = await db.parent.findUnique({
     where: { userId },
@@ -30,6 +32,8 @@ export async function GET() {
   });
 
   return apiOk({
+    currentEmail,
+    clubSlug,
     players: players.map((p) => ({
       id: p.id,
       name: p.user.name,

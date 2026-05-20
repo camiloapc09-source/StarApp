@@ -11,14 +11,13 @@ type Player = { id: string; name: string; category: string | null; linked: boole
 
 export default function ParentSetupPage() {
   const { data: session } = useSession();
-  const currentEmail = session?.user?.email ?? "";
-  const clubSlug = (session?.user as any)?.clubSlug ?? "";
 
   // Credentials
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm]   = useState("");
   const [showPw, setShowPw]     = useState(false);
+  const [clubSlug, setClubSlug] = useState("");
 
   // Children
   const [players, setPlayers]         = useState<Player[]>([]);
@@ -31,14 +30,7 @@ export default function ParentSetupPage() {
   const [error, setError]     = useState("");
   const [done, setDone]       = useState(false);
 
-  // Pre-fill email if it's already a real address
-  useEffect(() => {
-    if (currentEmail && !currentEmail.endsWith(".internal")) {
-      setEmail(currentEmail);
-    }
-  }, [currentEmail]);
-
-  // Load players
+  // Load players + current user info from API (authoritative source, avoids SessionProvider issues)
   useEffect(() => {
     fetch("/api/parent/setup")
       .then((r) => r.json())
@@ -47,8 +39,18 @@ export default function ParentSetupPage() {
           setPlayers(data.players);
           setSelected(new Set(data.players.filter((p: Player) => p.linked).map((p: Player) => p.id)));
         }
+        if (data.clubSlug) setClubSlug(data.clubSlug);
+        // Pre-fill email only if it's a real address
+        if (data.currentEmail && !data.currentEmail.endsWith(".internal")) {
+          setEmail(data.currentEmail);
+        }
+        // Fallback: try session if API didn't return clubSlug
+        if (!data.clubSlug && (session?.user as any)?.clubSlug) {
+          setClubSlug((session?.user as any).clubSlug);
+        }
       })
       .finally(() => setLoadingPlayers(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function togglePlayer(id: string) {
