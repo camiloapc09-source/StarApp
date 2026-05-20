@@ -13,12 +13,14 @@ export default async function AdminParentsPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
-  const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
+  const clubId   = (session.user as { clubId?: string; clubSlug?: string }).clubId   ?? "club-star";
+  const clubSlug = (session.user as { clubId?: string; clubSlug?: string }).clubSlug ?? "";
 
   const parents = await db.parent.findMany({
     where: { user: { clubId } },
     include: {
-      user: { select: { id: true, name: true, email: true, setupCompleted: true } },
+      user: { select: { id: true, name: true, email: true, phone: true, setupCompleted: true } },
+      // phone lives on both Parent and User — fetched below via parent.phone
       children: {
         include: {
           player: {
@@ -128,6 +130,8 @@ export default async function AdminParentsPage() {
                         userId={parent.user.id}
                         userName={parent.user.name}
                         role="PARENT"
+                        phone={parent.phone ?? parent.user.phone ?? undefined}
+                        clubSlug={clubSlug}
                       />
                     </div>
                   </div>
