@@ -15,8 +15,16 @@ import BulkPaymentButton from "@/components/admin/bulk-payment-button";
 import MarkOverdueButton from "@/components/admin/mark-overdue-button";
 import ProofViewer from "@/components/admin/proof-viewer";
 import BulkMarkReceivedPanel from "@/components/admin/bulk-mark-received-panel";
+import { Suspense } from "react";
+import PaymentSearch from "@/components/admin/payment-search";
 
-export default async function AdminPaymentsPage() {
+export default async function AdminPaymentsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ q?: string }>;
+}) {
+  const { q } = (await searchParams) ?? {};
+  const query = q?.toLowerCase().trim() ?? "";
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
@@ -121,10 +129,15 @@ export default async function AdminPaymentsPage() {
     },
   });
 
-  const submitted = payments.filter((p) => p.status === "SUBMITTED");
-  const pending   = payments.filter((p) => p.status === "PENDING");
-  const overdue   = payments.filter((p) => p.status === "OVERDUE");
-  const completed = payments.filter((p) => p.status === "COMPLETED");
+  const matchesQuery = (p: typeof payments[0]) =>
+    !query ||
+    p.player.user.name.toLowerCase().includes(query) ||
+    p.concept.toLowerCase().includes(query);
+
+  const submitted = payments.filter((p) => p.status === "SUBMITTED" && matchesQuery(p));
+  const pending   = payments.filter((p) => p.status === "PENDING"   && matchesQuery(p));
+  const overdue   = payments.filter((p) => p.status === "OVERDUE"   && matchesQuery(p));
+  const completed = payments.filter((p) => p.status === "COMPLETED" && matchesQuery(p));
 
   // Last paid map: playerId -> most recent completed payment
   const lastPaidMap = new Map<string, typeof payments[0]>();
@@ -172,11 +185,14 @@ export default async function AdminPaymentsPage() {
       />
       <div className="p-4 md:p-8 space-y-5">
 
-        {/* Top bar with export */}
-        <div className="flex justify-end">
+        {/* Top bar with search + export */}
+        <div className="flex items-center gap-3">
+          <Suspense fallback={null}>
+            <PaymentSearch defaultValue={q} />
+          </Suspense>
           <Link
             href="/api/admin/payments/export"
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:opacity-80"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all hover:opacity-80 flex-shrink-0"
             style={{
               background: "rgba(255,255,255,0.05)",
               color: "rgba(255,255,255,0.70)",
@@ -499,10 +515,18 @@ export default async function AdminPaymentsPage() {
 
         {actionItems.length === 0 && scheduled.length === 0 && completed.length === 0 && submitted.length === 0 && (
           <Card className="py-16 text-center">
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>No hay pagos registrados.</p>
-            <Link href="/dashboard/admin/payments/new" className="mt-4 inline-block text-xs px-4 py-2 rounded-xl font-semibold" style={{ background: "var(--accent)", color: "#000" }}>
-              + Agregar primer pago
-            </Link>
+            {query ? (
+              <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                Sin resultados para &ldquo;{query}&rdquo;.
+              </p>
+            ) : (
+              <>
+                <p className="text-sm" style={{ color: "var(--text-muted)" }}>No hay pagos registrados.</p>
+                <Link href="/dashboard/admin/payments/new" className="mt-4 inline-block text-xs px-4 py-2 rounded-xl font-semibold" style={{ background: "var(--accent)", color: "#000" }}>
+                  + Agregar primer pago
+                </Link>
+              </>
+            )}
           </Card>
         )}
       </div>
