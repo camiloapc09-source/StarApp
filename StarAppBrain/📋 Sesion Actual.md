@@ -69,10 +69,100 @@
 
 ---
 
+## ✅ Completado (sesión 2026-05-20 — login por documento del hijo + panel Acudientes)
+
+### Contexto
+El flujo anterior usaba el documento del PADRE como clave (que no teníamos). Se cambió al documento del HIJO, que sí existe en DB desde el registro del jugador.
+
+### Cambios implementados
+
+| Tarea | Commit | Estado |
+|---|---|---|
+| **auth.ts — nuevo fallback**: si input sin @, busca padre por `parentPlayer.player.documentNumber` (para padres con email real, no @bb.internal) | `dd5ae71` | ✅ |
+| **reset-password API**: al resetear padre con `resetToDocument=true`, también pone `setupCompleted=false` → fuerza re-setup | `dd5ae71` | ✅ |
+| **reset-password-button**: botón "Resetear al documento del hijo" ahora visible para rol PARENT (antes solo PLAYER) | `dd5ae71` | ✅ |
+| **Nueva página `/dashboard/admin/parents`**: lista todos los acudientes con sus hijos, documentos, pagos pendientes y botón de reset | `dd5ae71` | ✅ |
+| **Sidebar admin**: enlace "Acudientes" con ícono `UsersRound` | `dd5ae71` | ✅ |
+| **NewInviteForm**: acepta `defaultRole="PARENT"` para generar invites desde el panel de acudientes | `dd5ae71` | ✅ |
+| **Locales**: clave `"parents": "Acudientes"` en es.json + en.json | `dd5ae71` | ✅ |
+| **Tests Playwright 9/9**: flujo completo verificado en producción | `802e6e3` | ✅ |
+
+### Flujo resultante para TODOS los padres
+
+```
+Karen va al panel Admin → Acudientes
+    ↓
+Busca al padre, clic "Resetear al documento del hijo"
+    ↓
+Sistema: password = hash(doc_hijo) + setupCompleted = false
+    ↓
+Karen le dice al padre: "Entra con el documento de [hijo] como usuario y clave"
+    ↓
+Padre entra con doc_hijo / doc_hijo → redirige a /setup
+    ↓
+Padre elige correo real + nueva contraseña + confirma hijos vinculados
+    ↓
+setupCompleted = true → entra al dashboard
+```
+
+**Nota**: los padres `@bb.internal` (migrados) siguen funcionando igual — su email ya tiene el formato `{doc_hijo}@bb.internal`, el fallback antiguo los encuentra sin tocarlos.
+
+---
+
+## ✅ Completado (sesión 2026-05-20 — onboarding automático de padres)
+
+### Contexto
+Ball Breakers tenía ~42 padres con email roto (número de cédula sin @, ej. `1043689342`). Karen tendría que corregirlos uno a uno. Se implementó una solución completamente automatizada donde cada padre resuelve el suyo solo.
+
+### Cambios implementados
+
+| Tarea | Commit | Estado |
+|---|---|---|
+| **Migración DB**: emails sin @ → `{doc}@bb.internal`; duplicados → `{doc}@acudiente.bb.internal` | SQL directo en Neon | ✅ |
+| **Auth fallback**: si el input no tiene @, busca `{input}@bb.internal` automáticamente | `6e41676` | ✅ |
+| **Schema + campo**: `User.setupCompleted Boolean @default(false)` — ALTER TABLE ejecutado en Neon | `4d7df1f` | ✅ |
+| **JWT/Session**: `setupCompleted` + `clubSlug` se propagan en el token | `4d7df1f` | ✅ |
+| **Middleware**: todos los padres con `setupCompleted=false` → redirige a `/dashboard/parent/setup` | `4d7df1f` | ✅ |
+| **GET /api/parent/setup**: devuelve jugadores activos del club + los ya vinculados + email actual | `4d7df1f` | ✅ |
+| **PATCH /api/parent/setup**: actualiza email + password + re-vincula hijos + marca `setupCompleted=true` | `4d7df1f` | ✅ |
+| **Página /dashboard/parent/setup**: correo (pre-rellenado si era real) + contraseña + lista buscable de jugadores con checkboxes | `4d7df1f` | ✅ |
+| **Registro via invite** (`/api/invites/redeem`): marca `setupCompleted=true` al crear cuenta + acepta `additionalDocs[]` para vincular hijos extra | `4d5a9e0` | ✅ |
+| **Form de registro**: sección "Más hijos en el club" con inputs dinámicos de documento | `4d5a9e0` | ✅ |
+| **Tests Playwright**: 5 tests e2e contra el deploy en Render — todos pasan ✅ | `56e4298` | ✅ |
+
+### Flujo resultante
+
+**Padres existentes con email roto (42 en Ball Breakers):**
+```
+Padre escribe su número de cédula como usuario + clave
+    ↓
+Auth lo encuentra como {doc}@bb.internal (automático)
+    ↓
+Middleware detecta setupCompleted=false → redirige a /setup
+    ↓
+Padre ve formulario: correo real + contraseña + lista de hijos
+    ↓
+Guarda → setupCompleted=true → re-login automático → dashboard
+```
+**Una sola vez. Sin intervención de Karen.**
+
+**Padres nuevos (invite):**
+- Se registran con su propio correo/contraseña → `setupCompleted=true` desde el inicio
+- Pueden agregar documentos de hijos adicionales en el mismo formulario de registro
+
+**Padres con correo real preexistente:**
+- También pasan por /setup si `setupCompleted=false`
+- El correo aparece pre-rellenado; solo ponen contraseña y vinculan hijos
+
+---
+
 ## 🔜 Pendientes
 
 | Tarea | Prioridad | Notas |
 |---|---|---|
+| **Comunicarle a Karen el flujo nuevo**: Admin → Acudientes → "Resetear al documento del hijo" → decirle al padre "Entra con el doc de tu hijo" | Inmediata | Deploy + tests OK |
+| Katerin Perez (mamá de un jugador) → Karen debe crear el jugador primero, luego invitar a Katerin | Alta | No existe en DB |
+| Padres con 2 hijos (ADONIS, Fernando Sarmiento, Yula Jiménez, Luis Carmona) → el segundo hijo lo vinculan ellos mismos en la pantalla de setup | Media | Cuentas duplicadas en DB — pueden fusionarse en /setup |
 | Landing page / website para StarApp | Alta | Necesaria para verificación de Meta (WhatsApp Business API) |
 | WhatsApp IA para cobros (asistente de cobranza) | Alta | Bloqueado por verificación Meta |
 | VAPID_EMAIL en Render → cambiar a email starshine | Baja | Actualmente usa email personal |
