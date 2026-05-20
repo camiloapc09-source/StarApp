@@ -6,12 +6,14 @@ declare module "next-auth" {
       id: string;
       role: string;
       clubId: string;
+      clubSlug: string;
     } & DefaultSession["user"];
   }
 
   interface User {
     role?: string;
     clubId?: string;
+    clubSlug?: string;
   }
 }
 
@@ -20,5 +22,6 @@ declare module "next-auth/jwt" {
     role?: string;
     id?: string;
     clubId?: string;
+    clubSlug?: string;
   }
 }

@@ -32,6 +32,16 @@ export default auth((req) => {
     if (role !== "admin" && !pathname.startsWith(allowedPath)) {
       return NextResponse.redirect(new URL(allowedPath, req.nextUrl));
     }
+
+    // Parents with temporary @bb.internal / @acudiente.bb.internal emails must
+    // complete account setup before accessing anything else
+    if (
+      role === "parent" &&
+      !pathname.startsWith("/dashboard/parent/setup") &&
+      (req.auth?.user?.email ?? "").endsWith(".internal")
+    ) {
+      return NextResponse.redirect(new URL("/dashboard/parent/setup", req.nextUrl));
+    }
   }
 
   // Public API routes (no auth required)

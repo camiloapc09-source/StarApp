@@ -22,20 +22,36 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // Resolve clubId from slug when provided
         let clubId: string | undefined;
+        let resolvedSlug: string | undefined = clubSlug;
         if (clubSlug) {
           const club = await db.club.findUnique({
             where: { slug: clubSlug },
-            select: { id: true },
+            select: { id: true, slug: true },
           });
-          clubId = club?.id ?? undefined;
+          clubId      = club?.id   ?? undefined;
+          resolvedSlug = club?.slug ?? clubSlug;
         }
 
-        const user = await db.user.findFirst({
+        let user = await db.user.findFirst({
           where: {
             email: emailInput,
             ...(clubId ? { clubId } : {}),
           },
         });
+
+        // Fallback: if input has no @, try the @bb.internal / @acudiente.bb.internal
+        // formats used for accounts migrated from document-number credentials
+        if (!user && !emailInput.includes("@")) {
+          user = await db.user.findFirst({
+            where: {
+              AND: [
+                { email: { startsWith: `${emailInput}@` } },
+                { email: { endsWith: ".internal" } },
+              ],
+              ...(clubId ? { clubId } : {}),
+            },
+          });
+        }
 
         if (!user) return null;
 
@@ -46,12 +62,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (!isValid) return null;
 
+        // Resolve slug if not already known (e.g. login from global /login page)
+        if (!resolvedSlug) {
+          const club = await db.club.findUnique({
+            where: { id: user.clubId },
+            select: { slug: true },
+          });
+          resolvedSlug = club?.slug ?? "";
+        }
+
         return {
-          id:     user.id,
-          name:   user.name,
-          email:  user.email,
-          role:   user.role,
-          clubId: user.clubId,
+          id:       user.id,
+          name:     user.name,
+          email:    user.email,
+          role:     user.role,
+          clubId:   user.clubId,
+          clubSlug: resolvedSlug,
         };
       },
     }),
