@@ -156,20 +156,35 @@ Guarda → setupCompleted=true → re-login automático → dashboard
 
 ---
 
+## ✅ Completado (sesión 2026-05-20 — UX pagos + acudientes)
+
+| Tarea | Commit | Estado |
+|---|---|---|
+| **Buscador en `/admin/payments`**: filtra por nombre del jugador o concepto en todas las secciones | `5a73139` | ✅ Producción |
+| **Botón WhatsApp en reset de contraseña (perfil jugador)**: al resetear al doc del hijo, abre WhatsApp con credenciales pre-redactadas al teléfono del acudiente | `0d08a6a` | ✅ Producción |
+| **Botón WhatsApp en reset (página `/admin/parents`)**: mismo botón disponible desde el panel de acudientes | `588d36f` | ✅ Producción |
+| **Badge "Enviado" en acudientes**: al hacer clic en el botón de WhatsApp, aparece badge verde con hora — persiste en localStorage | `3e91328` | ✅ Producción |
+| **Mensaje "¿Tienes otro hijo?" en perfil del acudiente**: guía al acudiente a contactar al admin si necesita vincular más hijos | `a877bcc` | ✅ Producción |
+
+### Diagnóstico login por documento (Julina)
+- Hay dos "Julieta/Julietta" en DB: una en `star-club`, otra en `ballbreakers`
+- El auth filtra por `clubId` → el login DEBE hacerse desde la URL del club correcto
+- Flujo: admin resetea → botón WhatsApp le manda credenciales al acudiente → acudiente entra desde su club → `/setup`
+
+---
+
 ## 🔜 Pendientes
 
 | Tarea | Prioridad | Notas |
 |---|---|---|
-| **Comunicarle a Karen el flujo nuevo**: Admin → Acudientes → "Resetear al documento del hijo" → decirle al padre "Entra con el doc de tu hijo" | Inmediata | Deploy + tests OK |
 | Katerin Perez (mamá de un jugador) → Karen debe crear el jugador primero, luego invitar a Katerin | Alta | No existe en DB |
-| Padres con 2 hijos (ADONIS, Fernando Sarmiento, Yula Jiménez, Luis Carmona) → el segundo hijo lo vinculan ellos mismos en la pantalla de setup | Media | Cuentas duplicadas en DB — pueden fusionarse en /setup |
+| Padres con 2 hijos (ADONIS, Fernando Sarmiento, Yula Jiménez, Luis Carmona) → el segundo hijo lo vinculan ellos mismos en la pantalla de setup | Media | Durante el setup ven la lista completa y pueden seleccionar varios |
 | Landing page / website para StarApp | Alta | Necesaria para verificación de Meta (WhatsApp Business API) |
 | WhatsApp IA para cobros (asistente de cobranza) | Alta | Bloqueado por verificación Meta |
 | VAPID_EMAIL en Render → cambiar a email starshine | Baja | Actualmente usa email personal |
 | Historial de asistencia para coaches (`/coach/attendance` index) | Media | Actualmente redirige a sessions — ver audit |
 | Push notifications para jugadores/padres | Media | Endpoint existe, falta automatización |
 | Notificación cuando se cancela una sesión | Media | Al eliminar sesión → crear notifs para jugadores + padres |
-| Filtros y búsqueda en `/admin/payments` | Media | Página de 512 líneas sin search |
 
 ---
 

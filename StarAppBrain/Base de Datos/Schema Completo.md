@@ -40,6 +40,9 @@ User
 ├── avatar, avatarPending, avatarStatus (NONE|PENDING|APPROVED|REJECTED)
 ├── coachCategoryId String? → Category (categoría que entrena)
 ├── coachCategoryIds String (JSON array, múltiples categorías)
+├── setupCompleted  Boolean @default(false)
+│   ← PARENT: false hasta que complete /dashboard/parent/setup
+│   ← Middleware redirige a /setup si es false y role=PARENT
 └── → playerProfile, parentProfile, notifications, coachSessions
 ```
 

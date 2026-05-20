@@ -30,9 +30,8 @@
 Si un coach elimina una sesión, los jugadores y padres no se enteran.
 - **Fix:** al DELETE de sesión → crear notifications para todos los players asignados + sus padres
 
-### Admin payments sin búsqueda/filtros
-Página de 512 líneas sin input de búsqueda. Difícil encontrar un jugador específico con 100+ registros.
-- **Fix:** chips de estado (Todos / Pendiente / Vencido / Pagado) + input search por nombre
+### ✅ Admin payments — buscador (resuelto 2026-05-20)
+Input de búsqueda por nombre del jugador o concepto, filtra las 4 secciones (por verificar / acción requerida / programados / confirmados). Usa URL params `?q=` para mantener SSR.
 
 ---
 

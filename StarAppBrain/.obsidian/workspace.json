@@ -11,14 +11,10 @@
             "id": "da9446d7e2e0eb95",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "IA Admin/Tareas Automatizables.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Tareas Automatizables"
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Vista gráfica"
             }
           }
         ]
@@ -182,12 +178,15 @@
   },
   "active": "da9446d7e2e0eb95",
   "lastOpenFiles": [
-    "📋 Sesion Actual.md.tmp.17052.1777395580687",
     "Contexto del Negocio/Ball Breakers - Info Completa.md",
+    "Reglas de Negocio/Roles y Permisos.md",
+    "000 - Inicio.md",
+    "📋 Sesion Actual.md",
+    "IA Admin/Tareas Automatizables.md",
+    "📋 Sesion Actual.md.tmp.17052.1777395580687",
     "📋 Sesion Actual.md.tmp.17052.1777394152446",
     "Contexto del Negocio/BallBreakers - Info Completa.md",
     "Reglas de Negocio/Ciclo de Pagos.md",
-    "000 - Inicio.md",
     "000 - Inicio.md.tmp.20040.1776956432075",
     "Contexto del Negocio/Flujo de Prospecto Nuevo.md.tmp.20040.1776956425952",
     "Contexto del Negocio/Ball Breakers - Info Completa.md.tmp.20040.1776956399444",
@@ -202,18 +201,15 @@
     "Contexto del Negocio/Modelo de Negocio SaaS.md",
     "Contexto del Negocio/Quién es el Cliente.md",
     "IA Admin/Protocolo de Decisiones.md",
-    "IA Admin/Tareas Automatizables.md",
     "IA Admin/Vision y Roadmap IA.md",
     "Features/Notificaciones y Push.md",
     "Features/Gamificación.md",
     "Features/Sesiones y Asistencia.md",
     "Reglas de Negocio/Flujo de Onboarding.md",
-    "Reglas de Negocio/Roles y Permisos.md",
     "Base de Datos/Schema Completo.md",
     "Arquitectura/Rutas API.md",
     "Arquitectura/Stack Tecnológico.md",
     "Contexto del Negocio",
-    "Reglas de Negocio",
-    "IA Admin"
+    "Reglas de Negocio"
   ]
 }
