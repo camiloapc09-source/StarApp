@@ -309,21 +309,66 @@ export default function RegisterClient() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <SectionLabel>Datos principales</SectionLabel>
 
-          <SpaceInput label="Nombre completo" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Tu nombre completo" required />
-          <SpaceInput label="Correo electrónico" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="tu@email.com" required />
+          {/* ── Advertencia para PLAYER: los datos son del deportista, no del padre ── */}
+          {modalRole === "PLAYER" && (
+            <div
+              className="rounded-2xl px-4 py-3.5 flex items-start gap-3"
+              style={{ background: "rgba(251,146,60,0.10)", border: "1px solid rgba(251,146,60,0.30)" }}
+            >
+              <span className="text-lg leading-none mt-0.5">⚠️</span>
+              <div>
+                <p className="text-xs font-black" style={{ color: "rgba(251,146,60,0.95)" }}>
+                  Llena los datos del deportista, no los tuyos
+                </p>
+                <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: "rgba(251,146,60,0.70)" }}>
+                  Nombre, documento y fecha de nacimiento son del niño/la niña que se inscribe. Tus datos van en la sección "Acudiente" al final.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <SectionLabel>
+            {modalRole === "PLAYER" ? "Datos del deportista" : modalRole === "PARENT" ? "Tus datos personales" : "Datos principales"}
+          </SectionLabel>
+
+          <SpaceInput
+            label={modalRole === "PLAYER" ? "Nombre completo del deportista" : modalRole === "PARENT" ? "Tu nombre completo" : "Nombre completo"}
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder={modalRole === "PLAYER" ? "Nombre del niño / la niña" : modalRole === "PARENT" ? "Tu nombre completo" : "Tu nombre completo"}
+            required
+          />
+          <SpaceInput
+            label={modalRole === "PLAYER" ? "Correo del deportista (opcional)" : modalRole === "PARENT" ? "Tu correo electrónico (para iniciar sesión)" : "Correo electrónico"}
+            type="email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            placeholder={modalRole === "PARENT" ? "Tu correo, no el del deportista" : "correo@ejemplo.com"}
+            required
+          />
           {modalRole !== "PARENT" && (
-            <SpaceInput label="Número de documento" value={form.documentNumber} onChange={(e) => setForm({ ...form, documentNumber: e.target.value })} placeholder="Cédula / pasaporte" required />
+            <SpaceInput
+              label={modalRole === "PLAYER" ? "Número de documento del deportista" : "Número de documento"}
+              value={form.documentNumber}
+              onChange={(e) => setForm({ ...form, documentNumber: e.target.value })}
+              placeholder={modalRole === "PLAYER" ? "Cédula / tarjeta de identidad del deportista" : "Cédula / pasaporte"}
+              required
+            />
           )}
           {modalRole !== "PARENT" && (
-            <SpaceInput label="Teléfono / WhatsApp" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="+57 300 000 0000" />
+            <SpaceInput
+              label={modalRole === "PLAYER" ? "Teléfono del deportista (opcional)" : "Teléfono / WhatsApp"}
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="+57 300 000 0000"
+            />
           )}
 
           {modalRole !== "PARENT" && (
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold tracking-[0.25em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
-                Fecha de nacimiento
+                {modalRole === "PLAYER" ? "Fecha de nacimiento del deportista" : "Fecha de nacimiento"}
               </label>
               <input
                 type="date"
@@ -431,17 +476,29 @@ export default function RegisterClient() {
                   {sedeOptions.map((s) => <option key={s} value={s} style={{ background: "#0E0E2C" }}>{s}</option>)}
                 </SpaceSelect>
               )}
-              <SectionLabel>Acudiente {isMinor ? "(obligatorio)" : "(opcional)"}</SectionLabel>
-              <SpaceInput label="Nombre del acudiente" value={form.parentName} onChange={(e) => setForm({ ...form, parentName: e.target.value })} placeholder="Nombre completo" required={isMinor} />
-              <SpaceInput label="WhatsApp del acudiente" value={form.parentPhone} onChange={(e) => setForm({ ...form, parentPhone: e.target.value })} placeholder="+57 300 000 0000" required={isMinor} />
-              <SpaceSelect label="Relación con el deportista" value={form.parentRelation} onChange={(e) => setForm({ ...form, parentRelation: e.target.value })} required={isMinor}>
+              <SectionLabel>Tus datos — acudiente {isMinor ? "(obligatorio)" : "(opcional)"}</SectionLabel>
+
+              {/* Banner acudiente — deja claro que aquí van los datos del padre */}
+              <div
+                className="rounded-2xl px-4 py-3 flex items-start gap-3"
+                style={{ background: "rgba(96,165,250,0.08)", border: "1px solid rgba(96,165,250,0.22)" }}
+              >
+                <span className="text-base leading-none mt-0.5">👤</span>
+                <p className="text-[11px] leading-relaxed" style={{ color: "rgba(147,197,253,0.85)" }}>
+                  Aquí sí van <strong>tus datos</strong> como padre, madre o tutor del deportista.
+                </p>
+              </div>
+
+              <SpaceInput label="Tu nombre completo" value={form.parentName} onChange={(e) => setForm({ ...form, parentName: e.target.value })} placeholder="Tu nombre, no el del deportista" required={isMinor} />
+              <SpaceInput label="Tu WhatsApp" value={form.parentPhone} onChange={(e) => setForm({ ...form, parentPhone: e.target.value })} placeholder="+57 300 000 0000" required={isMinor} />
+              <SpaceSelect label="Tu relación con el deportista" value={form.parentRelation} onChange={(e) => setForm({ ...form, parentRelation: e.target.value })} required={isMinor}>
                 <option value="">Seleccionar relación</option>
                 {["Padre", "Madre", "Abuelo/a", "Tío/a", "Hermano/a", "Acudiente"].map((r) => (
                   <option key={r} value={r} style={{ background: "#0E0E2C" }}>{r}</option>
                 ))}
               </SpaceSelect>
               <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.22)" }}>
-                La contraseña del deportista y del acudiente será el número de documento.
+                La contraseña del deportista y del acudiente será el número de documento del deportista.
               </p>
             </>
           )}
