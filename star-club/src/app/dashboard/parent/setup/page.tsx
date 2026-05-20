@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { signIn, useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 import {
   ShieldCheck, Mail, Lock, Eye, EyeOff, ArrowRight,
   CheckCircle2, Users, Search, Check,
@@ -10,8 +10,6 @@ import {
 type Player = { id: string; name: string; category: string | null; linked: boolean };
 
 export default function ParentSetupPage() {
-  const { data: session } = useSession();
-
   // Credentials
   const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
@@ -43,10 +41,6 @@ export default function ParentSetupPage() {
         // Pre-fill email only if it's a real address
         if (data.currentEmail && !data.currentEmail.endsWith(".internal")) {
           setEmail(data.currentEmail);
-        }
-        // Fallback: try session if API didn't return clubSlug
-        if (!data.clubSlug && (session?.user as any)?.clubSlug) {
-          setClubSlug((session?.user as any).clubSlug);
         }
       })
       .finally(() => setLoadingPlayers(false));
