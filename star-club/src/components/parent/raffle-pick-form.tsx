@@ -176,7 +176,8 @@ export default function RafflePickForm({
               } else if (isMine) {
                 bg = "rgba(139,92,246,0.20)"; border = "rgba(139,92,246,0.50)"; color = "#DEC4FF";
               } else if (isTaken) {
-                bg = "rgba(255,255,255,0.06)"; border = "rgba(255,255,255,0.10)"; color = "rgba(255,255,255,0.18)"; cursor = "not-allowed";
+                bg = "repeating-linear-gradient(45deg, rgba(255,184,0,0.07) 0px, rgba(255,184,0,0.07) 3px, rgba(255,184,0,0.02) 3px, rgba(255,184,0,0.02) 9px)";
+                border = "rgba(255,184,0,0.22)"; color = "rgba(255,184,0,0.40)"; cursor = "not-allowed";
               } else if (isSelected) {
                 bg = "rgba(139,92,246,0.30)"; border = "rgba(139,92,246,0.60)"; color = "#DEC4FF";
               }
@@ -213,8 +214,11 @@ export default function RafflePickForm({
               Mío pagado
             </span>
             <span className="flex items-center gap-1.5 text-[10px]" style={{ color: "var(--text-muted)" }}>
-              <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }} />
-              Ocupado
+              <span className="w-2.5 h-2.5 rounded-sm" style={{
+                background: "repeating-linear-gradient(45deg, rgba(255,184,0,0.07) 0px, rgba(255,184,0,0.07) 3px, rgba(255,184,0,0.02) 3px, rgba(255,184,0,0.02) 9px)",
+                border: "1px solid rgba(255,184,0,0.22)"
+              }} />
+              Reservado
             </span>
           </div>
 

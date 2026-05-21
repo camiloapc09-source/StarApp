@@ -40,6 +40,7 @@ const ADMIN_MORE: MoreItem[] = [
 ];
 
 const COACH_MORE: MoreItem[] = [
+  { href: "/dashboard/coach/rifas",         icon: Ticket,    label: "Rifas",          color: "#DEC4FF", bg: "rgba(139,92,246,0.12)" },
   { href: "/dashboard/coach/notifications", icon: Bell,      label: "Notificaciones", color: "#F87171", bg: "rgba(239,68,68,0.12)" },
   { href: "/dashboard/coach/reports",       icon: BarChart3, label: "Reportes",       color: "#FB923C", bg: "rgba(251,146,60,0.12)" },
   { href: "/dashboard/coach/invites",       icon: UserPlus,  label: "Invitaciones",   color: "#60A5FA", bg: "rgba(96,165,250,0.15)" },

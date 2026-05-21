@@ -10,7 +10,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; num: string }> }
 ) {
-  const session = await requireRole(["PARENT", "PLAYER", "ADMIN"]);
+  const session = await requireRole(["PARENT", "PLAYER", "COACH", "ADMIN"]);
   if (isResponse(session)) return session;
   const clubId = getClubId(session);
 

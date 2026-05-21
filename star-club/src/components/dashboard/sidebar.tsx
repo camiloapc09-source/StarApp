@@ -44,6 +44,7 @@ const roleNavigationIds: Record<string, SidebarLink[]> = {
     { key: "players",   href: "/dashboard/coach/players",      icon: Users },
     { key: "sessions",  href: "/dashboard/coach/sessions",     icon: Calendar },
     { key: "missions",  href: "/dashboard/coach/missions",     icon: Target },
+    { key: "rifas",     href: "/dashboard/coach/rifas",        icon: Ticket },
     { key: "reports",   href: "/dashboard/coach/reports",      icon: BarChart3 },
     { key: "invites",  href: "/dashboard/coach/invites",     icon: UserPlus },
     { key: "profile",   href: "/dashboard/coach/profile",      icon: User },

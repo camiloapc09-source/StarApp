@@ -10,7 +10,7 @@
 |---|---|---|
 | `SUPERADMIN` | Tú (dueño de StarApp) | Todo el sistema, todos los clubes |
 | `ADMIN` | Administrador del club | Todo dentro de su club |
-| `COACH` | Entrenador | Ver jugadores de su categoría, registrar asistencia, notas |
+| `COACH` | Entrenador | Ver jugadores de su categoría, registrar asistencia, notas, participar en rifas |
 | `PLAYER` | Jugador | Ver su propio perfil, pagos, misiones |
 | `PARENT` | Padre / madre | Ver el perfil de sus hijos, pagar, pedir uniformes |
 
