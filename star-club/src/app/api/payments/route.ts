@@ -94,6 +94,9 @@ export async function PUT(req: NextRequest) {
   let created = 0, skipped = 0, noAmount = 0;
 
   for (const player of players) {
+    // Skip 100% scholarship players — they don't owe monthly payments
+    if (player.scholarshipPct === 100) { skipped++; continue; }
+
     const existing = await db.payment.findFirst({
       where: { playerId: player.id, dueDate: { gte: monthStart, lte: monthEnd } },
     });

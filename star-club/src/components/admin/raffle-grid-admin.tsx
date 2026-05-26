@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Clock, XCircle, Eye, EyeOff, Upload } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, Eye, EyeOff, Upload, Search, UserPlus, X } from "lucide-react";
 
 interface Ticket {
   id: string;
@@ -16,6 +16,12 @@ interface Ticket {
   takenBy: { name: string; id: string } | null;
 }
 
+interface ParentSummary {
+  id: string;       // User ID
+  name: string;     // Parent name
+  children: string[]; // Children names
+}
+
 interface Props {
   raffleId: string;
   tickets: Ticket[];
@@ -25,10 +31,12 @@ interface Props {
   prize?: string | null;
   ticketPrice: number;
   drawDate?: string | null;
+  parents: ParentSummary[];
+  raffleOpen: boolean;
 }
 
 export default function RaffleGridAdmin({
-  raffleId, tickets, clubLogo, clubName, raffleName, prize, ticketPrice, drawDate,
+  raffleId, tickets, clubLogo, clubName, raffleName, prize, ticketPrice, drawDate, parents, raffleOpen,
 }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Ticket | null>(null);
@@ -36,7 +44,23 @@ export default function RaffleGridAdmin({
   const [verifying, setVerifying] = useState(false);
   const [releasing, setReleasing] = useState(false);
 
+  // Assign panel state
+  const [assigningNumber, setAssigningNumber] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [assigning, setAssigning] = useState(false);
+  const [assignError, setAssignError] = useState("");
+
   const ticketMap = new Map(tickets.map((t) => [t.number, t]));
+
+  // Filter parents by search query (matches parent name OR any child name)
+  const filteredParents = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return parents;
+    return parents.filter((p) =>
+      p.name.toLowerCase().includes(q) ||
+      p.children.some((c) => c.toLowerCase().includes(q))
+    );
+  }, [parents, searchQuery]);
 
   async function handleVerify(number: number) {
     setVerifying(true);
@@ -61,6 +85,35 @@ export default function RaffleGridAdmin({
       const res = await fetch(`/api/rifas/${raffleId}/tickets/${number}/release`, { method: "DELETE" });
       if (res.ok) { setSelected(null); router.refresh(); }
     } finally { setReleasing(false); }
+  }
+
+  async function handleAssign(parentId: string, parentName: string) {
+    if (assigningNumber === null) return;
+    setAssigning(true);
+    setAssignError("");
+    try {
+      const res = await fetch(`/api/rifas/${raffleId}/tickets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          numbers: [assigningNumber],
+          ownerName: parentName,
+          assignToUserId: parentId,
+        }),
+      });
+      if (res.ok) {
+        setAssigningNumber(null);
+        setSearchQuery("");
+        router.refresh();
+      } else {
+        const d = await res.json();
+        setAssignError(d.error ?? "Error al asignar");
+      }
+    } catch {
+      setAssignError("Error de red");
+    } finally {
+      setAssigning(false);
+    }
   }
 
   const totalTaken = tickets.length;
@@ -134,37 +187,67 @@ export default function RaffleGridAdmin({
 
         {/* Number grid */}
         <div className="p-4">
+          {raffleOpen && (
+            <p className="text-[10px] mb-3 text-center" style={{ color: "rgba(255,255,255,0.35)" }}>
+              Toca un número libre para asignarlo a un padre
+            </p>
+          )}
           <div className="grid gap-[5px]" style={{ gridTemplateColumns: "repeat(10, 1fr)" }}>
             {Array.from({ length: 100 }, (_, i) => {
               const ticket = ticketMap.get(i);
               const isPaid = ticket?.status === "PAID";
               const isTaken = !!ticket && !isPaid;
+              const isFree = !ticket;
+              const isBeingAssigned = assigningNumber === i;
               const label = String(i).padStart(2, "0");
 
               return (
                 <button
                   key={i}
-                  onClick={() => ticket && setSelected(ticket)}
-                  className="aspect-square flex items-center justify-center rounded-lg text-[11px] font-bold transition-all"
+                  onClick={() => {
+                    if (ticket) {
+                      setAssigningNumber(null);
+                      setSelected(ticket);
+                    } else if (raffleOpen) {
+                      setSelected(null);
+                      setAssigningNumber(isBeingAssigned ? null : i);
+                      setSearchQuery("");
+                      setAssignError("");
+                    }
+                  }}
+                  className="aspect-square flex items-center justify-center rounded-lg text-[11px] font-bold transition-all active:scale-95"
                   style={{
-                    background: isPaid
+                    background: isBeingAssigned
+                      ? "rgba(139,92,246,0.30)"
+                      : isPaid
                       ? "rgba(0,255,135,0.15)"
                       : isTaken
                       ? "rgba(255,184,0,0.12)"
                       : "rgba(255,255,255,0.04)",
-                    border: isPaid
+                    border: isBeingAssigned
+                      ? "1px solid rgba(139,92,246,0.70)"
+                      : isPaid
                       ? "1px solid rgba(0,255,135,0.35)"
                       : isTaken
                       ? "1px solid rgba(255,184,0,0.30)"
                       : "1px solid rgba(255,255,255,0.07)",
-                    color: isPaid
+                    color: isBeingAssigned
+                      ? "#DEC4FF"
+                      : isPaid
                       ? "rgba(0,255,135,0.90)"
                       : isTaken
                       ? "rgba(255,184,0,0.90)"
                       : "rgba(255,255,255,0.28)",
-                    cursor: ticket ? "pointer" : "default",
+                    cursor: (ticket || raffleOpen) ? "pointer" : "default",
+                    boxShadow: isBeingAssigned ? "0 0 8px rgba(139,92,246,0.40)" : "none",
                   }}
-                  title={ticket ? `${label} — ${ticket.ownerName ?? "?"} (${isPaid ? "Pagado" : "Por cobrar"})` : label}
+                  title={
+                    ticket
+                      ? `${label} — ${ticket.ownerName ?? "?"} (${isPaid ? "Pagado" : "Por cobrar"})`
+                      : raffleOpen
+                      ? `Asignar número ${label}`
+                      : label
+                  }
                 >
                   {label}
                 </button>
@@ -173,7 +256,7 @@ export default function RaffleGridAdmin({
           </div>
 
           {/* Legend */}
-          <div className="flex items-center justify-center gap-5 mt-4">
+          <div className="flex items-center justify-center gap-4 mt-4 flex-wrap">
             <span className="flex items-center gap-1.5 text-[10px]" style={{ color: "var(--text-muted)" }}>
               <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.12)" }} />
               Libre
@@ -186,6 +269,12 @@ export default function RaffleGridAdmin({
               <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "rgba(0,255,135,0.15)", border: "1px solid rgba(0,255,135,0.35)" }} />
               Pagado
             </span>
+            {raffleOpen && (
+              <span className="flex items-center gap-1.5 text-[10px]" style={{ color: "var(--text-muted)" }}>
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "rgba(139,92,246,0.30)", border: "1px solid rgba(139,92,246,0.70)" }} />
+                Seleccionado
+              </span>
+            )}
           </div>
 
           {drawDate && (
@@ -195,6 +284,97 @@ export default function RaffleGridAdmin({
           )}
         </div>
       </div>
+
+      {/* Assign panel — shown when a free number is selected */}
+      {assigningNumber !== null && (
+        <div
+          className="rounded-2xl border p-5 space-y-4"
+          style={{ background: "rgba(8,6,28,0.95)", borderColor: "rgba(139,92,246,0.30)" }}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
+                style={{ background: "rgba(139,92,246,0.20)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.40)" }}
+              >
+                {String(assigningNumber).padStart(2, "0")}
+              </span>
+              <div>
+                <p className="text-sm font-bold" style={{ color: "#DEC4FF" }}>
+                  Asignar número {String(assigningNumber).padStart(2, "0")}
+                </p>
+                <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  Busca por nombre del padre o del deportista
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => { setAssigningNumber(null); setSearchQuery(""); setAssignError(""); }}
+              className="p-1.5 rounded-lg transition-colors"
+              style={{ color: "var(--text-muted)", background: "rgba(255,255,255,0.05)" }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {/* Search input */}
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.30)" }} />
+            <input
+              type="text"
+              autoFocus
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Nombre del padre o del deportista..."
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(139,92,246,0.25)",
+                color: "var(--text-primary)",
+              }}
+            />
+          </div>
+
+          {/* Results list */}
+          <div className="space-y-1.5 max-h-64 overflow-y-auto">
+            {filteredParents.length === 0 ? (
+              <p className="text-center py-6 text-sm" style={{ color: "var(--text-muted)" }}>
+                No se encontraron padres con ese nombre
+              </p>
+            ) : (
+              filteredParents.map((parent) => (
+                <button
+                  key={parent.id}
+                  onClick={() => handleAssign(parent.id, parent.name)}
+                  disabled={assigning}
+                  className="w-full text-left px-4 py-3 rounded-xl transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{
+                    background: "rgba(255,255,255,0.04)",
+                    border: "1px solid rgba(255,255,255,0.07)",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(139,92,246,0.12)"; e.currentTarget.style.borderColor = "rgba(139,92,246,0.25)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
+                >
+                  <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                    {parent.name}
+                  </p>
+                  {parent.children.length > 0 && (
+                    <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.38)" }}>
+                      {parent.children.join(" · ")}
+                    </p>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+
+          {assignError && (
+            <p className="text-xs px-3 py-2 rounded-lg" style={{ background: "rgba(255,71,87,0.10)", color: "#ff4757" }}>
+              {assignError}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Ticket detail panel */}
       {selected && (
@@ -233,7 +413,6 @@ export default function RaffleGridAdmin({
             </div>
           </div>
 
-          {/* Proof image */}
           {selected.proofUrl && (
             <div>
               <button
@@ -261,7 +440,6 @@ export default function RaffleGridAdmin({
             </p>
           )}
 
-          {/* Actions */}
           <div className="flex gap-2 pt-1">
             {selected.status === "TAKEN" && (
               <button

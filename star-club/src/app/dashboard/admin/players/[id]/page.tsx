@@ -15,6 +15,7 @@ import AdminPlayerPhotoButton from "@/components/admin/admin-player-photo-button
 import DeletePlayerButton from "@/components/admin/delete-player-button";
 import ResetPasswordButton from "@/components/admin/reset-password-button";
 import PlayerNotesPanel from "@/components/admin/player-notes-panel";
+import PlayerStatusToggle from "@/components/admin/player-status-toggle";
 import InviteParentButton from "@/components/admin/invite-parent-button";
 import LinkExistingParentButton from "@/components/admin/link-existing-parent-button";
 import FixParentEmailButton from "@/components/admin/fix-parent-email-button";
@@ -94,12 +95,19 @@ export default async function PlayerProfilePage({ params }: Props) {
           >
             <ArrowLeft size={16} /> Volver a Deportistas
           </Link>
-          <span
-            className="px-3 py-1 rounded-full text-xs font-semibold"
-            style={{ background: statusStyle.bg, color: statusStyle.color }}
-          >
-            {statusStyle.label}
-          </span>
+          <div className="flex items-center gap-2">
+            <span
+              className="px-3 py-1 rounded-full text-xs font-semibold"
+              style={{ background: statusStyle.bg, color: statusStyle.color }}
+            >
+              {statusStyle.label}
+            </span>
+            <PlayerStatusToggle
+              playerId={player.id}
+              playerName={player.user.name}
+              currentStatus={player.status}
+            />
+          </div>
         </div>
 
         {/* Pending-approval banner */}

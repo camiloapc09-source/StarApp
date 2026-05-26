@@ -27,7 +27,7 @@ export default async function AdminRifaDetailPage({
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
   const { id } = await params;
 
-  const [raffle, club] = await Promise.all([
+  const [raffle, club, rawParents] = await Promise.all([
     db.raffle.findUnique({
       where: { id },
       include: {
@@ -48,7 +48,25 @@ export default async function AdminRifaDetailPage({
       },
     }),
     db.club.findUnique({ where: { id: clubId }, select: { name: true, logo: true } }),
+    db.parent.findMany({
+      where: { user: { clubId } },
+      select: {
+        userId: true,
+        user: { select: { name: true } },
+        children: {
+          select: {
+            player: { select: { user: { select: { name: true } } } },
+          },
+        },
+      },
+    }),
   ]);
+
+  const parents = rawParents.map((p) => ({
+    id: p.userId,
+    name: p.user.name,
+    children: p.children.map((c) => c.player.user.name).filter(Boolean) as string[],
+  }));
 
   if (!raffle || raffle.clubId !== clubId) notFound();
 
@@ -133,6 +151,8 @@ export default async function AdminRifaDetailPage({
           prize={raffle.prize}
           ticketPrice={raffle.ticketPrice}
           drawDate={raffle.drawDate?.toISOString() ?? null}
+          parents={parents}
+          raffleOpen={raffle.status === "OPEN"}
         />
 
         {/* Taken list */}
@@ -157,6 +177,14 @@ export default async function AdminRifaDetailPage({
                     </span>
                     <div>
                       <p className="text-sm font-medium">{t.ownerName ?? t.takenBy?.name ?? "—"}</p>
+                      {t.takenById && (() => {
+                        const parentRecord = parents.find((p) => p.id === t.takenById);
+                        return parentRecord?.children && parentRecord.children.length > 0 ? (
+                          <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.38)" }}>
+                            {parentRecord.children.join(" · ")}
+                          </p>
+                        ) : null;
+                      })()}
                       <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                         {format(new Date(t.takenAt), "d MMM yyyy", { locale: es })}
                         {t.paidAt && ` · Pagó: ${format(new Date(t.paidAt), "d MMM", { locale: es })}`}

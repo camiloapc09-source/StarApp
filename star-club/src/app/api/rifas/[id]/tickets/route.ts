@@ -21,16 +21,33 @@ export async function POST(
   if (raffle.status !== "OPEN") return apiError("Esta rifa no está abierta", 400);
 
   const body = await req.json();
-  const { numbers, ownerName } = body as { numbers: number[]; ownerName?: string };
+  const { numbers, ownerName, assignToUserId } = body as {
+    numbers: number[];
+    ownerName?: string;
+    assignToUserId?: string; // ADMIN only — assign to a specific parent user
+  };
 
   if (!Array.isArray(numbers) || numbers.length === 0) return apiError("Debes seleccionar al menos un número", 400);
   if (numbers.some((n) => typeof n !== "number" || n < 0 || n > 99)) return apiError("Números inválidos (0-99)", 400);
+
+  // Resolve target user (admin can assign to someone else)
+  let targetUserId = session.user.id;
+  let targetUserName = session.user.name ?? "Usuario";
+  if (session.user.role === "ADMIN" && assignToUserId) {
+    const targetUser = await db.user.findFirst({
+      where: { id: assignToUserId, clubId },
+      select: { id: true, name: true },
+    });
+    if (!targetUser) return apiError("Usuario no encontrado", 404);
+    targetUserId = targetUser.id;
+    targetUserName = targetUser.name;
+  }
 
   const taken = new Set(raffle.tickets.map((t) => t.number));
   const conflict = numbers.find((n) => taken.has(n));
   if (conflict !== undefined) return apiError(`El número ${String(conflict).padStart(2, "0")} ya está tomado`, 409);
 
-  const displayName = ownerName?.trim() || session.user.name || "Usuario";
+  const displayName = ownerName?.trim() || targetUserName;
 
   const tickets = await db.$transaction(
     numbers.map((num) =>
@@ -38,7 +55,7 @@ export async function POST(
         data: {
           raffleId,
           number: num,
-          takenById: session.user.id,
+          takenById: targetUserId,
           ownerName: displayName,
           status: "TAKEN",
         },
