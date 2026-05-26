@@ -29,7 +29,12 @@ export default auth((req) => {
     const allowedPath = `/dashboard/${role}`;
 
     // Prevent accessing other role dashboards (except admin can access all)
+    // Exception: COACH with a linked player profile can access /dashboard/player
     if (role !== "admin" && !pathname.startsWith(allowedPath)) {
+      const linkedPlayerId = (req.auth?.user as any)?.linkedPlayerId;
+      if (role === "coach" && linkedPlayerId && pathname.startsWith("/dashboard/player")) {
+        return NextResponse.next();
+      }
       return NextResponse.redirect(new URL(allowedPath, req.nextUrl));
     }
 

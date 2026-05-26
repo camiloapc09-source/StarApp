@@ -9,12 +9,13 @@ export const authConfig = {
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        const u = user as { id?: string; role?: string; clubId?: string; clubSlug?: string; setupCompleted?: boolean };
+        const u = user as { id?: string; role?: string; clubId?: string; clubSlug?: string; setupCompleted?: boolean; linkedPlayerId?: string | null };
         if (u.role)                    token.role           = u.role;
         if (u.id)                      token.id             = u.id;
         if (u.clubId)                  token.clubId         = u.clubId;
         if (u.clubSlug)                token.clubSlug       = u.clubSlug;
         if (u.setupCompleted !== undefined) token.setupCompleted = u.setupCompleted;
+        token.linkedPlayerId = u.linkedPlayerId ?? null;
       }
       return token;
     },
@@ -25,6 +26,7 @@ export const authConfig = {
         (session.user as any).clubId         = token.clubId ?? "club-star";
         (session.user as any).clubSlug       = token.clubSlug ?? "";
         (session.user as any).setupCompleted = token.setupCompleted ?? false;
+        (session.user as any).linkedPlayerId = token.linkedPlayerId ?? null;
       }
       return session;
     },

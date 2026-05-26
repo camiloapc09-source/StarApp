@@ -9,12 +9,14 @@ import { XPProgressCard } from "@/components/gamification/xp-progress-card";
 import { Leaderboard } from "@/components/gamification/leaderboard";
 import { calculateLevel, LEVEL_TITLES } from "@/lib/utils";
 import { Calendar, CheckCircle2, XCircle, Clock, Flame, Trophy } from "lucide-react";
+import { CoachPlayerBanner } from "@/components/coach/coach-player-banner";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default async function PlayerStatsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PLAYER") redirect("/");
+  const isCoachPlayer = session?.user?.role === "COACH";
+  if (!session?.user || (session.user.role !== "PLAYER" && !(isCoachPlayer && session.user.linkedPlayerId))) redirect("/");
 
   const player = await db.player.findUnique({
     where: { userId: session.user.id },
@@ -94,6 +96,7 @@ export default async function PlayerStatsPage() {
   return (
     <div>
       <Header title="Mis estadísticas" subtitle="Progreso, asistencia y ranking" />
+      {isCoachPlayer && <CoachPlayerBanner />}
       <div className="p-4 md:p-8 space-y-5">
 
         {/* XP card with rank */}

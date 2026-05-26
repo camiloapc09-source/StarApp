@@ -5,10 +5,12 @@ import { Header } from "@/components/dashboard/header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import PlayerMissionsClient from "@/components/gamification/player-missions-client";
+import { CoachPlayerBanner } from "@/components/coach/coach-player-banner";
 
 export default async function PlayerMissionsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PLAYER") redirect("/");
+  const isCoachPlayer = session?.user?.role === "COACH";
+  if (!session?.user || (session.user.role !== "PLAYER" && !(isCoachPlayer && session.user.linkedPlayerId))) redirect("/");
 
   const player = await db.player.findUnique({
     where: { userId: session.user.id },
@@ -44,6 +46,7 @@ export default async function PlayerMissionsPage() {
         title="Mis misiones"
         subtitle={`${active.length} activa${active.length !== 1 ? "s" : ""} · ${completed.length} completada${completed.length !== 1 ? "s" : ""}`}
       />
+      {isCoachPlayer && <CoachPlayerBanner />}
       <div className="p-4 md:p-8 space-y-6">
         {/* Active missions */}
         <Card>

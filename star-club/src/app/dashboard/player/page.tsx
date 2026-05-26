@@ -11,6 +11,7 @@ import { Calendar, Trophy, Zap, ArrowRight } from "lucide-react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
+import { CoachPlayerBanner } from "@/components/coach/coach-player-banner";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -21,7 +22,8 @@ function getGreeting() {
 
 export default async function PlayerDashboard() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PLAYER") redirect("/");
+  const isCoachPlayer = session?.user?.role === "COACH";
+  if (!session?.user || (session.user.role !== "PLAYER" && !(isCoachPlayer && session.user.linkedPlayerId))) redirect("/");
 
   const player = await db.player.findUnique({
     where: { userId: session.user.id },
@@ -84,6 +86,7 @@ export default async function PlayerDashboard() {
   return (
     <div>
       <Header title="Inicio" notificationCount={unreadNotifications} />
+      {isCoachPlayer && <CoachPlayerBanner />}
 
       <div className="p-4 md:p-8 space-y-5">
 

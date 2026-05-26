@@ -8,14 +8,23 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import EvidencePanel from "@/components/coach/evidence-panel";
 import { getDictionary } from "@/lib/dict";
-import { Users, Calendar, UserCheck, BarChart3 } from "lucide-react";
+import { Users, Calendar, UserCheck, BarChart3, Zap, Clock } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { RequestPlayerProfileButton } from "@/components/coach/request-player-profile-button";
 
 export default async function CoachDashboard() {
   const session = await auth();
   if (!session?.user || session.user.role !== "COACH") redirect("/");
   const dict = await getDictionary();
+
+  const linkedPlayerId = (session.user as any).linkedPlayerId as string | null;
+
+  // Check if coach has a pending player profile request
+  const coachUser = await db.user.findUnique({
+    where: { id: session.user.id },
+    select: { requestedPlayerProfile: true },
+  });
 
   const [sessionsCount, playersCount, recentSessions, upcomingSessions, pendingEvidences, unreadNotifications] =
     await Promise.all([
@@ -52,6 +61,58 @@ export default async function CoachDashboard() {
       />
 
       <div className="p-4 md:p-8 space-y-8">
+
+        {/* Player mode card */}
+        <div
+          className="rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap"
+          style={{
+            background: "linear-gradient(135deg, rgba(139,92,246,0.10) 0%, rgba(96,165,250,0.06) 100%)",
+            border: "1px solid rgba(139,92,246,0.20)",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+              style={{ background: "rgba(139,92,246,0.18)", border: "1px solid rgba(139,92,246,0.30)" }}>
+              <Zap size={16} style={{ color: "#A78BFA" }} />
+            </div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: "#DEC4FF" }}>
+                {linkedPlayerId ? "Modo Jugador disponible" : "¿Eres también jugador?"}
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.40)" }}>
+                {linkedPlayerId
+                  ? "Puedes acceder a tu perfil de jugador"
+                  : coachUser?.requestedPlayerProfile
+                  ? "Solicitud enviada — pendiente de aprobación"
+                  : "Solicita al admin activar tu perfil de jugador"}
+              </p>
+            </div>
+          </div>
+          <div>
+            {linkedPlayerId ? (
+              <Link
+                href="/dashboard/player"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
+                style={{
+                  background: "rgba(139,92,246,0.20)",
+                  color: "#DEC4FF",
+                  border: "1px solid rgba(139,92,246,0.35)",
+                }}
+              >
+                <Zap size={14} />
+                Cambiar a Jugador
+              </Link>
+            ) : coachUser?.requestedPlayerProfile ? (
+              <div className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl"
+                style={{ background: "rgba(255,184,0,0.08)", color: "rgba(255,184,0,0.80)", border: "1px solid rgba(255,184,0,0.20)" }}>
+                <Clock size={12} /> Pendiente de aprobación
+              </div>
+            ) : (
+              <RequestPlayerProfileButton />
+            )}
+          </div>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <StatCard label={dict.common.activePlayers} value={playersCount} icon={<Users size={20} />} gradient="linear-gradient(135deg, rgba(139,92,246,0.25), rgba(109,40,217,0.12))" />

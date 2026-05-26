@@ -60,6 +60,7 @@ model User {
   canInvite        Boolean   @default(false) // coach-level permission to create player invites
   documentNumber String?   // used for identity verification & password reset (PARENT / COACH)
   setupCompleted Boolean   @default(false)
+  requestedPlayerProfile Boolean @default(false) // coach requested to also be a player, pending admin approval
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 
@@ -120,6 +121,9 @@ model Player {
   gender      String?  // "M" | "F"
   jerseyNumber Int?
   status      String   @default("ACTIVE") // ACTIVE | PENDING | INACTIVE
+
+  // Dual-role: coach who is also a player
+  paymentExempt Boolean  @default(false) // true for coach-players — skipped in bulk payment generation
 
   // Gamification
   xp          Int      @default(0)

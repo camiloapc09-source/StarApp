@@ -85,6 +85,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           resolvedSlug = club?.slug ?? "";
         }
 
+        // For COACH users, check if they also have a player profile (dual-role)
+        let linkedPlayerId: string | null = null;
+        if (user.role === "COACH") {
+          const playerProfile = await db.player.findUnique({
+            where: { userId: user.id },
+            select: { id: true },
+          });
+          linkedPlayerId = playerProfile?.id ?? null;
+        }
+
         return {
           id:             user.id,
           name:           user.name,
@@ -93,6 +103,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           clubId:         user.clubId,
           clubSlug:       resolvedSlug,
           setupCompleted: user.setupCompleted,
+          linkedPlayerId,
         };
       },
     }),

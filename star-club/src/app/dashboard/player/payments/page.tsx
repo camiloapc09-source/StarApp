@@ -5,6 +5,7 @@ import { Header } from "@/components/dashboard/header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, CheckCircle2, AlertTriangle, Clock, Info } from "lucide-react";
+import { CoachPlayerBanner } from "@/components/coach/coach-player-banner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -17,7 +18,8 @@ const STATUS_META: Record<string, { label: string; variant: "success" | "warning
 
 export default async function PlayerPaymentsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PLAYER") redirect("/");
+  const isCoachPlayer = session?.user?.role === "COACH";
+  if (!session?.user || (session.user.role !== "PLAYER" && !(isCoachPlayer && session.user.linkedPlayerId))) redirect("/");
 
   const player = await db.player.findUnique({
     where: { userId: session.user.id },
@@ -36,6 +38,7 @@ export default async function PlayerPaymentsPage() {
   return (
     <div>
       <Header title="Mis pagos" subtitle="Estado de cuenta y mensualidades" />
+      {isCoachPlayer && <CoachPlayerBanner />}
       <div className="p-4 md:p-8 space-y-5">
 
         {/* Beca banner */}

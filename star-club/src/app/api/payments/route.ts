@@ -87,7 +87,7 @@ export async function PUT(req: NextRequest) {
   const zonePrices = (club?.zonePrices ?? {}) as Record<string, number>;
 
   const players = await db.player.findMany({
-    where: { clubId, status: "ACTIVE" },
+    where: { clubId, status: "ACTIVE", paymentExempt: false },
     select: { id: true, userId: true, paymentDay: true, monthlyAmount: true, zone: true, scholarshipPct: true },
   });
 

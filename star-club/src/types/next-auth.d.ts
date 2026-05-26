@@ -8,6 +8,7 @@ declare module "next-auth" {
       clubId: string;
       clubSlug: string;
       setupCompleted: boolean;
+      linkedPlayerId?: string | null; // set for COACH users who also have a player profile
     } & DefaultSession["user"];
   }
 
@@ -16,6 +17,7 @@ declare module "next-auth" {
     clubId?: string;
     clubSlug?: string;
     setupCompleted?: boolean;
+    linkedPlayerId?: string | null;
   }
 }
 
@@ -26,5 +28,6 @@ declare module "next-auth/jwt" {
     clubId?: string;
     clubSlug?: string;
     setupCompleted?: boolean;
+    linkedPlayerId?: string | null;
   }
 }

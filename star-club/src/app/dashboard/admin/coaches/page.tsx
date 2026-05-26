@@ -7,11 +7,12 @@ import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CalendarDays, Plus } from "lucide-react";
+import { CalendarDays, Plus, Zap, Clock } from "lucide-react";
 import Link from "next/link";
 import NewInviteForm from "@/components/admin/new-invite-form";
 import { CoachEditButton, CoachDeleteButton, CoachResetPasswordButton } from "@/components/admin/coach-actions";
 import { CoachCategorySelect } from "@/components/admin/coach-category-select";
+import { CreatePlayerProfileButton, RemovePlayerProfileButton } from "@/components/admin/coach-player-profile-button";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -38,6 +39,7 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
       orderBy: { createdAt: "desc" },
       include: {
         _count: { select: { coachSessions: true } },
+        playerProfile: { select: { id: true, paymentExempt: true } },
       },
     }),
     db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } }),
@@ -180,6 +182,29 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
                           coachCategoryIds={coach.coachCategoryIds ?? "[]"}
                           categories={categories}
                         />
+                      </div>
+
+                      {/* Dual-role player profile */}
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        {(coach as any).playerProfile ? (
+                          <>
+                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg"
+                              style={{ background: "rgba(139,92,246,0.12)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.22)" }}>
+                              <Zap size={10} /> Jugador activo · exento de pagos
+                            </span>
+                            <RemovePlayerProfileButton coachId={coach.id} coachName={coach.name} />
+                          </>
+                        ) : (coach as any).requestedPlayerProfile ? (
+                          <>
+                            <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg"
+                              style={{ background: "rgba(255,184,0,0.08)", color: "rgba(255,184,0,0.85)", border: "1px solid rgba(255,184,0,0.20)" }}>
+                              <Clock size={10} /> Solicitud de perfil jugador
+                            </span>
+                            <CreatePlayerProfileButton coachId={coach.id} coachName={coach.name} />
+                          </>
+                        ) : (
+                          <CreatePlayerProfileButton coachId={coach.id} coachName={coach.name} />
+                        )}
                       </div>
                     </div>
                   </div>

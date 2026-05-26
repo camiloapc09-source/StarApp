@@ -9,10 +9,12 @@ import AvatarUpload from "@/components/profile/avatar-upload";
 import ChangePasswordForm from "@/components/profile/change-password-form";
 import { calculateLevel, LEVEL_TITLES } from "@/lib/utils";
 import { Zap, Shield } from "lucide-react";
+import { CoachPlayerBanner } from "@/components/coach/coach-player-banner";
 
 export default async function PlayerProfilePage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PLAYER") redirect("/");
+  const isCoachPlayer = session?.user?.role === "COACH";
+  if (!session?.user || (session.user.role !== "PLAYER" && !(isCoachPlayer && session.user.linkedPlayerId))) redirect("/");
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
@@ -46,6 +48,7 @@ export default async function PlayerProfilePage() {
   return (
     <div>
       <Header title="Mi perfil" subtitle="Gestiona tu información personal" />
+      {isCoachPlayer && <CoachPlayerBanner />}
       <div className="p-4 md:p-8 space-y-6 max-w-2xl">
         {/* Avatar header */}
         <Card>

@@ -7,12 +7,14 @@ import { Badge } from "@/components/ui/badge";
 import { XPProgressCard } from "@/components/gamification/xp-progress-card";
 import { calculateLevel } from "@/lib/utils";
 import { Trophy, Lock, CheckCircle2, Star } from "lucide-react";
+import { CoachPlayerBanner } from "@/components/coach/coach-player-banner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
 export default async function PlayerRewardsPage() {
   const session = await auth();
-  if (!session?.user || session.user.role !== "PLAYER") redirect("/");
+  const isCoachPlayer = session?.user?.role === "COACH";
+  if (!session?.user || (session.user.role !== "PLAYER" && !(isCoachPlayer && session.user.linkedPlayerId))) redirect("/");
 
   const player = await db.player.findUnique({
     where: { userId: session.user.id },
@@ -47,6 +49,7 @@ export default async function PlayerRewardsPage() {
         title="Mis recompensas"
         subtitle={`${earnedRewards.length} recompensa${earnedRewards.length !== 1 ? "s" : ""} desbloqueada${earnedRewards.length !== 1 ? "s" : ""}`}
       />
+      {isCoachPlayer && <CoachPlayerBanner />}
       <div className="p-4 md:p-8 space-y-6">
 
         {/* XP card */}
