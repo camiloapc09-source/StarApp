@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Clock, XCircle, Eye, EyeOff, Upload, Search, X, MessageCircle } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, Eye, EyeOff, Upload, Search, MessageCircle } from "lucide-react";
 
 interface Ticket {
   id: string;
@@ -13,7 +13,7 @@ interface Ticket {
   takenAt: string;
   paidAt: string | null;
   proofUrl: string | null;
-  takenBy: { name: string; id: string; phone?: string | null } | null;
+  takenBy: { name: string; id: string; phone: string | null } | null;
 }
 
 interface ParentSummary {
@@ -36,40 +36,103 @@ interface Props {
   raffleOpen: boolean;
 }
 
-function buildWhatsAppLink(phone: string | null | undefined, ticket: { number: number }, raffleName: string, clubName: string, ticketPrice: number): string | null {
-  const digits = phone?.replace(/[^0-9]/g, "");
-  if (!digits) return null;
-  const num = String(ticket.number).padStart(2, "0");
-  const msg = `Hola 😊, te comunicamos del *${clubName}* 🏆.\n\nTienes asignado el número *${num}* de la rifa *${raffleName}* con un valor de *$${ticketPrice.toLocaleString("es-CO")}*.\n\n¡Te agradecemos realizar tu pago a la mayor brevedad! 💚`;
-  return `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${encodeURIComponent(msg)}`;
+function buildWhatsAppUrl(
+  phone: string | null,
+  number: number,
+  ownerName: string | null | undefined,
+  raffleName: string,
+  clubName: string,
+  ticketPrice: number,
+  prize?: string | null
+): string | null {
+  if (!phone) return null;
+  let cleaned = phone.replace(/[\s\-\(\)\+]/g, "");
+  if (cleaned.length === 10 && !cleaned.startsWith("57")) cleaned = "57" + cleaned;
+  const num = String(number).padStart(2, "0");
+  const name = ownerName ?? "";
+  const lines = [
+    `Hola ${name}! Te recordamos que tienes el número *${num}* de la rifa *"${raffleName}"* del ${clubName} pendiente de pago.`,
+    ``,
+    `💰 Valor: *$${ticketPrice.toLocaleString("es-CO")} COP*`,
+    prize ? `🎁 Premio: ${prize}` : null,
+    ``,
+    `¡Gracias por tu apoyo! 🙏`,
+  ]
+    .filter((l) => l !== null)
+    .join("\n");
+  return `https://wa.me/${cleaned}?text=${encodeURIComponent(lines)}`;
 }
 
 export default function RaffleGridAdmin({
   raffleId, tickets, clubLogo, clubName, raffleName, prize, ticketPrice, drawDate, parents, raffleOpen,
 }: Props) {
   const router = useRouter();
+
+  // Detail panel state
   const [selected, setSelected] = useState<Ticket | null>(null);
   const [proofVisible, setProofVisible] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [releasing, setReleasing] = useState(false);
 
   // Assign panel state
-  const [assigningNumber, setAssigningNumber] = useState<number | null>(null);
+  const [assignMode, setAssignMode] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [assigning, setAssigning] = useState(false);
   const [assignError, setAssignError] = useState("");
 
   const ticketMap = new Map(tickets.map((t) => [t.number, t]));
 
-  // Filter parents by search query (matches parent name OR any child name)
+  // Filter parents client-side — matches parent name OR any child name
   const filteredParents = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return parents;
-    return parents.filter((p) =>
-      p.name.toLowerCase().includes(q) ||
-      p.children.some((c) => c.toLowerCase().includes(q))
+    return parents.filter(
+      (p) =>
+        p.name.toLowerCase().includes(q) ||
+        p.children.some((c) => c.toLowerCase().includes(q))
     );
   }, [parents, searchQuery]);
+
+  function openAssign(num: number) {
+    setAssignMode(num);
+    setSelected(null);
+    setSearchQuery("");
+    setAssignError("");
+  }
+
+  function closeAssign() {
+    setAssignMode(null);
+    setSearchQuery("");
+    setAssignError("");
+  }
+
+  async function handleAssign(parentId: string, parentName: string) {
+    if (assignMode === null) return;
+    setAssigning(true);
+    setAssignError("");
+    try {
+      const res = await fetch(`/api/rifas/${raffleId}/tickets`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          numbers: [assignMode],
+          ownerName: parentName,
+          assignToUserId: parentId,
+        }),
+      });
+      if (res.ok) {
+        closeAssign();
+        router.refresh();
+      } else {
+        const d = await res.json();
+        setAssignError(d.error ?? "Error al asignar");
+      }
+    } catch {
+      setAssignError("Error de red");
+    } finally {
+      setAssigning(false);
+    }
+  }
 
   async function handleVerify(number: number) {
     setVerifying(true);
@@ -94,35 +157,6 @@ export default function RaffleGridAdmin({
       const res = await fetch(`/api/rifas/${raffleId}/tickets/${number}/release`, { method: "DELETE" });
       if (res.ok) { setSelected(null); router.refresh(); }
     } finally { setReleasing(false); }
-  }
-
-  async function handleAssign(parentId: string, parentName: string) {
-    if (assigningNumber === null) return;
-    setAssigning(true);
-    setAssignError("");
-    try {
-      const res = await fetch(`/api/rifas/${raffleId}/tickets`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          numbers: [assigningNumber],
-          ownerName: parentName,
-          assignToUserId: parentId,
-        }),
-      });
-      if (res.ok) {
-        setAssigningNumber(null);
-        setSearchQuery("");
-        router.refresh();
-      } else {
-        const d = await res.json();
-        setAssignError(d.error ?? "Error al asignar");
-      }
-    } catch {
-      setAssignError("Error de red");
-    } finally {
-      setAssigning(false);
-    }
   }
 
   const totalTaken = tickets.length;
@@ -165,9 +199,9 @@ export default function RaffleGridAdmin({
           }}
         >
           {clubLogo ? (
-            <img src={clubLogo} alt={clubName} className="w-10 h-10 rounded-xl object-cover flex-shrink-0" style={{ border: "1px solid rgba(255,255,255,0.15)" }} />
+            <img src={clubLogo} alt={clubName} className="w-10 h-10 rounded-xl object-cover shrink-0" style={{ border: "1px solid rgba(255,255,255,0.15)" }} />
           ) : (
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black flex-shrink-0"
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black shrink-0"
               style={{ background: "rgba(139,92,246,0.25)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.40)" }}>
               {clubName.charAt(0).toUpperCase()}
             </div>
@@ -176,7 +210,7 @@ export default function RaffleGridAdmin({
             <p className="font-black text-sm tracking-wide" style={{ color: "#DEC4FF" }}>{raffleName}</p>
             <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>{clubName}</p>
           </div>
-          <div className="text-right flex-shrink-0">
+          <div className="text-right shrink-0">
             <p className="text-[11px] font-bold" style={{ color: "var(--success)" }}>
               ${ticketPrice.toLocaleString("es-CO")}
             </p>
@@ -198,7 +232,7 @@ export default function RaffleGridAdmin({
         <div className="p-4">
           {raffleOpen && (
             <p className="text-[10px] mb-3 text-center" style={{ color: "rgba(255,255,255,0.35)" }}>
-              Toca un número libre para asignarlo a un padre
+              Toca un número libre para asignarlo a un acudiente
             </p>
           )}
           <div className="grid gap-[5px]" style={{ gridTemplateColumns: "repeat(10, 1fr)" }}>
@@ -206,8 +240,7 @@ export default function RaffleGridAdmin({
               const ticket = ticketMap.get(i);
               const isPaid = ticket?.status === "PAID";
               const isTaken = !!ticket && !isPaid;
-              const isFree = !ticket;
-              const isBeingAssigned = assigningNumber === i;
+              const isBeingAssigned = assignMode === i;
               const label = String(i).padStart(2, "0");
 
               return (
@@ -215,13 +248,12 @@ export default function RaffleGridAdmin({
                   key={i}
                   onClick={() => {
                     if (ticket) {
-                      setAssigningNumber(null);
+                      closeAssign();
                       setSelected(ticket);
                     } else if (raffleOpen) {
                       setSelected(null);
-                      setAssigningNumber(isBeingAssigned ? null : i);
-                      setSearchQuery("");
-                      setAssignError("");
+                      if (isBeingAssigned) closeAssign();
+                      else openAssign(i);
                     }
                   }}
                   className="aspect-square flex items-center justify-center rounded-lg text-[11px] font-bold transition-all active:scale-95"
@@ -295,7 +327,7 @@ export default function RaffleGridAdmin({
       </div>
 
       {/* Assign panel — shown when a free number is selected */}
-      {assigningNumber !== null && (
+      {assignMode !== null && (
         <div
           className="rounded-2xl border p-5 space-y-4"
           style={{ background: "rgba(8,6,28,0.95)", borderColor: "rgba(139,92,246,0.30)" }}
@@ -303,26 +335,26 @@ export default function RaffleGridAdmin({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0"
                 style={{ background: "rgba(139,92,246,0.20)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.40)" }}
               >
-                {String(assigningNumber).padStart(2, "0")}
+                {String(assignMode).padStart(2, "0")}
               </span>
               <div>
                 <p className="text-sm font-bold" style={{ color: "#DEC4FF" }}>
-                  Asignar número {String(assigningNumber).padStart(2, "0")}
+                  Asignar número {String(assignMode).padStart(2, "0")}
                 </p>
                 <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
-                  Busca por nombre del padre o del deportista
+                  Busca por nombre del acudiente o del hijo
                 </p>
               </div>
             </div>
             <button
-              onClick={() => { setAssigningNumber(null); setSearchQuery(""); setAssignError(""); }}
+              onClick={closeAssign}
               className="p-1.5 rounded-lg transition-colors"
               style={{ color: "var(--text-muted)", background: "rgba(255,255,255,0.05)" }}
             >
-              <X size={16} />
+              <XCircle size={16} />
             </button>
           </div>
 
@@ -334,7 +366,7 @@ export default function RaffleGridAdmin({
               autoFocus
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Nombre del padre o del deportista..."
+              placeholder="Nombre del acudiente o del deportista..."
               className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
               style={{
                 background: "rgba(255,255,255,0.06)",
@@ -348,7 +380,7 @@ export default function RaffleGridAdmin({
           <div className="space-y-1.5 max-h-64 overflow-y-auto">
             {filteredParents.length === 0 ? (
               <p className="text-center py-6 text-sm" style={{ color: "var(--text-muted)" }}>
-                No se encontraron padres con ese nombre
+                No se encontraron acudientes con ese nombre
               </p>
             ) : (
               filteredParents.map((parent) => (
@@ -361,8 +393,14 @@ export default function RaffleGridAdmin({
                     background: "rgba(255,255,255,0.04)",
                     border: "1px solid rgba(255,255,255,0.07)",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(139,92,246,0.12)"; e.currentTarget.style.borderColor = "rgba(139,92,246,0.25)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "rgba(139,92,246,0.12)";
+                    e.currentTarget.style.borderColor = "rgba(139,92,246,0.25)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "rgba(255,255,255,0.04)";
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
+                  }}
                 >
                   <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
                     {parent.name}
@@ -449,13 +487,25 @@ export default function RaffleGridAdmin({
             </p>
           )}
 
+          {/* Actions */}
           <div className="flex gap-2 pt-1 flex-wrap">
             {selected.status === "TAKEN" && (() => {
-              const waPhone = selected.takenBy?.phone ?? parents.find((p) => p.id === selected.takenById)?.phone ?? null;
-              const waLink = buildWhatsAppLink(waPhone, selected, raffleName, clubName, ticketPrice);
-              return waLink ? (
+              const waPhone =
+                selected.takenBy?.phone ??
+                parents.find((p) => p.id === selected.takenById)?.phone ??
+                null;
+              const waUrl = buildWhatsAppUrl(
+                waPhone,
+                selected.number,
+                selected.ownerName ?? selected.takenBy?.name,
+                raffleName,
+                clubName,
+                ticketPrice,
+                prize
+              );
+              return waUrl ? (
                 <a
-                  href={waLink}
+                  href={waUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
@@ -465,6 +515,7 @@ export default function RaffleGridAdmin({
                 </a>
               ) : null;
             })()}
+
             {selected.status === "TAKEN" && (
               <button
                 onClick={() => handleVerify(selected.number)}
