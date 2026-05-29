@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Clock, XCircle, Eye, EyeOff, Upload, Search, UserPlus, X } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, Eye, EyeOff, Upload, Search, X, MessageCircle } from "lucide-react";
 
 interface Ticket {
   id: string;
@@ -13,13 +13,14 @@ interface Ticket {
   takenAt: string;
   paidAt: string | null;
   proofUrl: string | null;
-  takenBy: { name: string; id: string } | null;
+  takenBy: { name: string; id: string; phone?: string | null } | null;
 }
 
 interface ParentSummary {
-  id: string;       // User ID
-  name: string;     // Parent name
-  children: string[]; // Children names
+  id: string;
+  name: string;
+  phone: string | null;
+  children: string[];
 }
 
 interface Props {
@@ -33,6 +34,14 @@ interface Props {
   drawDate?: string | null;
   parents: ParentSummary[];
   raffleOpen: boolean;
+}
+
+function buildWhatsAppLink(phone: string | null | undefined, ticket: { number: number }, raffleName: string, clubName: string, ticketPrice: number): string | null {
+  const digits = phone?.replace(/[^0-9]/g, "");
+  if (!digits) return null;
+  const num = String(ticket.number).padStart(2, "0");
+  const msg = `Hola 😊, te comunicamos del *${clubName}* 🏆.\n\nTienes asignado el número *${num}* de la rifa *${raffleName}* con un valor de *$${ticketPrice.toLocaleString("es-CO")}*.\n\n¡Te agradecemos realizar tu pago a la mayor brevedad! 💚`;
+  return `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${encodeURIComponent(msg)}`;
 }
 
 export default function RaffleGridAdmin({
@@ -440,7 +449,21 @@ export default function RaffleGridAdmin({
             </p>
           )}
 
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2 pt-1 flex-wrap">
+            {selected.status === "TAKEN" && (() => {
+              const waLink = buildWhatsAppLink(selected.takenBy?.phone, selected, raffleName, clubName, ticketPrice);
+              return waLink ? (
+                <a
+                  href={waLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 py-2.5 px-3 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+                  style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}
+                >
+                  <MessageCircle size={13} /> Cobrar por WhatsApp
+                </a>
+              ) : null;
+            })()}
             {selected.status === "TAKEN" && (
               <button
                 onClick={() => handleVerify(selected.number)}

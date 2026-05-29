@@ -41,7 +41,7 @@ export default async function AdminRifaDetailPage({
             paidAt: true,
             proofUrl: true,
             takenById: true,
-            takenBy: { select: { name: true, id: true } },
+            takenBy: { select: { name: true, id: true, phone: true } },
           },
           orderBy: { number: "asc" },
         },
@@ -52,7 +52,8 @@ export default async function AdminRifaDetailPage({
       where: { user: { clubId } },
       select: {
         userId: true,
-        user: { select: { name: true } },
+        user: { select: { name: true, phone: true } },
+        phone: true,
         children: {
           select: {
             player: { select: { user: { select: { name: true } } } },
@@ -65,6 +66,7 @@ export default async function AdminRifaDetailPage({
   const parents = rawParents.map((p) => ({
     id: p.userId,
     name: p.user.name,
+    phone: p.phone ?? p.user.phone ?? null,
     children: p.children.map((c) => c.player.user.name).filter(Boolean) as string[],
   }));
 
@@ -152,7 +154,7 @@ export default async function AdminRifaDetailPage({
           ticketPrice={raffle.ticketPrice}
           drawDate={raffle.drawDate?.toISOString() ?? null}
           parents={parents}
-          raffleOpen={raffle.status === "OPEN"}
+          raffleOpen={true}
         />
 
         {/* Taken list */}
@@ -197,6 +199,24 @@ export default async function AdminRifaDetailPage({
                         Comprobante ✓
                       </span>
                     )}
+                    {t.status === "TAKEN" && (() => {
+                      const phone = t.takenBy?.phone ?? parents.find((p) => p.id === t.takenById)?.phone ?? null;
+                      const digits = phone?.replace(/[^0-9]/g, "");
+                      if (!digits) return null;
+                      const num = String(t.number).padStart(2, "0");
+                      const msg = `Hola 😊, te comunicamos del *${club?.name ?? "el club"}* 🏆.\n\nTienes asignado el número *${num}* de la rifa *${raffle.title}* con un valor de *$${raffle.ticketPrice.toLocaleString("es-CO")}*.\n\n¡Te agradecemos realizar tu pago a la mayor brevedad! 💚`;
+                      return (
+                        <a
+                          href={`https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${encodeURIComponent(msg)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[10px] px-2 py-1 rounded-lg font-semibold flex items-center gap-1"
+                          style={{ background: "rgba(37,211,102,0.10)", color: "#25D366", border: "1px solid rgba(37,211,102,0.20)" }}
+                        >
+                          💬 Cobrar
+                        </a>
+                      );
+                    })()}
                     <Badge variant={t.status === "PAID" ? "success" : "warning"}>
                       {t.status === "PAID" ? "Pagado" : "Por cobrar"}
                     </Badge>

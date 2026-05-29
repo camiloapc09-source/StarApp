@@ -18,7 +18,6 @@ export async function POST(
   });
 
   if (!raffle || raffle.clubId !== clubId) return apiError("Rifa no encontrada", 404);
-  if (raffle.status !== "OPEN") return apiError("Esta rifa no está abierta", 400);
 
   const body = await req.json();
   const { numbers, ownerName, assignToUserId } = body as {
@@ -30,10 +29,13 @@ export async function POST(
   if (!Array.isArray(numbers) || numbers.length === 0) return apiError("Debes seleccionar al menos un número", 400);
   if (numbers.some((n) => typeof n !== "number" || n < 0 || n > 99)) return apiError("Números inválidos (0-99)", 400);
 
+  const isAdmin = session.user.role === "ADMIN";
+  if (!isAdmin && raffle.status !== "OPEN") return apiError("Esta rifa no está abierta", 400);
+
   // Resolve target user (admin can assign to someone else)
   let targetUserId = session.user.id;
   let targetUserName = session.user.name ?? "Usuario";
-  if (session.user.role === "ADMIN" && assignToUserId) {
+  if (isAdmin && assignToUserId) {
     const targetUser = await db.user.findFirst({
       where: { id: assignToUserId, clubId },
       select: { id: true, name: true },
