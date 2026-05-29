@@ -451,7 +451,8 @@ export default function RaffleGridAdmin({
 
           <div className="flex gap-2 pt-1 flex-wrap">
             {selected.status === "TAKEN" && (() => {
-              const waLink = buildWhatsAppLink(selected.takenBy?.phone, selected, raffleName, clubName, ticketPrice);
+              const waPhone = selected.takenBy?.phone ?? parents.find((p) => p.id === selected.takenById)?.phone ?? null;
+              const waLink = buildWhatsAppLink(waPhone, selected, raffleName, clubName, ticketPrice);
               return waLink ? (
                 <a
                   href={waLink}
