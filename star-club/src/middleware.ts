@@ -39,13 +39,8 @@ export default auth((req) => {
     }
 
     // All parents must complete account setup (email, password, link children) once
-    if (
-      role === "parent" &&
-      !pathname.startsWith("/dashboard/parent/setup") &&
-      !(req.auth?.user as any)?.setupCompleted
-    ) {
-      return NextResponse.redirect(new URL("/dashboard/parent/setup", req.nextUrl));
-    }
+    // NOTE: redirect is intentionally removed — setup is now voluntary (shown as banner in dashboard).
+    // Forced redirect caused login failures for seeded accounts that never went through setup.
   }
 
   // Public API routes (no auth required)

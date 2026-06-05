@@ -14,6 +14,7 @@ import { es } from "date-fns/locale";
 import Link from "next/link";
 import PaymentSubmitForm from "@/components/parent/payment-submit-form";
 import { UpcomingSessionsCard } from "@/components/shared/upcoming-sessions-card";
+import SetupBanner from "@/components/parent/setup-banner";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -73,10 +74,13 @@ export default async function ParentDashboard({
     where: { userId: session.user.id, isRead: false },
   });
 
+  const setupCompleted = (session.user as { setupCompleted?: boolean }).setupCompleted ?? false;
+
   if (!parent || parent.children.length === 0) {
     return (
       <div>
         <Header title="Inicio" notificationCount={unreadNotifications} />
+        {!setupCompleted && <SetupBanner />}
         <div className="p-4 md:p-8 text-center py-16">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
             style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.2)" }}>
@@ -119,6 +123,7 @@ export default async function ParentDashboard({
   return (
     <div>
       <Header title="Inicio" notificationCount={unreadNotifications} />
+      {!setupCompleted && <SetupBanner />}
 
       <div className="p-4 md:p-8 space-y-5">
 
