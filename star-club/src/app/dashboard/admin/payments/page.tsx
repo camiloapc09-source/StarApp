@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { Header } from "@/components/dashboard/header";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { format, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
@@ -15,6 +14,7 @@ import BulkPaymentButton from "@/components/admin/bulk-payment-button";
 import MarkOverdueButton from "@/components/admin/mark-overdue-button";
 import ProofViewer from "@/components/admin/proof-viewer";
 import BulkMarkReceivedPanel from "@/components/admin/bulk-mark-received-panel";
+import CompletedPaymentsAccordion from "@/components/admin/completed-payments-accordion";
 import { Suspense } from "react";
 import PaymentSearch from "@/components/admin/payment-search";
 
@@ -146,6 +146,17 @@ export default async function AdminPaymentsPage({
   )) {
     if (!lastPaidMap.has(p.playerId)) lastPaidMap.set(p.playerId, p);
   }
+
+  // Detect duplicates: same player with 2+ active payments in the same calendar month
+  const activePayments = [...submitted, ...pending, ...overdue];
+  const dupMap = new Map<string, typeof payments>();
+  for (const p of activePayments) {
+    const d = new Date(p.dueDate);
+    const key = `${p.playerId}-${d.getFullYear()}-${d.getMonth()}`;
+    if (!dupMap.has(key)) dupMap.set(key, []);
+    dupMap.get(key)!.push(p);
+  }
+  const duplicateGroups = [...dupMap.values()].filter((g) => g.length > 1);
 
   // 10-day rule: split pending into action-required vs scheduled
   const in10Days = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
@@ -316,6 +327,36 @@ export default async function AdminPaymentsPage({
           </Link>
         </div>
 
+        {/* DUPLICADOS — alerta si hay pagos duplicados en el mismo mes */}
+        {duplicateGroups.length > 0 && (
+          <div
+            className="rounded-xl px-5 py-4 space-y-2"
+            style={{ background: "rgba(255,184,0,0.07)", border: "1px solid rgba(255,184,0,0.25)" }}
+          >
+            <p className="text-xs font-bold tracking-wide uppercase" style={{ color: "var(--warning)" }}>
+              ⚠ Pagos duplicados detectados
+            </p>
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
+              Los siguientes jugadores tienen más de un cobro activo para el mismo mes. Esto puede ocurrir si un pago fue reportado (En revisión) y luego se generó otro. Revisa y elimina el sobrante.
+            </p>
+            <div className="space-y-1 pt-1">
+              {duplicateGroups.map((group) => {
+                const player = group[0].player.user.name;
+                const d = new Date(group[0].dueDate);
+                const monthLabel = d.toLocaleDateString("es-CO", { month: "long", year: "numeric" });
+                return (
+                  <p key={`${group[0].playerId}-${d.getFullYear()}-${d.getMonth()}`} className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>
+                    · {player} — {group.length} cobros para {monthLabel}{" "}
+                    <span style={{ color: "var(--text-muted)" }}>
+                      ({group.map((p) => p.status).join(", ")})
+                    </span>
+                  </p>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* POR VERIFICAR */}
         {submitted.length > 0 && (
           <Card className="p-0 overflow-hidden">
@@ -481,36 +522,19 @@ export default async function AdminPaymentsPage({
           </Card>
         )}
 
-        {/* PAGADOS */}
+        {/* PAGADOS — agrupados por mes con acordeón */}
         {completed.length > 0 && (
-          <Card className="p-0 overflow-hidden">
-            <div className="px-6 py-4 border-b flex items-center gap-3" style={{ borderColor: "var(--border-primary)" }}>
-              <CheckCircle2 size={14} style={{ color: "var(--success)" }} />
-              <h2 className="text-sm font-semibold">Pagos confirmados - {completed.length}</h2>
-            </div>
-            <div className="divide-y" style={{ borderColor: "var(--border-primary)" }}>
-              {[...completed]
-                .sort((a, b) => new Date(b.paidAt ?? b.dueDate).getTime() - new Date(a.paidAt ?? a.dueDate).getTime())
-                .map((payment) => (
-                  <div key={payment.id} className="flex items-center gap-4 px-6 py-3">
-                    <Avatar name={payment.player.user.name} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{payment.player.user.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{payment.concept}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold">${payment.amount.toLocaleString("es-CO")}</p>
-                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                        {payment.paymentMethod === "CASH" ? "Efectivo " : payment.paymentMethod === "TRANSFER" ? "Transferencia " : payment.paymentMethod === "NEQUI" ? "Nequi " : ""}
-                        {format(new Date(payment.paidAt ?? payment.dueDate), "dd MMM yyyy", { locale: es })}
-                      </p>
-                    </div>
-                    <Badge variant="success">Pagado</Badge>
-                    <PaymentDeleteButton paymentId={payment.id} playerName={payment.player.user.name} />
-                  </div>
-                ))}
-            </div>
-          </Card>
+          <CompletedPaymentsAccordion
+            payments={completed.map((p) => ({
+              id: p.id,
+              amount: p.amount,
+              concept: p.concept,
+              paidAt: p.paidAt,
+              dueDate: p.dueDate,
+              paymentMethod: p.paymentMethod,
+              player: { user: { name: p.player.user.name, avatar: p.player.user.avatar } },
+            }))}
+          />
         )}
 
         {actionItems.length === 0 && scheduled.length === 0 && completed.length === 0 && submitted.length === 0 && (

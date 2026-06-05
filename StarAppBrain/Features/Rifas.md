@@ -47,17 +47,21 @@ model RaffleTicket {
 ```
 Admin crea rifa (título, premio, precio/número, fecha sorteo)
         ↓
-Padre o Entrenador entra a su /rifas → ve cartón 10×10 (00-99)
+[Flujo padre]  Padre entra a su /rifas → toca número libre → TAKEN
+               Sube comprobante de pago (imagen JPG/PNG/WEBP, max 5MB)
         ↓
-Usuario toca número libre → queda en TAKEN
+[Flujo admin]  Admin entra a /admin/rifas/[id] → toca número libre
+               → panel de asignación con buscador (padre o nombre del hijo)
+               → selecciona acudiente → número queda asignado en TAKEN
         ↓
-Usuario sube comprobante de pago (imagen JPG/PNG/WEBP, max 5MB)
+Admin ve cartón con colores → toca número amarillo
         ↓
-Admin ve en /admin/rifas/[id] → cartón con colores
+Botón "Cobrar por WhatsApp" → abre WhatsApp con mensaje pre-redactado
+                              (número, rifa, club, precio, premio)
         ↓
-Admin toca número amarillo → puede "Marcar pagado" → PAID (verde)
+Admin toca "Marcar pagado" → PAID (verde)
         ↓
-(opcional) Admin puede revertir PAID → TAKEN, o liberar número TAKEN → libre
+(opcional) Revertir PAID → TAKEN, o liberar número TAKEN → libre
 ```
 
 ---
@@ -78,7 +82,8 @@ Admin toca número amarillo → puede "Marcar pagado" → PAID (verde)
 
 | Estado | Color | Descripción |
 |---|---|---|
-| Libre | Gris tenue | Disponible |
+| Libre | Gris tenue | Disponible — click para asignar a un acudiente |
+| Seleccionado (asignando) | Violeta brillante | Número libre en proceso de asignación |
 | TAKEN | Amarillo | Reservado, pendiente de pago |
 | PAID | Verde | Pagado y verificado |
 
@@ -126,11 +131,14 @@ Transición: OPEN → CLOSED → FINISHED (solo admin, desde el botón en la UI)
 - Solo 1 ticket por número por rifa (unique en DB)
 - Solo el dueño del ticket o un ADMIN puede liberar un número
 - No se puede liberar un número en estado PAID
-- Rifa debe estar OPEN para que se puedan tomar números
+- Rifa debe estar OPEN para que padres/coaches tomen números; ADMIN puede asignar igual
 - Comprobante: solo imágenes JPG/PNG/WEBP, máx 5MB, guardado como base64 en DB
 - El logo del club se muestra en el encabezado del cartón
 - Multi-tenant: siempre filtrado por `clubId` del token de sesión
 - COACH y PARENT comparten el mismo componente `RafflePickForm`
+- Admin asigna a padres con `assignToUserId` (body del POST a `/tickets`)
+- Botón WhatsApp "Cobrar" usa `takenBy.phone` o fallback del array `parents` cargado en página
+- Búsqueda de acudientes: client-side con `useMemo`, filtra por nombre del padre O nombre del hijo
 
 ---
 

@@ -44,7 +44,7 @@ export async function PATCH(
         select: {
           id: true, userId: true, paymentDay: true, monthlyAmount: true,
           payments: {
-            where: { status: { in: ["PENDING", "OVERDUE"] } },
+            where: { status: { in: ["PENDING", "OVERDUE", "SUBMITTED"] } },
             orderBy: { dueDate: "desc" },
             take: 1,
           },

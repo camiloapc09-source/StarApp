@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:playwright.dev)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm --version)",
+      "Bash(claude mcp *)",
+      "Bash(npx playwright *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3000)",
+      "Bash(dir /s /b)"
+    ]
+  },
+  "enabledMcpjsonServers": ["playwright"]
+}
