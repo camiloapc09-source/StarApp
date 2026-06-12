@@ -12,6 +12,7 @@ import Link from "next/link";
 import { calculateLevel } from "@/lib/utils";
 import NewInviteForm from "@/components/admin/new-invite-form";
 import AvatarReviewList from "@/components/admin/avatar-review-list";
+import BulkResetParentsButton from "@/components/admin/bulk-reset-parents-button";
 
 type Props = { searchParams: Promise<{ categoryId?: string; gender?: string; zone?: string }> };
 
@@ -34,7 +35,7 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
   if (clubHasGenderedPlayers && (selectedGender === "F" || selectedGender === "M")) playerWhere.gender = selectedGender;
   if (selectedZone) playerWhere.zone = selectedZone;
 
-  const [players, categories, pendingAvatars, club] = await Promise.all([
+  const [players, categories, pendingAvatars, club, playersNoParent, parentCount] = await Promise.all([
     db.player.findMany({
       where: playerWhere,
       orderBy: { createdAt: "desc" },
@@ -51,6 +52,12 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
       select: { id: true, name: true, avatarPending: true },
     }),
     db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true, name: true } }),
+    db.player.findMany({
+      where: { clubId, status: "ACTIVE", parentLinks: { none: { status: "ACTIVE" } } },
+      select: { id: true, user: { select: { name: true } }, category: { select: { name: true } } },
+      orderBy: { user: { name: "asc" } },
+    }),
+    db.user.count({ where: { clubId, role: "PARENT" } }),
   ]);
 
   const zones = club?.zonePrices ? Object.keys(club.zonePrices as Record<string, unknown>) : [];
@@ -76,6 +83,48 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
           <h3 className="text-sm font-semibold mb-4">Generar código de registro</h3>
           <NewInviteForm defaultRole="PLAYER" hideRoleSelect={true} />
         </Card>
+
+        {/* Players without active parent */}
+        {playersNoParent.length > 0 && (
+          <Card className="p-5">
+            <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
+              <div className="flex items-center gap-2">
+                <UserX size={15} style={{ color: "#F87171" }} />
+                <h3 className="text-sm font-semibold">
+                  Sin acudiente vinculado ({playersNoParent.length})
+                </h3>
+              </div>
+              {parentCount > 0 && (
+                <BulkResetParentsButton parentCount={parentCount} />
+              )}
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {playersNoParent.map((p) => (
+                <Link key={p.id} href={`/dashboard/admin/players/${p.id}`}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all hover:opacity-80"
+                  style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.12)" }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold"
+                    style={{ background: "rgba(239,68,68,0.15)", color: "#F87171" }}>
+                    {p.user.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate">{p.user.name}</p>
+                    {p.category && (
+                      <p className="text-xs truncate" style={{ color: "var(--text-muted)" }}>{p.category.name}</p>
+                    )}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Bulk reset parents — show even when all players have parents */}
+        {playersNoParent.length === 0 && parentCount > 0 && (
+          <div className="flex justify-end">
+            <BulkResetParentsButton parentCount={parentCount} />
+          </div>
+        )}
 
         {/* Pending avatar approvals */}
         {pendingAvatars.length > 0 && (
