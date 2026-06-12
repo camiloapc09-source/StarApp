@@ -183,6 +183,7 @@ model ParentPlayer {
   parent   Parent @relation(fields: [parentId], references: [id], onDelete: Cascade)
   playerId String
   player   Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  status   String @default("ACTIVE") // ACTIVE | PENDING
 
   @@unique([parentId, playerId])
 }

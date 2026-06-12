@@ -20,6 +20,7 @@ import InviteParentButton from "@/components/admin/invite-parent-button";
 import LinkExistingParentButton from "@/components/admin/link-existing-parent-button";
 import FixParentEmailButton from "@/components/admin/fix-parent-email-button";
 import CreateParentButton from "@/components/admin/create-parent-button";
+import ApproveLinkRequestButton from "@/components/admin/approve-link-request-button";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -56,6 +57,9 @@ export default async function PlayerProfilePage({ params }: Props) {
   const zones = Object.keys(zonePrices);
 
   if (!player) redirect("/dashboard/admin/players");
+
+  const activeLinks = player.parentLinks.filter((l) => l.status === "ACTIVE" || !l.status);
+  const pendingLinks = player.parentLinks.filter((l) => l.status === "PENDING");
 
   const level = calculateLevel(player.xp);
   const presentCount = player.attendances.filter((a) => a.status === "PRESENT").length;
@@ -244,13 +248,14 @@ export default async function PlayerProfilePage({ params }: Props) {
               <InviteParentButton playerId={player.id} playerName={player.user.name} />
             </div>
           </div>
-          {player.parentLinks.length === 0 ? (
+          {activeLinks.length === 0 && pendingLinks.length === 0 ? (
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
               Sin acudiente vinculado. Vincula uno existente o genera un enlace de invitación.
             </p>
           ) : (
             <div className="space-y-5">
-              {player.parentLinks.map((link) => {
+              {/* Active links */}
+              {activeLinks.map((link) => {
                 const emailBroken = !link.parent.user.email.includes("@");
                 return (
                   <div key={link.id} className="rounded-xl p-4 space-y-3"
@@ -283,6 +288,39 @@ export default async function PlayerProfilePage({ params }: Props) {
                   </div>
                 );
               })}
+
+              {/* Pending link requests */}
+              {pendingLinks.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold mb-3 uppercase tracking-wider" style={{ color: "rgba(255,184,0,0.80)" }}>
+                    Solicitudes pendientes ({pendingLinks.length})
+                  </p>
+                  <div className="space-y-3">
+                    {pendingLinks.map((link) => (
+                      <div
+                        key={link.id}
+                        className="rounded-xl p-4 flex items-center justify-between gap-4 flex-wrap"
+                        style={{
+                          background: "rgba(255,184,0,0.04)",
+                          border: "1px solid rgba(255,184,0,0.18)",
+                        }}
+                      >
+                        <div>
+                          <p className="text-sm font-semibold">{link.parent.user.name}</p>
+                          <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                            {link.parent.user.email}
+                          </p>
+                        </div>
+                        <ApproveLinkRequestButton
+                          linkId={link.id}
+                          parentName={link.parent.user.name}
+                          onDone={() => { if (typeof window !== "undefined") window.location.reload(); }}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </Card>

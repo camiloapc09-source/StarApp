@@ -15,6 +15,7 @@ import Link from "next/link";
 import PaymentSubmitForm from "@/components/parent/payment-submit-form";
 import { UpcomingSessionsCard } from "@/components/shared/upcoming-sessions-card";
 import SetupBanner from "@/components/parent/setup-banner";
+import LinkChildButton from "@/components/parent/link-child-button";
 
 function getGreeting() {
   const h = new Date().getHours();
@@ -37,6 +38,7 @@ export default async function ParentDashboard({
     where: { userId: session.user.id },
     include: {
       children: {
+        where: { status: "ACTIVE" },
         include: {
           player: {
             include: {
@@ -87,9 +89,12 @@ export default async function ParentDashboard({
             <Shield size={28} style={{ color: "#A78BFA" }} />
           </div>
           <p className="font-semibold mb-2">Sin jugador vinculado</p>
-          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Tu cuenta no está vinculada a ningún jugador. Contacta al administrador.
+          <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
+            Tu cuenta no está vinculada a ningún jugador. Solicita vincularte abajo o contacta al administrador.
           </p>
+          <div className="flex justify-center">
+            <LinkChildButton />
+          </div>
         </div>
       </div>
     );
@@ -146,6 +151,11 @@ export default async function ParentDashboard({
               ? `${player.user.name} tiene ${overduePayments.length} pago${overduePayments.length !== 1 ? "s" : ""} vencido${overduePayments.length !== 1 ? "s" : ""} — revísalos hoy.`
               : `Todo al día · Asistencia de ${player.user.name}: ${attendanceRate}% este mes.`}
           </p>
+        </div>
+
+        {/* Link child button — always visible */}
+        <div className="flex justify-end">
+          <LinkChildButton />
         </div>
 
         {/* Multi-child selector — only shown if parent has more than 1 child */}

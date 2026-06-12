@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Zap, Plus, AlertTriangle, Clock } from "lucide-react";
+import { Zap, Plus, AlertTriangle, Clock, UserX } from "lucide-react";
 import Link from "next/link";
 import { calculateLevel } from "@/lib/utils";
 import NewInviteForm from "@/components/admin/new-invite-form";
@@ -42,6 +42,7 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
         user: true,
         category: true,
         attendances: { select: { status: true } },
+        _count: { select: { parentLinks: true } },
       },
     }),
     db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } }),
@@ -306,6 +307,14 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
                       {ageCategoryWarning && (
                         <div className="text-center" title={`Edad no coincide con categoría ${player.category?.name}`}>
                           <AlertTriangle size={15} style={{ color: "var(--warning)" }} />
+                        </div>
+                      )}
+                      {player._count.parentLinks === 0 && (
+                        <div
+                          className="text-center relative z-10"
+                          title="Sin acudiente vinculado"
+                        >
+                          <UserX size={15} style={{ color: "#F87171", opacity: 0.75 }} />
                         </div>
                       )}
 
