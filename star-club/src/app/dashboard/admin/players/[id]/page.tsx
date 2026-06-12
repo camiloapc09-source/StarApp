@@ -19,6 +19,7 @@ import PlayerStatusToggle from "@/components/admin/player-status-toggle";
 import InviteParentButton from "@/components/admin/invite-parent-button";
 import LinkExistingParentButton from "@/components/admin/link-existing-parent-button";
 import FixParentEmailButton from "@/components/admin/fix-parent-email-button";
+import CreateParentButton from "@/components/admin/create-parent-button";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -238,6 +239,7 @@ export default async function PlayerProfilePage({ params }: Props) {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">Acudiente / Tutor</h3>
             <div className="flex items-center gap-2 flex-wrap">
+              <CreateParentButton playerId={player.id} playerName={player.user.name} />
               <LinkExistingParentButton playerId={player.id} playerName={player.user.name} />
               <InviteParentButton playerId={player.id} playerName={player.user.name} />
             </div>

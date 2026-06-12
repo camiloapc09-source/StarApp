@@ -123,8 +123,14 @@ export async function POST(req: NextRequest) {
   let parentLoginEmailResult: string | undefined;
 
   if (parentName && (parentEmail || documentNumber)) {
-    // Use parentEmail as login if provided, else fall back to documentNumber
     const parentLoginEmail = parentEmail || `${documentNumber}@club.local`;
+    // Prevent the parent from sharing the player's own email — it would link the player to themselves
+    if (parentLoginEmail === email) {
+      return apiError(
+        "El correo del acudiente no puede ser el mismo que el del jugador. Usa un correo distinto para el acudiente.",
+        400
+      );
+    }
     // Generate a random temporary password — NOT the document number
     const tempPassword = randomBytes(5).toString("hex"); // 10 chars
     const parentHashed = await hash(tempPassword, 12);
