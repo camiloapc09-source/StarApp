@@ -38,7 +38,7 @@ export default async function ParentDashboard({
     where: { userId: session.user.id },
     include: {
       children: {
-        where: { status: "ACTIVE" },
+        where: { NOT: { status: "PENDING" } },
         include: {
           player: {
             include: {

@@ -53,7 +53,7 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
     }),
     db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true, name: true } }),
     db.player.findMany({
-      where: { clubId, status: "ACTIVE", parentLinks: { none: { status: "ACTIVE" } } },
+      where: { clubId, status: "ACTIVE", parentLinks: { none: {} } },
       select: { id: true, user: { select: { name: true } }, category: { select: { name: true } } },
       orderBy: { user: { name: "asc" } },
     }),
