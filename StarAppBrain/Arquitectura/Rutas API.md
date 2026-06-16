@@ -84,7 +84,8 @@ Todos los endpoints viven en `/api/`. Requieren sesión autenticada salvo los de
 | POST | `/api/admin/payments/bulk-confirm` | Confirmar pagos en lote |
 | GET | `/api/admin/payments/export` | Exportar pagos CSV |
 | POST | `/api/admin/players/notes` | Notas de entrenador |
-| POST | `/api/admin/players/reset-password` | Resetear contraseña de jugador |
+| POST | `/api/admin/players/reset-password` | Resetear contraseña de jugador/acudiente (individual) |
+| POST | `/api/admin/parents/bulk-reset` | Reset masivo: acudientes sin configurar → clave temp `123456789` |
 | GET | `/api/admin/uniforms/export` | Exportar pedidos de uniformes |
 
 ## Perfil

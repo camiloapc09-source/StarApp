@@ -102,7 +102,18 @@ export async function PATCH(
     },
   });
 
-  return apiOk(updated);
+  // Beca total (100%): el jugador no debe deber mensualidad. Cancelamos sus
+  // cobros abiertos (pendientes/vencidos/por verificar) para que no quede deuda fantasma.
+  // Los pagos ya COMPLETADOS quedan intactos como historial.
+  let canceledPayments = 0;
+  if (parsed.data.scholarshipPct === 100) {
+    const result = await db.payment.deleteMany({
+      where: { playerId: id, status: { in: ["PENDING", "OVERDUE", "SUBMITTED"] } },
+    });
+    canceledPayments = result.count;
+  }
+
+  return apiOk({ ...updated, canceledPayments });
 }
 
 export async function DELETE(

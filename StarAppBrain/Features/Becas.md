@@ -66,6 +66,24 @@ scholarshipPct: z.number().int().min(1).max(100).optional().nullable()
 
 ---
 
+## Beca 100% cancela la deuda abierta (desde 2026-06-16)
+
+La generación masiva de pagos (`PUT /api/payments`) **ya saltaba** a los jugadores con `scholarshipPct === 100` — pero si a un jugador se le marcaba beca total **después** de que ya tenía cobros generados, esos cobros quedaban vivos (deuda fantasma). Ese era el caso de Julian: aparecía con 3 mensualidades de $80.000 a pesar de estar becado.
+
+**Solución:** al hacer `PATCH /api/players/[id]` con `scholarshipPct === 100`, se borran automáticamente los pagos del jugador en estado `PENDING`, `OVERDUE` y `SUBMITTED`. Los pagos `COMPLETED` se conservan como historial. La respuesta incluye `canceledPayments` (cuántos se borraron).
+
+```ts
+if (parsed.data.scholarshipPct === 100) {
+  await db.payment.deleteMany({
+    where: { playerId: id, status: { in: ["PENDING", "OVERDUE", "SUBMITTED"] } },
+  });
+}
+```
+
+Las becas **parciales** (50%, 75%, etc.) siguen generando cobro con el descuento aplicado — solo el 100% limpia la deuda.
+
+---
+
 ## Display en player detail
 
 En `/dashboard/admin/players/[id]`, el badge muestra el porcentaje real:

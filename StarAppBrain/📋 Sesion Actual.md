@@ -4,6 +4,24 @@
 
 ---
 
+## ✅ Completado (sesión 2026-06-16 — esta sesión)
+
+Petición de Karen: ordenar pagos, arreglar becados, resolver el enredo de logins de acudientes, y buscador en jugadores.
+
+| Tarea | Archivo(s) | Estado |
+|---|---|---|
+| **Buscador en Jugadores**: filtra por nombre, correo, documento y dorsal (antes solo había chips de categoría/sede/género) | `components/admin/player-search.tsx` (nuevo) · `admin/players/page.tsx` | ✅ |
+| **Pagos agrupados por jugador**: "Acción requerida" ahora muestra cada deportista UNA vez; al expandir salen sus meses pendientes. Checkbox del grupo selecciona todos sus meses. WhatsApp masivo manda un mensaje por jugador resumiendo todos los meses | `components/admin/bulk-mark-received-panel.tsx` (reescrito) · `admin/payments/page.tsx` (pasa `playerId`) | ✅ |
+| **Becado 100% cancela deuda**: al marcar beca del 100% en el perfil, se borran sus pagos PENDING/OVERDUE/SUBMITTED abiertos (los COMPLETADOS quedan como historial). Resuelve el caso Julian. Parciales (50% etc.) siguen generando con descuento | `api/players/[id]/route.ts` | ✅ |
+| **Reseteo masivo de acudientes**: botón en `/admin/parents` que resetea a los que NO han configurado (setupCompleted=false) a clave temporal `123456789`. Endpoint `POST /api/admin/parents/bulk-reset`. Genera mensaje único para copiar/pegar en el grupo de WhatsApp | `api/admin/parents/bulk-reset/route.ts` (nuevo) · `components/admin/bulk-reset-parents-button.tsx` (nuevo) · `admin/parents/page.tsx` | ✅ |
+| **Login unificado de acudientes**: el documento del hijo es el USUARIO (cualquiera de los hijos sirve, ya estaba en `auth.ts`) + clave temporal. Esto resuelve la ambigüedad del padre con 2 hijos (antes el documento era la CLAVE). Banner de setup reforzado: "Estás usando una clave temporal" | `components/parent/setup-banner.tsx` | ✅ |
+
+**Decisiones de Karen (esta sesión)**: reset solo a los 92 sin configurar (no a los 21 ya listos) · clave `123456789` · login por documento del hijo · beca 100% cancela pagos automáticamente · sí maneja becas parciales.
+
+**Pendiente / sugerido (no hecho aún)**: mover el trabajo pesado de `/admin/payments/page.tsx` (auto-marcar vencidos + notificaciones con N+1 dentro de bucles) a un proceso aparte/cron · paginación en lista de jugadores (135 filas) · extraer la plantilla de WhatsApp duplicada en 3+ archivos a un helper.
+
+---
+
 ## ✅ Completado (sesión 2026-04-30)
 
 | Tarea | Commit | Estado |

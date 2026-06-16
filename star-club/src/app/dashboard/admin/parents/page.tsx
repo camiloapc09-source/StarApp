@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import ResetPasswordButton from "@/components/admin/reset-password-button";
 import MergeParentsButton from "@/components/admin/merge-parents-button";
+import BulkResetParentsButton from "@/components/admin/bulk-reset-parents-button";
 import NewInviteForm from "@/components/admin/new-invite-form";
 import { AlertTriangle, CheckCircle2, GitMerge, Users } from "lucide-react";
 import Link from "next/link";
@@ -17,6 +18,9 @@ export default async function AdminParentsPage() {
 
   const clubId   = (session.user as { clubId?: string; clubSlug?: string }).clubId   ?? "club-star";
   const clubSlug = (session.user as { clubId?: string; clubSlug?: string }).clubSlug ?? "";
+
+  const club = await db.club.findUnique({ where: { id: clubId }, select: { name: true } });
+  const clubName = club?.name ?? "el club";
 
   const parents = await db.parent.findMany({
     where: { user: { clubId } },
@@ -87,13 +91,14 @@ export default async function AdminParentsPage() {
 
         {/* Pending setup banner */}
         {pendingSetup.length > 0 && (
-          <div className="rounded-2xl px-5 py-4 flex items-center gap-3"
+          <div className="rounded-2xl px-5 py-4 flex items-center gap-3 flex-wrap"
             style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.20)" }}>
             <AlertTriangle size={16} style={{ color: "#FCD34D", flexShrink: 0 }} />
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.65)" }}>
+            <p className="text-sm flex-1 min-w-[240px]" style={{ color: "rgba(255,255,255,0.65)" }}>
               <span className="font-semibold text-yellow-300">{pendingSetup.length} acudiente{pendingSetup.length !== 1 ? "s" : ""}</span>
-              {" "}aún no han configurado su cuenta. Envíales el documento del jugador como usuario y contraseña temporal.
+              {" "}aún no han configurado su cuenta. Resetéalos todos a una clave temporal y envía el mensaje al grupo.
             </p>
+            <BulkResetParentsButton pendingCount={pendingSetup.length} clubName={clubName} />
           </div>
         )}
 

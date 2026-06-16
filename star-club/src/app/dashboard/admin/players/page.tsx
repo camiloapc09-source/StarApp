@@ -12,14 +12,17 @@ import Link from "next/link";
 import { calculateLevel } from "@/lib/utils";
 import NewInviteForm from "@/components/admin/new-invite-form";
 import AvatarReviewList from "@/components/admin/avatar-review-list";
+import PlayerSearch from "@/components/admin/player-search";
+import { Suspense } from "react";
 
-type Props = { searchParams: Promise<{ categoryId?: string; gender?: string; zone?: string }> };
+type Props = { searchParams: Promise<{ categoryId?: string; gender?: string; zone?: string; q?: string }> };
 
 export default async function AdminPlayersPage({ searchParams }: Props) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
-  const { categoryId: selectedCategory, gender: selectedGender, zone: selectedZone } = await searchParams;
+  const { categoryId: selectedCategory, gender: selectedGender, zone: selectedZone, q } = await searchParams;
+  const query = q?.toLowerCase().trim() ?? "";
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const t = await getDictionary();
@@ -55,6 +58,21 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
   const zones = club?.zonePrices ? Object.keys(club.zonePrices as Record<string, unknown>) : [];
   const clubName = club?.name ?? "el club";
   const pendingPlayers = players.filter((p) => p.status === "PENDING");
+
+  // Text search — filtra por nombre, correo, documento o dorsal
+  const filteredPlayers = query
+    ? players.filter((p) => {
+        const haystack = [
+          p.user.name,
+          p.user.email,
+          p.documentNumber ?? "",
+          p.jerseyNumber != null ? `#${p.jerseyNumber} ${p.jerseyNumber}` : "",
+        ]
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(query);
+      })
+    : players;
 
   function buildHref(opts: { categoryId?: string; gender?: string; zone?: string }) {
     const p = new URLSearchParams();
@@ -138,6 +156,11 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
             </div>
           </Card>
         )}
+
+        {/* Search */}
+        <Suspense fallback={null}>
+          <PlayerSearch defaultValue={q} />
+        </Suspense>
 
         {/* Controls */}
         <div className="space-y-3">
@@ -229,23 +252,36 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
 
         {/* Players Table */}
         <Card className="p-0 overflow-hidden">
-          <div className="px-6 py-4 border-b" style={{ borderColor: "var(--border-primary)" }}>
+          <div className="px-6 py-4 border-b flex items-center justify-between" style={{ borderColor: "var(--border-primary)" }}>
             <h2 className="font-semibold">{t.common.allPlayers}</h2>
+            {query && (
+              <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                {filteredPlayers.length} resultado{filteredPlayers.length !== 1 ? "s" : ""} para &ldquo;{query}&rdquo;
+              </span>
+            )}
           </div>
           <div className="divide-y" style={{ borderColor: "var(--border-primary)" }}>
-            {players.length === 0 ? (
+            {filteredPlayers.length === 0 ? (
               <div className="py-16 text-center">
-                <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
-                  {t.common.noPlayersYet}
-                </p>
-                <Link href="/dashboard/admin/players/new">
-                  <Button variant="secondary">
-                    <Plus size={16} /> {t.common.addFirstPlayer}
-                  </Button>
-                </Link>
+                {query ? (
+                  <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+                    Sin resultados para &ldquo;{query}&rdquo;.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm mb-4" style={{ color: "var(--text-muted)" }}>
+                      {t.common.noPlayersYet}
+                    </p>
+                    <Link href="/dashboard/admin/players/new">
+                      <Button variant="secondary">
+                        <Plus size={16} /> {t.common.addFirstPlayer}
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </div>
             ) : (
-              players.map((player) => {
+              filteredPlayers.map((player) => {
                 const level = calculateLevel(player.xp);
                 const presentCount = player.attendances.filter((a) => a.status === "PRESENT").length;
                 const attendancePct =

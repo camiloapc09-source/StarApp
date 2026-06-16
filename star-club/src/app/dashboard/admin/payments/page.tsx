@@ -442,6 +442,7 @@ export default async function AdminPaymentsPage({
               const lp = lastPaidMap.get(p.playerId);
               return {
                 id: p.id,
+                playerId: p.playerId,
                 amount: p.amount,
                 concept: p.concept,
                 status: p.status,

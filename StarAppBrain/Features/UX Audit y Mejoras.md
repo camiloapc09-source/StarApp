@@ -6,6 +6,31 @@
 
 ---
 
+## Resueltos (2026-06-16)
+
+| Problema | Archivo | Fix |
+|----------|---------|-----|
+| Jugadores: sin buscador, tocaba scroll entre 135 filas | `player-search.tsx` (nuevo) · `admin/players/page.tsx` | Búsqueda por nombre/correo/documento/dorsal vía `?q=` |
+| Pagos: un mismo jugador aparecía repetido (1 fila por mes vencido) | `bulk-mark-received-panel.tsx` | Agrupado por jugador, expandible; checkbox de grupo selecciona todos sus meses |
+| Becado 100% con deuda fantasma (cobros viejos no se borraban) | `api/players/[id]/route.ts` | Al marcar 100% se cancelan pagos PENDING/OVERDUE/SUBMITTED |
+| Logins de acudientes enredados (doc del hijo como clave, ambiguo con 2 hijos) | `api/admin/parents/bulk-reset/route.ts` + botón | Reseteo masivo a clave temp `123456789`, doc del hijo = usuario |
+
+## Pendientes detectados (2026-06-16) — auditoría de esta sesión
+
+### `/admin/payments` hace trabajo pesado en cada render — ALTA
+La página marca vencidos y crea notificaciones "due-soon" con **consultas dentro de bucles (N+1)** en cada visita (`payments/page.tsx:34-107`). Con 201+ pagos esto va a ir lento. **Fix sugerido:** mover a un cron/route aparte (`/api/payments/mark-overdue` ya existe) y dejar la página solo de lectura.
+
+### Lista de jugadores sin paginación — MEDIA
+135 filas se cargan de golpe. El buscador ayuda, pero conviene paginar o virtualizar.
+
+### Plantilla de WhatsApp duplicada — MEDIA
+El mismo texto de cobro está repetido casi idéntico en `payments/page.tsx`, `bulk-mark-received-panel.tsx` y otros. **Fix:** extraer a un helper `lib/whatsapp.ts`.
+
+### Detección de acudientes duplicados por nombre normalizado — BAJA
+`parents/page.tsx` agrupa por `name.trim().toLowerCase()`. Nombres con tildes/typos no agrupan. Considerar agrupar por teléfono/documento.
+
+---
+
 ## Resueltos (2026-05-03)
 
 | # | Problema | Archivo | Fix aplicado |

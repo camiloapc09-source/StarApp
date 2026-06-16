@@ -20,10 +20,10 @@ export default function SetupBanner() {
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold" style={{ color: "#FBBF24" }}>
-          Configura tu cuenta
+          Estás usando una clave temporal
         </p>
         <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>
-          Elige tu contraseña y vincula a tus hijos para personalizar tu acceso.
+          Cambia tu contraseña y vincula a todos tus hijos para asegurar tu acceso.
         </p>
       </div>
       <Link

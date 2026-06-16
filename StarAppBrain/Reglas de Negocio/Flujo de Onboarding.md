@@ -64,38 +64,41 @@ setupCompleted = true (configuró su propia cuenta)
 Padre entra directo a su dashboard
 ```
 
-## Para un padre que necesita resetear su acceso (flujo principal Ball Breakers)
+## Reseteo MASIVO de acudientes (flujo principal Ball Breakers, desde 2026-06-16)
 
-Aplica a cualquier padre con `setupCompleted = false` o cuando Karen hace un reset.
+> **Por qué existe:** al arrancar la app se usó el *documento del hijo como CONTRASEÑA*. Para un padre con 2 hijos eso era ambiguo (¿qué documento?). La solución: el documento del hijo es el **USUARIO** (cualquiera de los dos sirve) y la **clave** pasa a ser fija y temporal `123456789`. Así el mensaje es idéntico para todos y funciona incluso para padres con email roto (`@…internal`).
 
 ```
-Karen va a Admin → Acudientes (o al perfil del jugador)
+Karen va a Admin → Acudientes → botón "Resetear N sin configurar"
     ↓
-Clic en "Resetear al documento del hijo"
+POST /api/admin/parents/bulk-reset
+  → todos los PARENT con setupCompleted=false reciben password=hash("123456789")
+  → los 21 que YA configuraron NO se tocan
     ↓
-Sistema: password = hash(documentNumber del hijo) + setupCompleted = false
+El modal genera UN mensaje para pegar en el grupo de WhatsApp:
+  "Usuario: documento del hijo · Clave: 123456789 · luego cambia clave y vincula hijos"
     ↓
-Karen le dice al padre: "Tu usuario y clave es el documento de [nombre del hijo]"
+Padre entra con el documento del hijo (sin @) como usuario + clave 123456789
     ↓
-Padre entra al login escribiendo el documento del hijo (sin @) como usuario y clave
+Auth.ts lo encuentra por el fallback de documento (ver abajo)
     ↓
-Auth.ts lo encuentra por 3 fallbacks (ver abajo)
+setupCompleted=false → banner "Estás usando una clave temporal" (NO redirige forzado)
     ↓
-Middleware detecta setupCompleted = false → redirige a /dashboard/parent/setup
-    ↓
-Padre ve formulario:
+Padre va a /dashboard/parent/setup:
   - Correo electrónico real
   - Nueva contraseña
-  - Lista de jugadores del club (buscable, checkboxes) — hijo pre-marcado
+  - Lista de jugadores del club (buscable, checkboxes) — vincula TODOS sus hijos
     ↓
-Al guardar:
-  - Email y contraseña se actualizan en DB
-  - Vínculos ParentPlayer se re-crean con la selección
-  - setupCompleted = true
-  - Re-login automático con las nuevas credenciales
-    ↓
-Padre entra a su dashboard — nunca más ve /setup
+Al guardar: email + password actualizados, vínculos ParentPlayer re-creados, setupCompleted=true
 ```
+
+**Archivos:** `api/admin/parents/bulk-reset/route.ts` · `components/admin/bulk-reset-parents-button.tsx` · `components/parent/setup-banner.tsx`
+
+### Reset individual (sigue existiendo)
+
+Desde el perfil del jugador o el panel de acudientes, "Resetear contraseña" sigue disponible para casos puntuales (resetea al documento del hijo o a una clave aleatoria). Ver `api/admin/players/reset-password/route.ts`.
+
+> ⚠️ **Importante:** el middleware **ya NO redirige** forzado a `/setup`. La configuración es voluntaria (banner). El redirect forzado se quitó porque rompía el login de cuentas seeded que nunca pasaron por setup. Ver `src/middleware.ts:42`.
 
 ## Fallbacks de autenticación (auth.ts)
 
@@ -112,7 +115,8 @@ El tercer fallback cubre padres con email real (no @bb.internal) cuyos hijos tie
 - Lista todos los padres del club con sus hijos vinculados
 - Muestra documento del hijo, categoría, pagos pendientes
 - Chip amarillo "Sin configurar" si `setupCompleted = false`
-- Botón "Resetear al documento del hijo" por cada padre
+- **Botón "Resetear N sin configurar"** (masivo, clave temporal `123456789`) en el banner amarillo
+- Botón "Resetear contraseña" individual por cada padre
 - Generador de invitaciones para padres nuevos
 
 ## Formato de emails internos (migración Ball Breakers)
