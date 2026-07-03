@@ -134,7 +134,7 @@ export default async function AdminReportsPage() {
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border transition-opacity hover:opacity-70"
             style={{ borderColor: "var(--border-primary)", color: "var(--text-secondary)" }}
           >
-            <Download size={14} /> Exportar CSV
+            <Download size={14} /> Exportar Excel
           </Link>
         </div>
 
