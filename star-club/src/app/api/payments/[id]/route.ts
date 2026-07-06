@@ -114,7 +114,7 @@ export async function PATCH(
         concept: payment.concept,
         amountCOP: effectiveAmount,
         clubName: club?.name ?? "Star Club",
-        appUrl: process.env.NEXTAUTH_URL ?? "https://starapp.onrender.com",
+        appUrl: process.env.NEXTAUTH_URL ?? "https://starapp-9qb7.onrender.com",
       });
     }
   }

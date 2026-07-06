@@ -35,7 +35,7 @@ export async function POST(_req: NextRequest) {
   const userIdMap = Object.fromEntries(players.map((p) => [p.id, p.userId]));
 
   const club = await db.club.findUnique({ where: { id: clubId }, select: { name: true } });
-  const appUrl = process.env.NEXTAUTH_URL ?? "https://starapp.onrender.com";
+  const appUrl = process.env.NEXTAUTH_URL ?? "https://starapp-9qb7.onrender.com";
 
   for (const payment of overdue) {
     const userId = userIdMap[payment.playerId];
