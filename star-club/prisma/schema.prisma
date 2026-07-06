@@ -239,6 +239,7 @@ model Payment {
   paymentMethod String?
   proofUrl      String?
   proofNote     String?
+  wompiReference String? @unique // referencia única del checkout Wompi, para correlacionar el webhook
   createdAt     DateTime @default(now())
 
   @@index([clubId])

@@ -44,7 +44,7 @@ export default auth((req) => {
   }
 
   // Public API routes (no auth required)
-  const publicApiRoutes = ["/api/invites/redeem", "/api/invites", "/api/admin/bootstrap", "/api/cron"];
+  const publicApiRoutes = ["/api/invites/redeem", "/api/invites", "/api/admin/bootstrap", "/api/cron", "/api/webhooks"];
   const isPublicApi = publicApiRoutes.some((r) => pathname.startsWith(r));
 
   // Protect API routes

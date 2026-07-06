@@ -8,6 +8,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { CheckCircle2, Clock, AlertTriangle, CreditCard, FileText, Users } from "lucide-react";
 import PaymentSubmitForm from "@/components/parent/payment-submit-form";
+import { wompiConfigured } from "@/lib/wompi";
 import Link from "next/link";
 
 const statusMeta: Record<string, { label: string; variant: "success" | "warning" | "error" | "default" }> = {
@@ -65,6 +66,7 @@ export default async function ParentPaymentsPage({
   const pending   = payments.filter((p) => p.status === "PENDING" || p.status === "OVERDUE");
   const submitted = payments.filter((p) => p.status === "SUBMITTED");
   const completed = payments.filter((p) => p.status === "COMPLETED");
+  const onlinePayEnabled = wompiConfigured();
 
   return (
     <div>
@@ -129,6 +131,24 @@ export default async function ParentPaymentsPage({
                       </Badge>
                     </div>
                   </div>
+                  {onlinePayEnabled && (
+                    <a
+                      href={`/api/payments/${payment.id}/wompi-checkout`}
+                      className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90"
+                      style={{ background: "linear-gradient(135deg, #3B82F6, #6366F1)", color: "#fff" }}
+                    >
+                      <CreditCard size={16} /> Pagar en línea
+                    </a>
+                  )}
+                  {onlinePayEnabled && (
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-px" style={{ background: "var(--border-primary)" }} />
+                      <span className="text-[10px] uppercase tracking-wider" style={{ color: "var(--text-muted)" }}>
+                        o reporta tu comprobante
+                      </span>
+                      <div className="flex-1 h-px" style={{ background: "var(--border-primary)" }} />
+                    </div>
+                  )}
                   <PaymentSubmitForm paymentId={payment.id} />
                 </div>
               ))}
