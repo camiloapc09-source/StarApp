@@ -57,9 +57,12 @@ export async function POST(req: NextRequest) {
   });
 
   // 2) Actualizar rachas --------------------------------------------------------
+  // IMPORTANTE: las rachas se calculan ANTES de reasignar misiones (paso 3),
+  // porque reasignar resetea a ACTIVE las misiones completadas ayer y la racha
+  // se calcula leyendo justamente esas completadas.
   const players = await db.player.findMany({
     where: { status: "ACTIVE" },
-    select: { id: true, userId: true, streak: true },
+    select: { id: true, userId: true, streak: true, clubId: true },
   });
 
   // Jugadores que completaron alguna misión ayer
@@ -111,12 +114,60 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // 3) Asignar las misiones diarias del día -------------------------------------
+  // Cada jugador activo recibe todas las misiones DAILY activas de su club.
+  // El coach controla qué aparece marcando misiones como activas/inactivas.
+  const dailyMissions = await db.mission.findMany({
+    where: { isActive: true, type: "DAILY" },
+    select: { id: true, clubId: true },
+  });
+
+  // Agrupar misiones diarias por club
+  const missionsByClub = new Map<string, string[]>();
+  for (const m of dailyMissions) {
+    const arr = missionsByClub.get(m.clubId) ?? [];
+    arr.push(m.id);
+    missionsByClub.set(m.clubId, arr);
+  }
+
+  let assignedCount = 0;
+  let playersNotified = 0;
+  for (const p of players) {
+    const missionIds = missionsByClub.get(p.clubId);
+    if (!missionIds || missionIds.length === 0) continue;
+
+    await Promise.all(
+      missionIds.map((missionId) =>
+        db.playerMission.upsert({
+          where: { playerId_missionId: { playerId: p.id, missionId } },
+          create: { playerId: p.id, missionId, target: 1, status: "ACTIVE" },
+          // Reset diario: vuelve a ACTIVE aunque ayer estuviera completada/expirada.
+          update: { status: "ACTIVE", progress: 0, completedAt: null, assignedAt: new Date() },
+        }),
+      ),
+    );
+    assignedCount += missionIds.length;
+
+    await db.notification.create({
+      data: {
+        userId: p.userId,
+        title: "Misiones diarias listas 🎯",
+        message: `Tienes ${missionIds.length} misión(es) nueva(s) para hoy. ¡A por el XP!`,
+        type: "ACHIEVEMENT",
+        link: "/dashboard/player/missions",
+      },
+    });
+    playersNotified++;
+  }
+
   return apiOk({
     ok: true,
     expiredDaily: expiredDaily.count,
     expiredWeekly: expiredWeekly.count,
     streaksIncreased: increased,
     streaksReset: reset,
+    dailyAssigned: assignedCount,
+    playersNotified,
     ranAt: now.toISOString(),
   });
 }
