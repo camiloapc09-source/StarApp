@@ -158,10 +158,8 @@ export default async function AdminPaymentsPage({
   }
   const duplicateGroups = [...dupMap.values()].filter((g) => g.length > 1);
 
-  // 10-day rule: split pending into action-required vs scheduled
-  const in10Days = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
-  const actionItems = [...overdue, ...pending.filter((p) => new Date(p.dueDate) <= in10Days)];
-  const scheduled   = pending.filter((p) => new Date(p.dueDate) > in10Days);
+  // Todos los pagos por cobrar (vencidos + pendientes), se agrupan por mes en el panel
+  const toCollect = [...overdue, ...pending];
 
   const stats = {
     collected:  completed.reduce((s, p) => s + p.amount, 0),
@@ -435,10 +433,10 @@ export default async function AdminPaymentsPage({
           </Card>
         )}
 
-        {/* ACCION REQUERIDA — bulk selectable */}
-        {actionItems.length > 0 && (
+        {/* POR COBRAR — agrupado por mes, bulk selectable */}
+        {toCollect.length > 0 && (
           <BulkMarkReceivedPanel
-            payments={actionItems.map((p) => {
+            payments={toCollect.map((p) => {
               const lp = lastPaidMap.get(p.playerId);
               return {
                 id: p.id,
@@ -467,62 +465,6 @@ export default async function AdminPaymentsPage({
           />
         )}
 
-        {/* PROGRAMADOS */}
-        {scheduled.length > 0 && (
-          <Card className="p-0 overflow-hidden">
-            <div className="px-6 py-4 border-b flex items-center gap-3" style={{ borderColor: "var(--border-primary)" }}>
-              <Clock size={14} style={{ color: "var(--text-muted)" }} />
-              <h2 className="text-sm font-semibold" style={{ color: "var(--text-muted)" }}>
-                Programados — {scheduled.length} pago{scheduled.length !== 1 ? "s" : ""} futuros
-              </h2>
-            </div>
-            <div className="divide-y" style={{ borderColor: "var(--border-primary)" }}>
-              {scheduled.map((payment) => {
-                const parentLink = payment.player.parentLinks?.[0]?.parent;
-                const phone = parentLink?.phone || parentLink?.user?.phone;
-                const digits = phone?.replace?.(/[^0-9]/g, "");
-                const daysLeft = differenceInDays(new Date(payment.dueDate), new Date());
-                const contactName = parentLink?.user?.name || payment.player.user.name;
-                const inEarlyWindow =
-                  bcd > 0 && epd > 0 && epdiscount > 0 &&
-                  colombiaDay >= bcd && colombiaDay <= earlyWindowEnd;
-                const waMsg = encodeURIComponent(
-                  inEarlyWindow
-                    ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El motivo de nuestro contacto es recordarle que el pago de *$${payment.amount.toLocaleString("es-CO")}* de la mensualidad del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* tiene como fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n💰 ¡Aún está a tiempo de aprovechar el *descuento de pronto pago de $${epdiscount.toLocaleString("es-CO")}*! Tiene hasta el día ${earlyWindowEnd} de este mes.\n\n¡Muchas gracias! 💚`
-                    : `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El motivo de nuestro contacto es recordarle que el pago de *$${payment.amount.toLocaleString("es-CO")}* de la mensualidad del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* tiene como fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n⏰ ¡Le recomendamos realizarlo a tiempo para evitar inconvenientes!\n\n¡Muchas gracias! 💚`
-                );
-                const waHref = digits ? `https://wa.me/${digits}?text=${waMsg}` : null;
-                return (
-                  <div key={payment.id} className="flex items-center gap-4 px-5 py-3">
-                    <Avatar name={payment.player.user.name} size="sm" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{payment.player.user.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{payment.concept}</p>
-                    </div>
-                    <div className="text-right hidden sm:block">
-                      <p className="text-sm font-bold">${payment.amount.toLocaleString("es-CO")}</p>
-                      <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                        {format(new Date(payment.dueDate), "dd MMM yyyy", { locale: es })} · en {daysLeft}d
-                      </p>
-                    </div>
-                    {waHref && (
-                      <a
-                        href={waHref}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80 flex-shrink-0"
-                        style={{ background: "rgba(37,211,102,0.1)", color: "#25D366", border: "1px solid rgba(37,211,102,0.2)" }}
-                      >
-                        <PhoneCall size={12} /> Cobrar
-                      </a>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </Card>
-        )}
-
         {/* PAGADOS — agrupados por mes con acordeón */}
         {completed.length > 0 && (
           <CompletedPaymentsAccordion
@@ -538,7 +480,7 @@ export default async function AdminPaymentsPage({
           />
         )}
 
-        {actionItems.length === 0 && scheduled.length === 0 && completed.length === 0 && submitted.length === 0 && (
+        {toCollect.length === 0 && completed.length === 0 && submitted.length === 0 && (
           <Card className="py-16 text-center">
             {query ? (
               <p className="text-sm" style={{ color: "var(--text-muted)" }}>

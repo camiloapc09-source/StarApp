@@ -60,6 +60,39 @@ function getColombiaDay(): number {
   ).getDate();
 }
 
+// Agrupa los pagos por mes de vencimiento (ascendente), ordenando cada mes por fecha.
+function groupByMonth(payments: Payment[]) {
+  const map = new Map<
+    string,
+    { key: string; label: string; date: Date; items: Payment[]; total: number }
+  >();
+  for (const p of payments) {
+    const d = new Date(p.dueDate);
+    const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
+    if (!map.has(key)) {
+      map.set(key, {
+        key,
+        label: format(d, "MMMM yyyy", { locale: es }),
+        date: new Date(d.getFullYear(), d.getMonth(), 1),
+        items: [],
+        total: 0,
+      });
+    }
+    const g = map.get(key)!;
+    g.items.push(p);
+    g.total += p.amount;
+  }
+  const groups = [...map.values()].sort((a, b) => a.date.getTime() - b.date.getTime());
+  for (const g of groups) {
+    g.items.sort(
+      (a, b) =>
+        new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime() ||
+        a.player.user.name.localeCompare(b.player.user.name),
+    );
+  }
+  return groups;
+}
+
 export default function BulkMarkReceivedPanel({
   payments,
   clubName = "el club",
@@ -69,7 +102,16 @@ export default function BulkMarkReceivedPanel({
 }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  // Meses abiertos por defecto: el mes actual y los anteriores (donde hay vencidos).
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(() => {
+    const now = new Date();
+    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    return new Set(
+      groupByMonth(payments)
+        .filter((g) => g.date <= currentMonthStart)
+        .map((g) => g.key),
+    );
+  });
   const [showModal, setShowModal] = useState(false);
   const [method, setMethod] = useState<string>("CASH");
   const [loading, setLoading] = useState(false);
@@ -107,6 +149,9 @@ export default function BulkMarkReceivedPanel({
       };
     })
     .sort((a, b) => new Date(a.oldestDue).getTime() - new Date(b.oldestDue).getTime());
+
+  // ─── Agrupar pagos por mes (para el desplegable visual) ───────
+  const monthGroups = groupByMonth(payments);
 
   // ─── WhatsApp: un mensaje por jugador (resumiendo todos sus meses) ───
   const bulkWaContacts = groups
@@ -161,11 +206,11 @@ export default function BulkMarkReceivedPanel({
     });
   }
 
-  function toggleExpand(playerId: string) {
-    setExpanded((prev) => {
+  function toggleMonth(key: string) {
+    setExpandedMonths((prev) => {
       const next = new Set(prev);
-      if (next.has(playerId)) next.delete(playerId);
-      else next.add(playerId);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   }
@@ -201,7 +246,7 @@ export default function BulkMarkReceivedPanel({
           <div className="flex items-center gap-3">
             <AlertTriangle size={16} style={{ color: "var(--warning)" }} />
             <h2 className="font-semibold text-sm" style={{ color: "var(--warning)" }}>
-              Acción requerida — {groups.length} jugador{groups.length !== 1 ? "es" : ""} · {payments.length} pago{payments.length !== 1 ? "s" : ""}
+              Por cobrar — {payments.length} pago{payments.length !== 1 ? "s" : ""} · {monthGroups.length} {monthGroups.length === 1 ? "mes" : "meses"}
             </h2>
           </div>
 
@@ -240,98 +285,98 @@ export default function BulkMarkReceivedPanel({
           </div>
         </div>
 
-        {/* Player groups */}
+        {/* Month groups — un desplegable por mes de vencimiento */}
         <div className="divide-y" style={{ borderColor: "var(--border-primary)" }}>
-          {groups.map((g) => {
-            const groupIds = g.items.map((p) => p.id);
-            const selectedInGroup = groupIds.filter((id) => selected.has(id)).length;
-            const allInGroup = selectedInGroup === groupIds.length;
-            const someInGroup = selectedInGroup > 0 && !allInGroup;
-            const isOpen = expanded.has(g.playerId);
-            const multi = g.items.length > 1;
-            const parentLink = g.player.parentLinks?.[0]?.parent;
+          {monthGroups.map((mg) => {
+            const monthIds = mg.items.map((p) => p.id);
+            const selectedInMonth = monthIds.filter((id) => selected.has(id)).length;
+            const allInMonth = selectedInMonth === monthIds.length && monthIds.length > 0;
+            const someInMonth = selectedInMonth > 0 && !allInMonth;
+            const isOpen = expandedMonths.has(mg.key);
+            const overdueCount = mg.items.filter(
+              (p) => p.status === "OVERDUE" || differenceInDays(new Date(p.dueDate), new Date()) < 0,
+            ).length;
 
             return (
-              <div key={g.playerId} style={{ background: selectedInGroup > 0 ? "rgba(52,211,153,0.04)" : "transparent" }}>
-                {/* Group header row */}
+              <div key={mg.key} style={{ background: selectedInMonth > 0 ? "rgba(52,211,153,0.03)" : "transparent" }}>
+                {/* Month header — clickable to toggle */}
                 <div
-                  className="p-5 flex items-center gap-3 cursor-pointer transition-all"
-                  onClick={() => (multi ? toggleExpand(g.playerId) : toggleGroup(g.items))}
+                  className="px-4 sm:px-5 py-3.5 flex items-center gap-3 cursor-pointer transition-all"
+                  onClick={() => toggleMonth(mg.key)}
                 >
-                  {/* Group checkbox */}
-                  <div className="flex-shrink-0" onClick={(e) => { e.stopPropagation(); toggleGroup(g.items); }}>
-                    {allInGroup
+                  {/* Select-all-month checkbox */}
+                  <div className="flex-shrink-0" onClick={(e) => { e.stopPropagation(); toggleGroup(mg.items); }}>
+                    {allInMonth
                       ? <CheckSquare size={18} style={{ color: "#34D399" }} />
-                      : someInGroup
+                      : someInMonth
                       ? <MinusSquare size={18} style={{ color: "#34D399" }} />
                       : <Square size={18} style={{ color: "rgba(255,255,255,0.25)" }} />}
                   </div>
 
-                  <Avatar name={g.player.user.name} src={g.player.user.avatar} size="sm" />
+                  <div className="flex-shrink-0" style={{ color: "rgba(255,255,255,0.45)" }}>
+                    {isOpen ? <ChevronDown size={16} /> : <ChevronRightSm size={16} />}
+                  </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold">{g.player.user.name}</p>
-                    <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                      {multi
-                        ? `${g.items.length} meses pendientes`
-                        : g.items[0].concept}
-                      {parentLink?.user?.name ? ` · ${parentLink.user.name}` : ""}
-                    </p>
-                  </div>
-
-                  <div className="text-right flex-shrink-0">
-                    <p className="text-base font-black">${g.totalAmount.toLocaleString("es-CO")}</p>
-                    <p className="text-xs font-medium" style={{ color: g.isLate ? "var(--error)" : "var(--warning)" }}>
-                      {g.isLate
-                        ? `Vencido ${Math.abs(g.oldestDaysLeft)}d`
-                        : `Vence ${format(new Date(g.oldestDue), "dd MMM", { locale: es })}`}
-                    </p>
-                  </div>
-
-                  {multi && (
-                    <div className="flex-shrink-0 ml-1" style={{ color: "rgba(255,255,255,0.40)" }}>
-                      {isOpen ? <ChevronDown size={18} /> : <ChevronRightSm size={18} />}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-bold capitalize">{mg.label}</p>
+                      {overdueCount > 0 && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                          style={{ background: "rgba(255,71,87,0.12)", color: "var(--error)" }}>
+                          {overdueCount} vencido{overdueCount !== 1 ? "s" : ""}
+                        </span>
+                      )}
                     </div>
-                  )}
+                    <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                      {mg.items.length} pago{mg.items.length !== 1 ? "s" : ""}
+                    </p>
+                  </div>
+
+                  <p className="text-base font-black flex-shrink-0" style={{ color: "var(--warning)" }}>
+                    ${mg.total.toLocaleString("es-CO")}
+                  </p>
                 </div>
 
-                {/* Detail: one row per month — shown when single payment OR group expanded */}
-                {(!multi || isOpen) && (
+                {/* Payment rows — one per player for this month */}
+                {isOpen && (
                   <div className="pb-3" style={{ background: "rgba(0,0,0,0.12)" }}>
-                    {g.items.map((payment) => {
+                    {mg.items.map((payment) => {
                       const isSelected = selected.has(payment.id);
                       const daysLeft = differenceInDays(new Date(payment.dueDate), new Date());
                       const isLate = payment.status === "OVERDUE" || daysLeft < 0;
-                      const phone = parentLink?.phone || parentLink?.user?.phone || g.player.user.phone;
+                      const parentLink = payment.player.parentLinks?.[0]?.parent;
+                      const phone = parentLink?.phone || parentLink?.user?.phone || payment.player.user.phone;
                       const digits = phone?.replace(/[^0-9]/g, "");
                       const greeting = getColombiaGreeting();
-                      const contactName = parentLink?.user?.name || g.player.user.name;
+                      const contactName = parentLink?.user?.name || payment.player.user.name;
                       const waMsg = encodeURIComponent(
                         isLate
-                          ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${g.player.user.name}* por concepto de *${payment.concept}* se encuentra *vencido* desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")} 📋.\n\nLe pedimos amablemente ponerse al día. 🙏\n\n¡Muchas gracias! 💚`
-                          : `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nLe recordamos que el pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${g.player.user.name}* por concepto de *${payment.concept}* tiene fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n¡Muchas gracias! 💚`
+                          ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* se encuentra *vencido* desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")} 📋.\n\nLe pedimos amablemente ponerse al día. 🙏\n\n¡Muchas gracias! 💚`
+                          : `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nLe recordamos que el pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* tiene fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n¡Muchas gracias! 💚`
                       );
                       const waHref = digits ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${waMsg}` : null;
 
                       return (
-                        <div key={payment.id} className="px-5 py-3 mx-3 my-1 rounded-xl flex items-center gap-3 flex-wrap"
+                        <div key={payment.id} className="px-3 sm:px-4 py-3 mx-2 sm:mx-3 my-1 rounded-xl flex items-center gap-3 flex-wrap"
                           style={{ background: isSelected ? "rgba(52,211,153,0.06)" : "rgba(255,255,255,0.02)" }}>
                           <div className="flex-shrink-0 cursor-pointer" onClick={() => toggle(payment.id)}>
                             {isSelected
                               ? <CheckSquare size={16} style={{ color: "#34D399" }} />
                               : <Square size={16} style={{ color: "rgba(255,255,255,0.25)" }} />}
                           </div>
+                          <Avatar name={payment.player.user.name} src={payment.player.user.avatar} size="sm" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium">{payment.concept}</p>
+                            <p className="text-sm font-medium truncate">{payment.player.user.name}</p>
                             <p className="text-[11px] mt-0.5" style={{ color: isLate ? "var(--error)" : "var(--warning)" }}>
-                              {isLate ? `Vencido ${Math.abs(daysLeft)}d` : `Vence ${format(new Date(payment.dueDate), "dd MMM", { locale: es })}`}
+                              {payment.concept}
+                              {" · "}{isLate ? `Vencido ${Math.abs(daysLeft)}d` : `Vence ${format(new Date(payment.dueDate), "dd MMM", { locale: es })}`}
                               {" · "}${payment.amount.toLocaleString("es-CO")}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <RecordPaymentModal
                               paymentId={payment.id}
-                              playerName={g.player.user.name}
+                              playerName={payment.player.user.name}
                               concept={payment.concept}
                               fullAmount={payment.amount}
                             />
