@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
-import { calculateLevel } from "@/lib/utils";
+import { awardXp } from "@/lib/gamification";
 import { requireRole, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
 
 const assignMissionSchema = z.object({
@@ -69,50 +69,8 @@ export async function POST(req: NextRequest) {
     const playerCheck = await db.player.findUnique({ where: { id: parsed.data.playerId }, select: { clubId: true } });
     if (!playerCheck || playerCheck.clubId !== clubId) return apiError("Player not found", 404);
 
-    const player = await db.player.update({
-      where: { id: parsed.data.playerId },
-      data: { xp: { increment: parsed.data.xp } },
-      select: { xp: true, level: true, userId: true },
-    });
-
-    const newLevel = calculateLevel(player.xp);
-    const leveledUp = newLevel > player.level;
-
-    if (leveledUp) {
-      await db.player.update({ where: { id: parsed.data.playerId }, data: { level: newLevel } });
-
-      await db.notification.create({
-        data: {
-          userId: player.userId,
-          title: `Subiste de nivel ${newLevel}`,
-          message: `¡Felicitaciones! Alcanzaste el Nivel ${newLevel}. ¡Sigue así!`,
-          type: "ACHIEVEMENT",
-        },
-      });
-
-      try {
-        const newRewards = await db.reward.findMany({ where: { clubId, levelRequired: { lte: newLevel } } });
-        const earned = await db.playerReward.findMany({ where: { playerId: parsed.data.playerId }, select: { rewardId: true } });
-        const earnedIds = new Set(earned.map((r) => r.rewardId));
-        const toGrant = newRewards.filter((r) => !earnedIds.has(r.id));
-        if (toGrant.length > 0) {
-          await db.playerReward.createMany({
-            data: toGrant.map((r) => ({ playerId: parsed.data.playerId, rewardId: r.id })),
-          });
-          await db.notification.createMany({
-            data: toGrant.map((r) => ({
-              userId: player.userId,
-              title: `Nueva recompensa ${r.icon ?? ""} ${r.title}`,
-              message: r.description,
-              type: "ACHIEVEMENT",
-              link: "/dashboard/player/rewards",
-            })),
-          });
-        }
-      } catch { /* non-fatal */ }
-    }
-
-    return apiOk({ ...player, xp: player.xp, newLevel, leveledUp });
+    const result = await awardXp(parsed.data.playerId, clubId, parsed.data.xp);
+    return apiOk({ xp: result.xp, newLevel: result.newLevel, leveledUp: result.leveledUp });
   }
 
   if (action === "complete-mission") {
@@ -126,62 +84,24 @@ export async function POST(req: NextRequest) {
     if (!pm) return apiError("Mission not found", 404);
     if (pm.player.clubId !== clubId) return apiError("Forbidden", 403);
 
+    // Idempotencia: si ya estaba completada, no volver a otorgar XP.
+    if (pm.status === "COMPLETED") return apiOk({ ok: true, xpAwarded: 0, alreadyCompleted: true });
+
     await db.playerMission.update({
       where: { id: playerMissionId },
       data: { status: "COMPLETED", completedAt: new Date() },
     });
 
-    const player = await db.player.update({
-      where: { id: pm.playerId },
-      data: { xp: { increment: pm.mission.xpReward } },
-      select: { xp: true, level: true, userId: true },
-    });
-
-    const newLevel = calculateLevel(player.xp);
-    const completeLeveledUp = newLevel > player.level;
-    if (completeLeveledUp) {
-      await db.player.update({ where: { id: pm.playerId }, data: { level: newLevel } });
-    }
-
     await db.notification.create({
       data: {
         userId: pm.player.userId,
-        title: `Mision completada +${pm.mission.xpReward} XP`,
+        title: `Misión completada +${pm.mission.xpReward} XP`,
         message: `Completaste "${pm.mission.title}" y ganaste ${pm.mission.xpReward} XP.`,
         type: "ACHIEVEMENT",
       },
     });
 
-    if (completeLeveledUp) {
-      await db.notification.create({
-        data: {
-          userId: pm.player.userId,
-          title: `Subiste de nivel ${newLevel}`,
-          message: `¡Alcanzaste el Nivel ${newLevel}!`,
-          type: "ACHIEVEMENT",
-        },
-      });
-      try {
-        const newRewards = await db.reward.findMany({ where: { clubId, levelRequired: { lte: newLevel } } });
-        const earned = await db.playerReward.findMany({ where: { playerId: pm.playerId }, select: { rewardId: true } });
-        const earnedIds = new Set(earned.map((r) => r.rewardId));
-        const toGrant = newRewards.filter((r) => !earnedIds.has(r.id));
-        if (toGrant.length > 0) {
-          await db.playerReward.createMany({
-            data: toGrant.map((r) => ({ playerId: pm.playerId, rewardId: r.id })),
-          });
-          await db.notification.createMany({
-            data: toGrant.map((r) => ({
-              userId: pm.player.userId,
-              title: `Nueva recompensa ${r.icon ?? ""} ${r.title}`,
-              message: r.description,
-              type: "ACHIEVEMENT",
-              link: "/dashboard/player/rewards",
-            })),
-          });
-        }
-      } catch { /* non-fatal */ }
-    }
+    await awardXp(pm.playerId, clubId, pm.mission.xpReward, { touchLastActive: true });
 
     return apiOk({ ok: true, xpAwarded: pm.mission.xpReward });
   }

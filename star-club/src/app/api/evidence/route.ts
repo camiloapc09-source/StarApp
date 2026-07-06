@@ -5,6 +5,7 @@ import fs from "fs";
 import path from "path";
 import { randomBytes } from "crypto";
 import { requireAuth, requireRole, getClubId, isResponse, apiError, apiOk, rateLimit } from "@/lib/api";
+import { awardXp } from "@/lib/gamification";
 
 const uploadSchema = z.object({
   playerMissionId: z.string(),
@@ -103,13 +104,15 @@ export async function PATCH(req: NextRequest) {
           data: { status: "ACCEPTED", verifiedAt: new Date(), verifiedBy: session.user.id },
         });
 
-        const xp = ev.playerMission?.mission?.xpReward || 0;
-        if (xp > 0) {
-          await db.player.update({ where: { id: ev.playerId }, data: { xp: { increment: xp }, lastActive: new Date() } });
+        // Solo otorgar XP si la misión no estaba ya completada (evita XP duplicado).
+        const alreadyCompleted = ev.playerMission?.status === "COMPLETED";
+        if (ev.playerMissionId && !alreadyCompleted) {
+          await db.playerMission.update({ where: { id: ev.playerMissionId }, data: { status: "COMPLETED", completedAt: new Date() } });
         }
 
-        if (ev.playerMissionId) {
-          await db.playerMission.update({ where: { id: ev.playerMissionId }, data: { status: "COMPLETED", completedAt: new Date() } });
+        const xp = ev.playerMission?.mission?.xpReward || 0;
+        if (xp > 0 && !alreadyCompleted) {
+          await awardXp(ev.playerId, clubId, xp, { touchLastActive: true });
         }
 
         if (ev.url) {
@@ -135,15 +138,20 @@ export async function PATCH(req: NextRequest) {
     if (!ev || ev.player.clubId !== clubId) return apiError("Not found", 404);
 
     if (body.action === "accept") {
+      // Idempotencia: si la evidencia ya fue aceptada, no volver a otorgar XP.
+      if (ev.status === "ACCEPTED") return apiOk({ ok: true, alreadyAccepted: true });
+
       await db.evidence.update({ where: { id }, data: { status: "ACCEPTED", verifiedAt: new Date(), verifiedBy: session.user.id } });
 
-      const xp = ev.playerMission?.mission?.xpReward || 0;
-      if (xp > 0) {
-        await db.player.update({ where: { id: ev.playerId }, data: { xp: { increment: xp }, lastActive: new Date() } });
+      // Solo otorgar XP si la misión no estaba ya completada por otra evidencia.
+      const alreadyCompleted = ev.playerMission?.status === "COMPLETED";
+      if (ev.playerMissionId && !alreadyCompleted) {
+        await db.playerMission.update({ where: { id: ev.playerMissionId }, data: { status: "COMPLETED", completedAt: new Date() } });
       }
 
-      if (ev.playerMissionId) {
-        await db.playerMission.update({ where: { id: ev.playerMissionId }, data: { status: "COMPLETED", completedAt: new Date() } });
+      const xp = ev.playerMission?.mission?.xpReward || 0;
+      if (xp > 0 && !alreadyCompleted) {
+        await awardXp(ev.playerId, clubId, xp, { touchLastActive: true });
       }
 
       if (ev.url) {
@@ -154,6 +162,13 @@ export async function PATCH(req: NextRequest) {
       return apiOk({ ok: true });
     } else {
       await db.evidence.update({ where: { id }, data: { status: "REJECTED", verifiedAt: new Date(), verifiedBy: session.user.id } });
+
+      // Borrar el archivo también al rechazar — ya no se necesita, reduce costo de disco.
+      if (ev.url) {
+        const localPath = path.join(process.cwd(), "public", ev.url.replace(/^\//, ""));
+        try { fs.unlinkSync(localPath); } catch { /* ignore */ }
+      }
+
       return apiOk({ ok: true });
     }
   }

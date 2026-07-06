@@ -3,9 +3,17 @@ services:
     name: star-club
     env: node
     region: oregon
-    plan: free
+    plan: starter
     buildCommand: npm install && npx prisma db push --accept-data-loss && npm run build
     startCommand: npm start
+    # Disco persistente para archivos subidos (evidencias, avatares, fotos, logo).
+    # Sin esto, el filesystem de Render es efímero y todo se borra en cada deploy.
+    # IMPORTANTE: el mountPath debe coincidir con <cwd de la app>/public/uploads.
+    # Con "Root Directory = star-club" en el dashboard, la ruta es la de abajo.
+    disk:
+      name: uploads
+      mountPath: /opt/render/project/src/star-club/public/uploads
+      sizeGB: 1
     envVars:
       - key: DATABASE_URL
         sync: false        # Set in Render dashboard → Neon pooled connection string
@@ -13,5 +21,7 @@ services:
         generateValue: true
       - key: NEXTAUTH_URL
         sync: false        # Set to your app URL after first deploy
+      - key: CRON_SECRET
+        sync: false        # Debe coincidir con el secret CRON_SECRET de GitHub Actions
       - key: NODE_ENV
         value: production

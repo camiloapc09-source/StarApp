@@ -1,0 +1,29 @@
+name: Reseteo diario de misiones
+
+# Corre cada día a las 05:00 UTC = 00:00 (medianoche) hora de Colombia (UTC-5).
+# También se puede disparar manualmente desde la pestaña Actions de GitHub.
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  daily-reset:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar al endpoint de reseteo diario
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          BASE_URL="${APP_URL:-https://starapp.onrender.com}"
+          echo "Llamando a $BASE_URL/api/cron/daily-reset"
+          HTTP_CODE=$(curl -s -o /tmp/body.txt -w "%{http_code}" \
+            -X POST "$BASE_URL/api/cron/daily-reset" \
+            -H "Authorization: Bearer $CRON_SECRET")
+          echo "HTTP $HTTP_CODE"
+          cat /tmp/body.txt
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "::error::El reseteo diario falló con código $HTTP_CODE"
+            exit 1
+          fi
