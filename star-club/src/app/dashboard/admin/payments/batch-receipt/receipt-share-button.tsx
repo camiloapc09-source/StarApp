@@ -100,7 +100,9 @@ export default function ReceiptShareButton({
             width: "64px", height: "64px", borderRadius: "50%",
             background: "rgba(52,211,153,0.15)", border: "2px solid rgba(52,211,153,0.4)",
           }}>
-            <span style={{ color: "#34D399", fontSize: "30px", lineHeight: 1 }}>✓</span>
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#34D399" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
           </div>
         </div>
 
