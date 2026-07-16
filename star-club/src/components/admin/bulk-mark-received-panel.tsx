@@ -7,7 +7,7 @@ import { es } from "date-fns/locale";
 import {
   AlertTriangle, CheckSquare, Square, MinusSquare, Banknote,
   Loader2, PhoneCall, X, Check, MessageCircleMore, ChevronLeft, ChevronRight,
-  ChevronDown, ChevronRight as ChevronRightSm,
+  ChevronDown, ChevronRight as ChevronRightSm, Trash2,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import RecordPaymentModal from "@/components/admin/record-payment-modal";
@@ -60,39 +60,6 @@ function getColombiaDay(): number {
   ).getDate();
 }
 
-// Agrupa los pagos por mes de vencimiento (ascendente), ordenando cada mes por fecha.
-function groupByMonth(payments: Payment[]) {
-  const map = new Map<
-    string,
-    { key: string; label: string; date: Date; items: Payment[]; total: number }
-  >();
-  for (const p of payments) {
-    const d = new Date(p.dueDate);
-    const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
-    if (!map.has(key)) {
-      map.set(key, {
-        key,
-        label: format(d, "MMMM yyyy", { locale: es }),
-        date: new Date(d.getFullYear(), d.getMonth(), 1),
-        items: [],
-        total: 0,
-      });
-    }
-    const g = map.get(key)!;
-    g.items.push(p);
-    g.total += p.amount;
-  }
-  const groups = [...map.values()].sort((a, b) => a.date.getTime() - b.date.getTime());
-  for (const g of groups) {
-    g.items.sort(
-      (a, b) =>
-        new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime() ||
-        a.player.user.name.localeCompare(b.player.user.name),
-    );
-  }
-  return groups;
-}
-
 export default function BulkMarkReceivedPanel({
   payments,
   clubName = "el club",
@@ -102,14 +69,13 @@ export default function BulkMarkReceivedPanel({
 }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  // Meses abiertos por defecto: el mes actual y los anteriores (donde hay vencidos).
-  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(() => {
+  // Alumnos abiertos por defecto: los que tienen algún cobro vencido.
+  const [expandedPlayers, setExpandedPlayers] = useState<Set<string>>(() => {
     const now = new Date();
-    const currentMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     return new Set(
-      groupByMonth(payments)
-        .filter((g) => g.date <= currentMonthStart)
-        .map((g) => g.key),
+      payments
+        .filter((p) => p.status === "OVERDUE" || new Date(p.dueDate) < now)
+        .map((p) => p.playerId),
     );
   });
   const [showModal, setShowModal] = useState(false);
@@ -118,6 +84,7 @@ export default function BulkMarkReceivedPanel({
   const [error, setError] = useState<string | null>(null);
   const [showBulkWa, setShowBulkWa] = useState(false);
   const [bulkWaIdx, setBulkWaIdx] = useState(0);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const allSelected = selected.size === payments.length && payments.length > 0;
   const total = payments.filter((p) => selected.has(p.id)).reduce((s, p) => s + p.amount, 0);
@@ -149,9 +116,6 @@ export default function BulkMarkReceivedPanel({
       };
     })
     .sort((a, b) => new Date(a.oldestDue).getTime() - new Date(b.oldestDue).getTime());
-
-  // ─── Agrupar pagos por mes (para el desplegable visual) ───────
-  const monthGroups = groupByMonth(payments);
 
   // ─── WhatsApp: un mensaje por jugador (resumiendo todos sus meses) ───
   const bulkWaContacts = groups
@@ -206,13 +170,40 @@ export default function BulkMarkReceivedPanel({
     });
   }
 
-  function toggleMonth(key: string) {
-    setExpandedMonths((prev) => {
+  function togglePlayer(playerId: string) {
+    setExpandedPlayers((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
+      if (next.has(playerId)) next.delete(playerId);
+      else next.add(playerId);
       return next;
     });
+  }
+
+  async function deletePayments(ids: string[], label: string) {
+    if (ids.length === 0) return;
+    if (!window.confirm(
+      ids.length === 1
+        ? `¿Eliminar este cobro de ${label}? Esta acción no se puede deshacer.`
+        : `¿Eliminar los ${ids.length} cobros pendientes de ${label}? Úsalo para deportistas retirados. No se puede deshacer.`,
+    )) return;
+    setDeletingId(ids[0]);
+    try {
+      await Promise.all(
+        ids.map((id) =>
+          fetch(`/api/payments/${id}`, { method: "DELETE" }),
+        ),
+      );
+      setSelected((prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+      router.refresh();
+    } catch {
+      setError("No se pudo eliminar el cobro");
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function confirm() {
@@ -246,7 +237,7 @@ export default function BulkMarkReceivedPanel({
           <div className="flex items-center gap-3">
             <AlertTriangle size={16} style={{ color: "var(--warning)" }} />
             <h2 className="font-semibold text-sm" style={{ color: "var(--warning)" }}>
-              Por cobrar — {payments.length} pago{payments.length !== 1 ? "s" : ""} · {monthGroups.length} {monthGroups.length === 1 ? "mes" : "meses"}
+              Por cobrar — {payments.length} pago{payments.length !== 1 ? "s" : ""} · {groups.length} {groups.length === 1 ? "alumno" : "alumnos"}
             </h2>
           </div>
 
@@ -285,30 +276,47 @@ export default function BulkMarkReceivedPanel({
           </div>
         </div>
 
-        {/* Month groups — un desplegable por mes de vencimiento */}
+        {/* Un desplegable por alumno — todos sus meses adeudados juntos */}
         <div className="divide-y" style={{ borderColor: "var(--border-primary)" }}>
-          {monthGroups.map((mg) => {
-            const monthIds = mg.items.map((p) => p.id);
-            const selectedInMonth = monthIds.filter((id) => selected.has(id)).length;
-            const allInMonth = selectedInMonth === monthIds.length && monthIds.length > 0;
-            const someInMonth = selectedInMonth > 0 && !allInMonth;
-            const isOpen = expandedMonths.has(mg.key);
-            const overdueCount = mg.items.filter(
+          {groups.map((g) => {
+            const ids = g.items.map((p) => p.id);
+            const selectedInGroup = ids.filter((id) => selected.has(id)).length;
+            const allInGroup = selectedInGroup === ids.length && ids.length > 0;
+            const someInGroup = selectedInGroup > 0 && !allInGroup;
+            const isOpen = expandedPlayers.has(g.playerId);
+            const overdueCount = g.items.filter(
               (p) => p.status === "OVERDUE" || differenceInDays(new Date(p.dueDate), new Date()) < 0,
             ).length;
+            // items viene ascendente → el último es el mes más reciente adeudado
+            const latest = g.items[g.items.length - 1];
+
+            // WhatsApp consolidado (todos sus meses en un solo mensaje)
+            const parentLink = g.player.parentLinks?.[0]?.parent;
+            const phone = parentLink?.phone || parentLink?.user?.phone || g.player.user.phone;
+            const digits = phone?.replace(/[^0-9]/g, "");
+            const greeting = getColombiaGreeting();
+            const contactName = parentLink?.user?.name || g.player.user.name;
+            const conceptList = g.items
+              .map((p) => `• ${p.concept} — $${p.amount.toLocaleString("es-CO")}`)
+              .join("\n");
+            const monthsWord = g.items.length === 1 ? "el siguiente pago" : `los siguientes ${g.items.length} pagos`;
+            const groupMsg = `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. Le recordamos ${monthsWord} pendiente${g.items.length !== 1 ? "s" : ""} del deportista *${g.player.user.name}*:\n\n${conceptList}\n\n*Total: $${g.totalAmount.toLocaleString("es-CO")}*\n\nLe pedimos amablemente ponerse al día. 🙏\n\n¡Muchas gracias! 💚`;
+            const groupWaHref = digits
+              ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${encodeURIComponent(groupMsg)}`
+              : null;
 
             return (
-              <div key={mg.key} style={{ background: selectedInMonth > 0 ? "rgba(52,211,153,0.03)" : "transparent" }}>
-                {/* Month header — clickable to toggle */}
+              <div key={g.playerId} style={{ background: selectedInGroup > 0 ? "rgba(52,211,153,0.03)" : "transparent" }}>
+                {/* Player header — clickable to toggle */}
                 <div
                   className="px-4 sm:px-5 py-3.5 flex items-center gap-3 cursor-pointer transition-all"
-                  onClick={() => toggleMonth(mg.key)}
+                  onClick={() => togglePlayer(g.playerId)}
                 >
-                  {/* Select-all-month checkbox */}
-                  <div className="flex-shrink-0" onClick={(e) => { e.stopPropagation(); toggleGroup(mg.items); }}>
-                    {allInMonth
+                  {/* Select-all-player checkbox */}
+                  <div className="flex-shrink-0" onClick={(e) => { e.stopPropagation(); toggleGroup(g.items); }}>
+                    {allInGroup
                       ? <CheckSquare size={18} style={{ color: "#34D399" }} />
-                      : someInMonth
+                      : someInGroup
                       ? <MinusSquare size={18} style={{ color: "#34D399" }} />
                       : <Square size={18} style={{ color: "rgba(255,255,255,0.25)" }} />}
                   </div>
@@ -317,9 +325,11 @@ export default function BulkMarkReceivedPanel({
                     {isOpen ? <ChevronDown size={16} /> : <ChevronRightSm size={16} />}
                   </div>
 
+                  <Avatar name={g.player.user.name} src={g.player.user.avatar} size="sm" />
+
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-bold capitalize">{mg.label}</p>
+                      <p className="text-sm font-bold truncate">{g.player.user.name}</p>
                       {overdueCount > 0 && (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
                           style={{ background: "rgba(255,71,87,0.12)", color: "var(--error)" }}>
@@ -328,33 +338,29 @@ export default function BulkMarkReceivedPanel({
                       )}
                     </div>
                     <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                      {mg.items.length} pago{mg.items.length !== 1 ? "s" : ""}
+                      {g.items.length} mes{g.items.length !== 1 ? "es" : ""} · último{" "}
+                      <span className="capitalize">{format(new Date(latest.dueDate), "MMM yyyy", { locale: es })}</span>
                     </p>
                   </div>
 
-                  <p className="text-base font-black flex-shrink-0" style={{ color: "var(--warning)" }}>
-                    ${mg.total.toLocaleString("es-CO")}
+                  <p className="text-base font-black flex-shrink-0" style={{ color: g.isLate ? "var(--error)" : "var(--warning)" }}>
+                    ${g.totalAmount.toLocaleString("es-CO")}
                   </p>
                 </div>
 
-                {/* Payment rows — one per player for this month */}
+                {/* Payment rows — one per owed month */}
                 {isOpen && (
                   <div className="pb-3" style={{ background: "rgba(0,0,0,0.12)" }}>
-                    {mg.items.map((payment) => {
+                    {g.items.map((payment) => {
                       const isSelected = selected.has(payment.id);
                       const daysLeft = differenceInDays(new Date(payment.dueDate), new Date());
                       const isLate = payment.status === "OVERDUE" || daysLeft < 0;
-                      const parentLink = payment.player.parentLinks?.[0]?.parent;
-                      const phone = parentLink?.phone || parentLink?.user?.phone || payment.player.user.phone;
-                      const digits = phone?.replace(/[^0-9]/g, "");
-                      const greeting = getColombiaGreeting();
-                      const contactName = parentLink?.user?.name || payment.player.user.name;
-                      const waMsg = encodeURIComponent(
+                      const pWaMsg = encodeURIComponent(
                         isLate
-                          ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* se encuentra *vencido* desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")} 📋.\n\nLe pedimos amablemente ponerse al día. 🙏\n\n¡Muchas gracias! 💚`
-                          : `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nLe recordamos que el pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${payment.player.user.name}* por concepto de *${payment.concept}* tiene fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n¡Muchas gracias! 💚`
+                          ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${g.player.user.name}* por concepto de *${payment.concept}* se encuentra *vencido* desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")} 📋.\n\nLe pedimos amablemente ponerse al día. 🙏\n\n¡Muchas gracias! 💚`
+                          : `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nLe recordamos que el pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${g.player.user.name}* por concepto de *${payment.concept}* tiene fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n¡Muchas gracias! 💚`
                       );
-                      const waHref = digits ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${waMsg}` : null;
+                      const pWaHref = digits ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${pWaMsg}` : null;
 
                       return (
                         <div key={payment.id} className="px-3 sm:px-4 py-3 mx-2 sm:mx-3 my-1 rounded-xl flex items-center gap-3 flex-wrap"
@@ -364,33 +370,59 @@ export default function BulkMarkReceivedPanel({
                               ? <CheckSquare size={16} style={{ color: "#34D399" }} />
                               : <Square size={16} style={{ color: "rgba(255,255,255,0.25)" }} />}
                           </div>
-                          <Avatar name={payment.player.user.name} src={payment.player.user.avatar} size="sm" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{payment.player.user.name}</p>
+                            <p className="text-sm font-medium truncate">{payment.concept}</p>
                             <p className="text-[11px] mt-0.5" style={{ color: isLate ? "var(--error)" : "var(--warning)" }}>
-                              {payment.concept}
-                              {" · "}{isLate ? `Vencido ${Math.abs(daysLeft)}d` : `Vence ${format(new Date(payment.dueDate), "dd MMM", { locale: es })}`}
+                              {isLate ? `Vencido ${Math.abs(daysLeft)}d` : `Vence ${format(new Date(payment.dueDate), "dd MMM", { locale: es })}`}
                               {" · "}${payment.amount.toLocaleString("es-CO")}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <RecordPaymentModal
                               paymentId={payment.id}
-                              playerName={payment.player.user.name}
+                              playerName={g.player.user.name}
                               concept={payment.concept}
                               fullAmount={payment.amount}
                             />
-                            {waHref && (
-                              <a href={waHref} target="_blank" rel="noreferrer"
+                            {pWaHref && (
+                              <a href={pWaHref} target="_blank" rel="noreferrer"
                                 className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
                                 style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}>
                                 <PhoneCall size={12} /> WhatsApp
                               </a>
                             )}
+                            <button
+                              onClick={() => deletePayments([payment.id], g.player.user.name)}
+                              disabled={deletingId === payment.id}
+                              title="Eliminar este cobro"
+                              className="flex items-center justify-center p-1.5 rounded-xl transition-all hover:opacity-80 disabled:opacity-40"
+                              style={{ background: "rgba(255,71,87,0.10)", color: "#ff4757", border: "1px solid rgba(255,71,87,0.22)" }}>
+                              {deletingId === payment.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                            </button>
                           </div>
                         </div>
                       );
                     })}
+
+                    {/* Acciones a nivel de alumno */}
+                    <div className="px-3 sm:px-5 pt-1.5 flex items-center gap-2 flex-wrap">
+                      {groupWaHref && (
+                        <a href={groupWaHref} target="_blank" rel="noreferrer"
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+                          style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}>
+                          <MessageCircleMore size={13} /> Cobrar todo por WhatsApp
+                        </a>
+                      )}
+                      {g.items.length > 1 && (
+                        <button
+                          onClick={() => deletePayments(ids, g.player.user.name)}
+                          disabled={deletingId != null}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80 disabled:opacity-40"
+                          style={{ background: "rgba(255,71,87,0.08)", color: "#ff4757", border: "1px solid rgba(255,71,87,0.20)" }}>
+                          <Trash2 size={13} /> Eliminar los {g.items.length} cobros
+                        </button>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

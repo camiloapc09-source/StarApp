@@ -102,18 +102,44 @@ export async function PATCH(
     },
   });
 
-  // Beca total (100%): el jugador no debe deber mensualidad. Cancelamos sus
-  // cobros abiertos (pendientes/vencidos/por verificar) para que no quede deuda fantasma.
-  // Los pagos ya COMPLETADOS quedan intactos como historial.
+  // Ajustes sobre los cobros abiertos según el cambio aplicado.
+  // Los pagos ya COMPLETADOS nunca se tocan (historial).
   let canceledPayments = 0;
+  let updatedPayments = 0;
+  const OPEN = ["PENDING", "OVERDUE", "SUBMITTED"] as const;
+
   if (parsed.data.scholarshipPct === 100) {
+    // Beca total: el jugador no debe deber nada. Cancelamos todos sus cobros abiertos.
     const result = await db.payment.deleteMany({
-      where: { playerId: id, status: { in: ["PENDING", "OVERDUE", "SUBMITTED"] } },
+      where: { playerId: id, status: { in: [...OPEN] } },
     });
     canceledPayments = result.count;
+  } else if (parsed.data.status === "INACTIVE") {
+    // Deportista retirado: eliminamos las mensualidades abiertas generadas para que
+    // no sigan apareciendo por cobrar. Otros cobros (uniformes, etc.) se conservan.
+    const result = await db.payment.deleteMany({
+      where: { playerId: id, status: { in: [...OPEN] }, concept: { startsWith: "Mensualidad" } },
+    });
+    canceledPayments = result.count;
+  } else if (typeof parsed.data.monthlyAmount === "number") {
+    if (parsed.data.monthlyAmount <= 0) {
+      // Monto en 0 (beca implícita): cancelamos las mensualidades abiertas.
+      const result = await db.payment.deleteMany({
+        where: { playerId: id, status: { in: [...OPEN] }, concept: { startsWith: "Mensualidad" } },
+      });
+      canceledPayments = result.count;
+    } else {
+      // Cambió la mensualidad (por sede o beca 50%): ajustamos las mensualidades
+      // pendientes/vencidas al nuevo monto para que se refleje de inmediato.
+      const result = await db.payment.updateMany({
+        where: { playerId: id, status: { in: ["PENDING", "OVERDUE"] }, concept: { startsWith: "Mensualidad" } },
+        data: { amount: parsed.data.monthlyAmount },
+      });
+      updatedPayments = result.count;
+    }
   }
 
-  return apiOk({ ...updated, canceledPayments });
+  return apiOk({ ...updated, canceledPayments, updatedPayments });
 }
 
 export async function DELETE(

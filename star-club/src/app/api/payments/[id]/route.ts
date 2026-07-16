@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { requireAdmin, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
 import { sendPaymentConfirmedEmail } from "@/lib/email";
 import { sendPushToUser } from "@/lib/push";
+import { ensureNextMonthlyPayment } from "@/lib/billing";
 
 // PATCH /api/payments/[id] — admin confirms payment (full or partial)
 // Body: { paymentMethod?: string, paidAmount?: number }
@@ -122,33 +123,7 @@ export async function PATCH(
   // Auto-generate next month only on full payment
   if (!isPartial) {
     try {
-      const lastPending = payment.player.payments[0];
-      const paymentDay  = payment.player.paymentDay ?? new Date(payment.dueDate).getDate();
-      const prevDue     = new Date(payment.dueDate);
-      const nextMonth   = prevDue.getMonth() + 1;
-      const nextYear    = prevDue.getFullYear() + (nextMonth > 11 ? 1 : 0);
-      const month       = nextMonth % 12;
-      const lastDay     = new Date(nextYear, month + 1, 0).getDate();
-      const nextDue     = new Date(nextYear, month, Math.min(paymentDay, lastDay));
-
-      const alreadyExists = lastPending && new Date(lastPending.dueDate) >= nextDue;
-
-      if (!alreadyExists) {
-        const periodEnd  = new Date(nextYear, month + 1, Math.min(paymentDay, new Date(nextYear, month + 2, 0).getDate()) - 1);
-        const periodLabel = `${nextDue.toLocaleDateString("es-CO", { day: "numeric", month: "short" })} – ${periodEnd.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })}`;
-        const nextAmount  = payment.player.monthlyAmount ?? payment.amount;
-
-        await db.payment.create({
-          data: {
-            clubId,
-            playerId: payment.player.id,
-            amount:   nextAmount,
-            concept:  `Mensualidad ${periodLabel}`,
-            status:   "PENDING",
-            dueDate:  nextDue,
-          },
-        });
-      }
+      await ensureNextMonthlyPayment(existing.playerId, effectiveAmount);
     } catch (e) {
       console.error("Failed to auto-generate next payment", e);
     }

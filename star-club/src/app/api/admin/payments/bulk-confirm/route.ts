@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireAdmin, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
+import { ensureNextMonthlyPayment } from "@/lib/billing";
 
 const schema = z.object({
   ids:           z.array(z.string()).min(1).max(100),
@@ -42,6 +43,21 @@ export async function POST(req: NextRequest) {
     type: "PAYMENT",
   }));
   await db.notification.createMany({ data: notifData });
+
+  // Auto-generar el cobro del siguiente mes por jugador (una sola vez por jugador,
+  // cuando queda al día). Usa el monto pagado como respaldo si no hay monthlyAmount.
+  const amountByPlayer = new Map<string, number>();
+  for (const p of payments) {
+    const prev = amountByPlayer.get(p.player.id) ?? 0;
+    if (p.amount > prev) amountByPlayer.set(p.player.id, p.amount);
+  }
+  for (const [playerId, amount] of amountByPlayer) {
+    try {
+      await ensureNextMonthlyPayment(playerId, amount);
+    } catch (e) {
+      console.error("Failed to auto-generate next payment (bulk)", e);
+    }
+  }
 
   return apiOk({ confirmed: payments.length, ids: payments.map((p) => p.id) });
 }

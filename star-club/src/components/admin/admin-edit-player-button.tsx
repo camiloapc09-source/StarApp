@@ -62,6 +62,23 @@ export default function AdminEditPlayerButton({ player, categories, zones = [], 
     });
   }
 
+  // Al cambiar de sede: auto-calcular la mensualidad según el precio de esa sede,
+  // aplicando la beca vigente (50% → mitad, 100% → 0). Si la sede no tiene precio
+  // configurado, se deja el monto como estaba para ajustarlo a mano.
+  function applyZone(z: string) {
+    setData((d) => {
+      const price = z ? (zonePrices[z] ?? null) : null;
+      let newAmount = d.monthlyAmount;
+      if (price != null) {
+        const pct = d.scholarshipPct ? parseInt(d.scholarshipPct) : 0;
+        if (pct === 100) newAmount = "0";
+        else if (pct > 0) newAmount = String(Math.round(price * (pct / 100)));
+        else newAmount = String(price);
+      }
+      return { ...d, zone: z, monthlyAmount: newAmount };
+    });
+  }
+
   const set = (k: keyof typeof data) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setData((d) => ({ ...d, [k]: e.target.value }));
 
@@ -142,7 +159,7 @@ export default function AdminEditPlayerButton({ player, categories, zones = [], 
                     <div className="flex gap-2 flex-wrap">
                       <button
                         type="button"
-                        onClick={() => setData((d) => ({ ...d, zone: "" }))}
+                        onClick={() => applyZone("")}
                         className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
                         style={!data.zone
                           ? { background: "rgba(52,211,153,0.18)", color: "#6EE7B7", borderColor: "rgba(52,211,153,0.35)" }
@@ -154,7 +171,7 @@ export default function AdminEditPlayerButton({ player, categories, zones = [], 
                         <button
                           key={z}
                           type="button"
-                          onClick={() => setData((d) => ({ ...d, zone: z }))}
+                          onClick={() => applyZone(z)}
                           className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
                           style={data.zone === z
                             ? { background: "rgba(52,211,153,0.18)", color: "#6EE7B7", borderColor: "rgba(52,211,153,0.35)" }
