@@ -69,13 +69,13 @@ export default function BulkMarkReceivedPanel({
 }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  // Alumnos abiertos por defecto: los que tienen algún cobro vencido.
-  const [expandedPlayers, setExpandedPlayers] = useState<Set<string>>(() => {
-    const now = new Date();
+  // Todos los meses abiertos por defecto (suelen ser pocos).
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(() => {
     return new Set(
-      payments
-        .filter((p) => p.status === "OVERDUE" || new Date(p.dueDate) < now)
-        .map((p) => p.playerId),
+      payments.map((p) => {
+        const d = new Date(p.dueDate);
+        return `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
+      }),
     );
   });
   const [showModal, setShowModal] = useState(false);
@@ -102,6 +102,7 @@ export default function BulkMarkReceivedPanel({
         (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
       );
       const oldest = sorted[0];
+      const latest = sorted[sorted.length - 1];
       const daysLeft = differenceInDays(new Date(oldest.dueDate), new Date());
       const isLate = oldest.status === "OVERDUE" || daysLeft < 0;
       return {
@@ -110,12 +111,40 @@ export default function BulkMarkReceivedPanel({
         player: oldest.player,
         totalAmount: items.reduce((s, p) => s + p.amount, 0),
         oldestDue: oldest.dueDate,
+        latestDue: latest.dueDate,
         oldestDaysLeft: daysLeft,
         isLate,
         lastPaid: oldest.lastPaid,
       };
     })
     .sort((a, b) => new Date(a.oldestDue).getTime() - new Date(b.oldestDue).getTime());
+
+  // ─── Agrupar alumnos por su ÚLTIMO mes adeudado ───────────────
+  // Cada alumno aparece UNA sola vez, dentro del desplegable de su mes más
+  // reciente. Ahí mismo se ven todos los meses que debe (incluidos los anteriores).
+  type PlayerGroup = (typeof groups)[number];
+  const monthMap = new Map<
+    string,
+    { key: string; label: string; date: Date; players: PlayerGroup[]; total: number }
+  >();
+  for (const g of groups) {
+    const d = new Date(g.latestDue);
+    const key = `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
+    if (!monthMap.has(key)) {
+      monthMap.set(key, {
+        key,
+        label: format(d, "MMMM yyyy", { locale: es }),
+        date: new Date(d.getFullYear(), d.getMonth(), 1),
+        players: [],
+        total: 0,
+      });
+    }
+    const m = monthMap.get(key)!;
+    m.players.push(g);
+    m.total += g.totalAmount;
+  }
+  // Meses en orden descendente (el más reciente arriba).
+  const monthGroups = [...monthMap.values()].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   // ─── WhatsApp: un mensaje por jugador (resumiendo todos sus meses) ───
   const bulkWaContacts = groups
@@ -170,11 +199,11 @@ export default function BulkMarkReceivedPanel({
     });
   }
 
-  function togglePlayer(playerId: string) {
-    setExpandedPlayers((prev) => {
+  function toggleMonth(key: string) {
+    setExpandedMonths((prev) => {
       const next = new Set(prev);
-      if (next.has(playerId)) next.delete(playerId);
-      else next.add(playerId);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
       return next;
     });
   }
@@ -276,47 +305,32 @@ export default function BulkMarkReceivedPanel({
           </div>
         </div>
 
-        {/* Un desplegable por alumno — todos sus meses adeudados juntos */}
+        {/* Desplegables por mes — cada alumno aparece UNA sola vez, en su último
+            mes adeudado, y ahí mismo se ven todos los meses que debe. */}
         <div className="divide-y" style={{ borderColor: "var(--border-primary)" }}>
-          {groups.map((g) => {
-            const ids = g.items.map((p) => p.id);
-            const selectedInGroup = ids.filter((id) => selected.has(id)).length;
-            const allInGroup = selectedInGroup === ids.length && ids.length > 0;
-            const someInGroup = selectedInGroup > 0 && !allInGroup;
-            const isOpen = expandedPlayers.has(g.playerId);
-            const overdueCount = g.items.filter(
+          {monthGroups.map((mg) => {
+            const monthPayments = mg.players.flatMap((g) => g.items);
+            const monthIds = monthPayments.map((p) => p.id);
+            const selectedInMonth = monthIds.filter((id) => selected.has(id)).length;
+            const allInMonth = selectedInMonth === monthIds.length && monthIds.length > 0;
+            const someInMonth = selectedInMonth > 0 && !allInMonth;
+            const isOpen = expandedMonths.has(mg.key);
+            const overdueCount = monthPayments.filter(
               (p) => p.status === "OVERDUE" || differenceInDays(new Date(p.dueDate), new Date()) < 0,
             ).length;
-            // items viene ascendente → el último es el mes más reciente adeudado
-            const latest = g.items[g.items.length - 1];
-
-            // WhatsApp consolidado (todos sus meses en un solo mensaje)
-            const parentLink = g.player.parentLinks?.[0]?.parent;
-            const phone = parentLink?.phone || parentLink?.user?.phone || g.player.user.phone;
-            const digits = phone?.replace(/[^0-9]/g, "");
-            const greeting = getColombiaGreeting();
-            const contactName = parentLink?.user?.name || g.player.user.name;
-            const conceptList = g.items
-              .map((p) => `• ${p.concept} — $${p.amount.toLocaleString("es-CO")}`)
-              .join("\n");
-            const monthsWord = g.items.length === 1 ? "el siguiente pago" : `los siguientes ${g.items.length} pagos`;
-            const groupMsg = `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. Le recordamos ${monthsWord} pendiente${g.items.length !== 1 ? "s" : ""} del deportista *${g.player.user.name}*:\n\n${conceptList}\n\n*Total: $${g.totalAmount.toLocaleString("es-CO")}*\n\nLe pedimos amablemente ponerse al día. 🙏\n\n¡Muchas gracias! 💚`;
-            const groupWaHref = digits
-              ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${encodeURIComponent(groupMsg)}`
-              : null;
 
             return (
-              <div key={g.playerId} style={{ background: selectedInGroup > 0 ? "rgba(52,211,153,0.03)" : "transparent" }}>
-                {/* Player header — clickable to toggle */}
+              <div key={mg.key} style={{ background: selectedInMonth > 0 ? "rgba(52,211,153,0.03)" : "transparent" }}>
+                {/* Month header — clickable to toggle */}
                 <div
                   className="px-4 sm:px-5 py-3.5 flex items-center gap-3 cursor-pointer transition-all"
-                  onClick={() => togglePlayer(g.playerId)}
+                  onClick={() => toggleMonth(mg.key)}
                 >
-                  {/* Select-all-player checkbox */}
-                  <div className="flex-shrink-0" onClick={(e) => { e.stopPropagation(); toggleGroup(g.items); }}>
-                    {allInGroup
+                  {/* Select-all-month checkbox */}
+                  <div className="flex-shrink-0" onClick={(e) => { e.stopPropagation(); toggleGroup(monthPayments); }}>
+                    {allInMonth
                       ? <CheckSquare size={18} style={{ color: "#34D399" }} />
-                      : someInGroup
+                      : someInMonth
                       ? <MinusSquare size={18} style={{ color: "#34D399" }} />
                       : <Square size={18} style={{ color: "rgba(255,255,255,0.25)" }} />}
                   </div>
@@ -325,11 +339,9 @@ export default function BulkMarkReceivedPanel({
                     {isOpen ? <ChevronDown size={16} /> : <ChevronRightSm size={16} />}
                   </div>
 
-                  <Avatar name={g.player.user.name} src={g.player.user.avatar} size="sm" />
-
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-bold truncate">{g.player.user.name}</p>
+                      <p className="text-sm font-bold capitalize">{mg.label}</p>
                       {overdueCount > 0 && (
                         <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
                           style={{ background: "rgba(255,71,87,0.12)", color: "var(--error)" }}>
@@ -338,91 +350,143 @@ export default function BulkMarkReceivedPanel({
                       )}
                     </div>
                     <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                      {g.items.length} mes{g.items.length !== 1 ? "es" : ""} · último{" "}
-                      <span className="capitalize">{format(new Date(latest.dueDate), "MMM yyyy", { locale: es })}</span>
+                      {mg.players.length} alumno{mg.players.length !== 1 ? "s" : ""}
                     </p>
                   </div>
 
-                  <p className="text-base font-black flex-shrink-0" style={{ color: g.isLate ? "var(--error)" : "var(--warning)" }}>
-                    ${g.totalAmount.toLocaleString("es-CO")}
+                  <p className="text-base font-black flex-shrink-0" style={{ color: "var(--warning)" }}>
+                    ${mg.total.toLocaleString("es-CO")}
                   </p>
                 </div>
 
-                {/* Payment rows — one per owed month */}
+                {/* Un bloque por alumno con todos sus meses adeudados */}
                 {isOpen && (
-                  <div className="pb-3" style={{ background: "rgba(0,0,0,0.12)" }}>
-                    {g.items.map((payment) => {
-                      const isSelected = selected.has(payment.id);
-                      const daysLeft = differenceInDays(new Date(payment.dueDate), new Date());
-                      const isLate = payment.status === "OVERDUE" || daysLeft < 0;
-                      const pWaMsg = encodeURIComponent(
-                        isLate
-                          ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${g.player.user.name}* por concepto de *${payment.concept}* se encuentra *vencido* desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")} 📋.\n\nLe pedimos amablemente ponerse al día. 🙏\n\n¡Muchas gracias! 💚`
-                          : `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nLe recordamos que el pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${g.player.user.name}* por concepto de *${payment.concept}* tiene fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n¡Muchas gracias! 💚`
-                      );
-                      const pWaHref = digits ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${pWaMsg}` : null;
+                  <div className="pb-3 space-y-2" style={{ background: "rgba(0,0,0,0.12)" }}>
+                    {mg.players.map((g) => {
+                      const ids = g.items.map((p) => p.id);
+                      const selectedInGroup = ids.filter((id) => selected.has(id)).length;
+                      const allInGroup = selectedInGroup === ids.length && ids.length > 0;
+                      const someInGroup = selectedInGroup > 0 && !allInGroup;
+
+                      // WhatsApp consolidado (todos sus meses en un solo mensaje)
+                      const parentLink = g.player.parentLinks?.[0]?.parent;
+                      const phone = parentLink?.phone || parentLink?.user?.phone || g.player.user.phone;
+                      const digits = phone?.replace(/[^0-9]/g, "");
+                      const greeting = getColombiaGreeting();
+                      const contactName = parentLink?.user?.name || g.player.user.name;
+                      const conceptList = g.items
+                        .map((p) => `• ${p.concept} — $${p.amount.toLocaleString("es-CO")}`)
+                        .join("\n");
+                      const monthsWord = g.items.length === 1 ? "el siguiente pago" : `los siguientes ${g.items.length} pagos`;
+                      const groupMsg = `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. Le recordamos ${monthsWord} pendiente${g.items.length !== 1 ? "s" : ""} del deportista *${g.player.user.name}*:\n\n${conceptList}\n\n*Total: $${g.totalAmount.toLocaleString("es-CO")}*\n\nLe pedimos amablemente ponerse al día. 🙏\n\n¡Muchas gracias! 💚`;
+                      const groupWaHref = digits
+                        ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${encodeURIComponent(groupMsg)}`
+                        : null;
 
                       return (
-                        <div key={payment.id} className="px-3 sm:px-4 py-3 mx-2 sm:mx-3 my-1 rounded-xl flex items-center gap-3 flex-wrap"
-                          style={{ background: isSelected ? "rgba(52,211,153,0.06)" : "rgba(255,255,255,0.02)" }}>
-                          <div className="flex-shrink-0 cursor-pointer" onClick={() => toggle(payment.id)}>
-                            {isSelected
-                              ? <CheckSquare size={16} style={{ color: "#34D399" }} />
-                              : <Square size={16} style={{ color: "rgba(255,255,255,0.25)" }} />}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium truncate">{payment.concept}</p>
-                            <p className="text-[11px] mt-0.5" style={{ color: isLate ? "var(--error)" : "var(--warning)" }}>
-                              {isLate ? `Vencido ${Math.abs(daysLeft)}d` : `Vence ${format(new Date(payment.dueDate), "dd MMM", { locale: es })}`}
-                              {" · "}${payment.amount.toLocaleString("es-CO")}
+                        <div key={g.playerId} className="mx-2 sm:mx-3 rounded-xl overflow-hidden"
+                          style={{ background: selectedInGroup > 0 ? "rgba(52,211,153,0.05)" : "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                          {/* Sub-cabecera del alumno */}
+                          <div className="px-3 sm:px-4 py-2.5 flex items-center gap-3">
+                            <div className="flex-shrink-0 cursor-pointer" onClick={() => toggleGroup(g.items)}>
+                              {allInGroup
+                                ? <CheckSquare size={16} style={{ color: "#34D399" }} />
+                                : someInGroup
+                                ? <MinusSquare size={16} style={{ color: "#34D399" }} />
+                                : <Square size={16} style={{ color: "rgba(255,255,255,0.25)" }} />}
+                            </div>
+                            <Avatar name={g.player.user.name} src={g.player.user.avatar} size="sm" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold truncate">{g.player.user.name}</p>
+                              <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                                {g.items.length === 1
+                                  ? "1 mes"
+                                  : `${g.items.length} meses (incluye anteriores)`}
+                              </p>
+                            </div>
+                            <p className="text-sm font-black flex-shrink-0" style={{ color: g.isLate ? "var(--error)" : "var(--warning)" }}>
+                              ${g.totalAmount.toLocaleString("es-CO")}
                             </p>
                           </div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <RecordPaymentModal
-                              paymentId={payment.id}
-                              playerName={g.player.user.name}
-                              concept={payment.concept}
-                              fullAmount={payment.amount}
-                            />
-                            {pWaHref && (
-                              <a href={pWaHref} target="_blank" rel="noreferrer"
-                                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
-                                style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}>
-                                <PhoneCall size={12} /> WhatsApp
-                              </a>
-                            )}
-                            <button
-                              onClick={() => deletePayments([payment.id], g.player.user.name)}
-                              disabled={deletingId === payment.id}
-                              title="Eliminar este cobro"
-                              className="flex items-center justify-center p-1.5 rounded-xl transition-all hover:opacity-80 disabled:opacity-40"
-                              style={{ background: "rgba(255,71,87,0.10)", color: "#ff4757", border: "1px solid rgba(255,71,87,0.22)" }}>
-                              {deletingId === payment.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                            </button>
+
+                          {/* Filas: un cobro por mes */}
+                          <div className="px-1.5 sm:px-2 pb-2 space-y-1">
+                            {g.items.map((payment) => {
+                              const isSelected = selected.has(payment.id);
+                              const daysLeft = differenceInDays(new Date(payment.dueDate), new Date());
+                              const isLate = payment.status === "OVERDUE" || daysLeft < 0;
+                              const pWaMsg = encodeURIComponent(
+                                isLate
+                                  ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${g.player.user.name}* por concepto de *${payment.concept}* se encuentra *vencido* desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")} 📋.\n\nLe pedimos amablemente ponerse al día. 🙏\n\n¡Muchas gracias! 💚`
+                                  : `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nLe recordamos que el pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${g.player.user.name}* por concepto de *${payment.concept}* tiene fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n¡Muchas gracias! 💚`
+                              );
+                              const pWaHref = digits ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${pWaMsg}` : null;
+
+                              return (
+                                <div key={payment.id} className="px-2.5 sm:px-3 py-2.5 rounded-lg flex items-center gap-3 flex-wrap"
+                                  style={{ background: isSelected ? "rgba(52,211,153,0.06)" : "rgba(255,255,255,0.02)" }}>
+                                  <div className="flex-shrink-0 cursor-pointer" onClick={() => toggle(payment.id)}>
+                                    {isSelected
+                                      ? <CheckSquare size={16} style={{ color: "#34D399" }} />
+                                      : <Square size={16} style={{ color: "rgba(255,255,255,0.25)" }} />}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate">{payment.concept}</p>
+                                    <p className="text-[11px] mt-0.5" style={{ color: isLate ? "var(--error)" : "var(--warning)" }}>
+                                      {isLate ? `Vencido ${Math.abs(daysLeft)}d` : `Vence ${format(new Date(payment.dueDate), "dd MMM", { locale: es })}`}
+                                      {" · "}${payment.amount.toLocaleString("es-CO")}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <RecordPaymentModal
+                                      paymentId={payment.id}
+                                      playerName={g.player.user.name}
+                                      concept={payment.concept}
+                                      fullAmount={payment.amount}
+                                    />
+                                    {pWaHref && (
+                                      <a href={pWaHref} target="_blank" rel="noreferrer"
+                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+                                        style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}>
+                                        <PhoneCall size={12} /> WhatsApp
+                                      </a>
+                                    )}
+                                    <button
+                                      onClick={() => deletePayments([payment.id], g.player.user.name)}
+                                      disabled={deletingId === payment.id}
+                                      title="Eliminar este cobro"
+                                      className="flex items-center justify-center p-1.5 rounded-xl transition-all hover:opacity-80 disabled:opacity-40"
+                                      style={{ background: "rgba(255,71,87,0.10)", color: "#ff4757", border: "1px solid rgba(255,71,87,0.22)" }}>
+                                      {deletingId === payment.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+
+                            {/* Acciones a nivel de alumno */}
+                            <div className="px-1.5 pt-1 flex items-center gap-2 flex-wrap">
+                              {groupWaHref && (
+                                <a href={groupWaHref} target="_blank" rel="noreferrer"
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+                                  style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}>
+                                  <MessageCircleMore size={13} /> Cobrar todo por WhatsApp
+                                </a>
+                              )}
+                              {g.items.length > 1 && (
+                                <button
+                                  onClick={() => deletePayments(ids, g.player.user.name)}
+                                  disabled={deletingId != null}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80 disabled:opacity-40"
+                                  style={{ background: "rgba(255,71,87,0.08)", color: "#ff4757", border: "1px solid rgba(255,71,87,0.20)" }}>
+                                  <Trash2 size={13} /> Eliminar los {g.items.length} cobros
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       );
                     })}
-
-                    {/* Acciones a nivel de alumno */}
-                    <div className="px-3 sm:px-5 pt-1.5 flex items-center gap-2 flex-wrap">
-                      {groupWaHref && (
-                        <a href={groupWaHref} target="_blank" rel="noreferrer"
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
-                          style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}>
-                          <MessageCircleMore size={13} /> Cobrar todo por WhatsApp
-                        </a>
-                      )}
-                      {g.items.length > 1 && (
-                        <button
-                          onClick={() => deletePayments(ids, g.player.user.name)}
-                          disabled={deletingId != null}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80 disabled:opacity-40"
-                          style={{ background: "rgba(255,71,87,0.08)", color: "#ff4757", border: "1px solid rgba(255,71,87,0.20)" }}>
-                          <Trash2 size={13} /> Eliminar los {g.items.length} cobros
-                        </button>
-                      )}
-                    </div>
                   </div>
                 )}
               </div>
