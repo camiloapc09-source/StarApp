@@ -24,6 +24,11 @@ model Club {
   earlyPaymentDiscount Float @default(0)   // discount amount in COP
   zonePrices           Json?               // { "SUR": 80000, "CENTRO": 90000, "NORTE": 100000 }
   coachCanInvite       Boolean  @default(false)
+  // ── Suscripción a la app (control del super admin) ──
+  active             Boolean   @default(true)  // false = acceso suspendido por falta de pago
+  suspendedAt        DateTime?                 // cuándo se suspendió (auditoría)
+  nextPaymentDue     DateTime?                 // fecha en que el club debe pagar a StarApp
+  subscriptionAmount Float?                    // mensualidad que el club paga por usar la app (COP)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -294,6 +299,7 @@ model Reward {
   createdAt   DateTime @default(now())
 
   playerRewards PlayerReward[]
+
 
   @@index([clubId])
 }

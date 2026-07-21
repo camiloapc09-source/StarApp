@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { isSuperAdminEmail } from "@/lib/superadmin";
 import type { Session } from "next-auth";
 
 type AppSession = Session & { user: Session["user"] & { id: string; role: string; clubId: string } };
@@ -13,9 +14,30 @@ export function apiError(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
+// Bloquea las llamadas de un club con la suscripción suspendida. El super admin
+// (StarApp) nunca queda bloqueado. Devuelve una respuesta 403 si está suspendido,
+// o null si puede continuar.
+async function clubSuspendedResponse(session: AppSession): Promise<NextResponse | null> {
+  const email = (session.user as { email?: string }).email ?? "";
+  if (isSuperAdminEmail(email)) return null;
+  const clubId = (session.user as { clubId?: string }).clubId;
+  if (!clubId) return null;
+  try {
+    const club = await db.club.findUnique({ where: { id: clubId }, select: { active: true } });
+    if (club && club.active === false) {
+      return apiError("Suscripción suspendida. Contacta a StarApp para reactivar el acceso.", 403);
+    }
+  } catch {
+    // Si la DB falla, no bloqueamos por este motivo.
+  }
+  return null;
+}
+
 export async function requireAuth(): Promise<AppSession | NextResponse> {
   const session = await auth();
   if (!session?.user) return apiError("Unauthorized", 401);
+  const suspended = await clubSuspendedResponse(session as AppSession);
+  if (suspended) return suspended;
   return session as AppSession;
 }
 
@@ -25,6 +47,8 @@ export async function requireRole(
   const session = await auth();
   if (!session?.user) return apiError("Unauthorized", 401);
   if (!roles.includes((session.user as any).role)) return apiError("Forbidden", 403);
+  const suspended = await clubSuspendedResponse(session as AppSession);
+  if (suspended) return suspended;
   return session as AppSession;
 }
 

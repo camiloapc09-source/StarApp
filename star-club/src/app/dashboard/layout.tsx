@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { isSuperAdminEmail } from "@/lib/superadmin";
 import { DashboardShell } from "@/components/dashboard/shell";
 
 export default async function DashboardLayout({
@@ -19,20 +20,29 @@ export default async function DashboardLayout({
   let clubLogo: string | null = null;
   let clubPlan = "STARTER";
   let coachCanInvite = false;
+  let clubActive = true;
   try {
     const isCoach = session.user.role === "COACH";
     const [count, club, coachUser] = await Promise.all([
       db.notification.count({ where: { userId: session.user.id, isRead: false } }),
-      db.club.findUnique({ where: { id: session.user.clubId }, select: { name: true, logo: true, plan: true, coachCanInvite: true } }),
+      db.club.findUnique({ where: { id: session.user.clubId }, select: { name: true, logo: true, plan: true, coachCanInvite: true, active: true } }),
       isCoach
         ? db.user.findUnique({ where: { id: session.user.id }, select: { canInvite: true } })
         : null,
     ]);
     unreadCount = count;
-    if (club) { clubName = club.name; clubLogo = club.logo; clubPlan = club.plan; }
+    if (club) { clubName = club.name; clubLogo = club.logo; clubPlan = club.plan; clubActive = club.active; }
     if (club?.coachCanInvite && coachUser?.canInvite) coachCanInvite = true;
   } catch {
     // DB unavailable — continue without notification count
+  }
+
+  // Suscripción suspendida: se bloquea el acceso a la app. El super admin
+  // (StarApp) nunca queda bloqueado para poder gestionar y reactivar clubes.
+  // El redirect va FUERA del try/catch (redirect() lanza y no debe atraparse).
+  const email = (session.user as { email?: string }).email ?? "";
+  if (!clubActive && !isSuperAdminEmail(email)) {
+    redirect("/suspended");
   }
 
   return (

@@ -21,15 +21,19 @@ export default async function SuperAdminPage() {
   ]);
 
   const clubsData = clubs.map((c) => ({
-    id:        c.id,
-    name:      c.name,
-    slug:      c.slug,
-    sport:     c.sport,
-    city:      c.city,
-    country:   c.country,
-    logo:      c.logo,
-    createdAt: c.createdAt,
-    plan:      c.plan,
+    id:                 c.id,
+    name:               c.name,
+    slug:               c.slug,
+    sport:              c.sport,
+    city:               c.city,
+    country:            c.country,
+    logo:               c.logo,
+    createdAt:          c.createdAt,
+    plan:               c.plan,
+    active:             c.active,
+    suspendedAt:        c.suspendedAt,
+    nextPaymentDue:     c.nextPaymentDue,
+    subscriptionAmount: c.subscriptionAmount,
     counts: {
       users:    c._count.users,
       players:  c._count.players,
