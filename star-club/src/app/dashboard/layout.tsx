@@ -41,7 +41,8 @@ export default async function DashboardLayout({
   // (StarApp) nunca queda bloqueado para poder gestionar y reactivar clubes.
   // El redirect va FUERA del try/catch (redirect() lanza y no debe atraparse).
   const email = (session.user as { email?: string }).email ?? "";
-  if (!clubActive && !isSuperAdminEmail(email)) {
+  const isSuperAdmin = isSuperAdminEmail(email);
+  if (!clubActive && !isSuperAdmin) {
     redirect("/suspended");
   }
 
@@ -54,6 +55,7 @@ export default async function DashboardLayout({
       clubLogo={clubLogo}
       plan={clubPlan}
       coachCanInvite={coachCanInvite}
+      isSuperAdmin={isSuperAdmin}
     >
       {children}
     </DashboardShell>

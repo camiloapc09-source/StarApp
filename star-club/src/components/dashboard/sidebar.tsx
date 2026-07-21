@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Calendar, CreditCard, Trophy, Bell,
   BarChart3, Target, UserCheck, Tag, FileImage, User, Shirt, LogOut, Settings,
-  Lock, UserPlus, Ticket, UsersRound,
+  Lock, UserPlus, Ticket, UsersRound, Shield,
   type LucideIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -74,13 +74,14 @@ interface SidebarProps {
   clubName?: string;
   clubLogo?: string | null;
   plan?: string;
+  isSuperAdmin?: boolean;
   isOpen?: boolean;
   onClose?: () => void;
 }
 
 export function Sidebar({
   role, userName, notificationCount = 0,
-  clubName = "StarApp", clubLogo, plan = "STARTER", isOpen = false, onClose,
+  clubName = "StarApp", clubLogo, plan = "STARTER", isSuperAdmin = false, isOpen = false, onClose,
 }: SidebarProps) {
   const pathname = usePathname();
   const dict = getClientDictionary();
@@ -208,6 +209,24 @@ export function Sidebar({
             )}
           </motion.div>
         </Link>
+
+        {/* Super Admin — solo StarApp (super admin) */}
+        {isSuperAdmin && (
+          <Link href="/superadmin" onClick={onClose}>
+            <motion.div
+              whileTap={{ scale: 0.97 }}
+              className="mt-2 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150"
+              style={{
+                background: pathname.startsWith("/superadmin") ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.06)",
+                color: "#C4B5FD",
+                border: "1px solid rgba(139,92,246,0.25)",
+              }}
+            >
+              <Shield size={16} strokeWidth={2} />
+              <span className="tracking-wide">Super Admin</span>
+            </motion.div>
+          </Link>
+        )}
 
         {/* Plan badge — solo STARTER */}
         {plan === "STARTER" && (

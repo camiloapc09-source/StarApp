@@ -23,5 +23,7 @@ services:
         sync: false        # Set to your app URL after first deploy
       - key: CRON_SECRET
         sync: false        # Debe coincidir con el secret CRON_SECRET de GitHub Actions
+      - key: SUPERADMIN_EMAIL
+        value: admin@starclub.com   # Email que puede entrar al panel /superadmin (StarApp)
       - key: NODE_ENV
         value: production

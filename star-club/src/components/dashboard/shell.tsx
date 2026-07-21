@@ -5,7 +5,7 @@ import { Sidebar } from "./sidebar";
 import { BottomNav } from "./bottom-nav";
 import { DashboardContext } from "./dashboard-context";
 import { NovaWordmark } from "@/components/nova-logo";
-import { LogOut, Bell } from "lucide-react";
+import { LogOut, Bell, Shield } from "lucide-react";
 import PushButton from "@/components/ui/push-button";
 
 interface DashboardShellProps {
@@ -17,6 +17,7 @@ interface DashboardShellProps {
   clubLogo?: string | null;
   plan?: string;
   coachCanInvite?: boolean;
+  isSuperAdmin?: boolean;
   children: React.ReactNode;
 }
 
@@ -29,6 +30,7 @@ export function DashboardShell({
   clubLogo,
   plan = "STARTER",
   coachCanInvite = false,
+  isSuperAdmin = false,
   children,
 }: DashboardShellProps) {
   return (
@@ -43,6 +45,7 @@ export function DashboardShell({
           clubName={clubName}
           clubLogo={clubLogo}
           plan={plan}
+          isSuperAdmin={isSuperAdmin}
           isOpen={false}
           onClose={() => {}}
         />
@@ -88,8 +91,18 @@ export function DashboardShell({
               <NovaWordmark dark height={22} showTag={false} />
             </div>
 
-            {/* Right: push + notif bell (player/parent only) + logout */}
+            {/* Right: super admin + push + notif bell (player/parent only) + logout */}
             <div className="flex items-center gap-1">
+              {isSuperAdmin && (
+                <Link
+                  href="/superadmin"
+                  className="p-2 rounded-xl transition-colors"
+                  style={{ color: "#A78BFA" }}
+                  title="Super Admin"
+                >
+                  <Shield size={17} strokeWidth={1.8} />
+                </Link>
+              )}
               <PushButton />
               {(role === "player" || role === "parent") && (
                 <Link
