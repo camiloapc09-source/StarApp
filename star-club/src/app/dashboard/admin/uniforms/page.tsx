@@ -18,6 +18,12 @@ const TYPE_NAMES: Record<string, string> = {
   PRESENTATION: "Presentación",
 };
 
+const ORIGIN_LABELS: Record<string, string> = {
+  PLAYER: "Pedido por el deportista",
+  PARENT: "Pedido por el acudiente",
+  ADMIN:  "Creado por el club",
+};
+
 const ORDER_STATUS: Record<string, { label: string; variant: "success" | "warning" | "error" | "default" }> = {
   PENDING:   { label: "Pendiente",  variant: "warning" },
   CONFIRMED: { label: "Confirmado", variant: "success" },
@@ -165,6 +171,7 @@ function OrderRow({
     status: string;
     notes: string | null;
     createdAt: Date;
+    createdByRole: string | null;
     player: { user: { name: string; avatar: string | null } };
     parent: { user: { name: string } } | null;
   };
@@ -199,6 +206,9 @@ function OrderRow({
             )}
             <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
               Pedido: {format(new Date(order.createdAt), "d 'de' MMMM yyyy", { locale: es })}
+              {order.createdByRole && ORIGIN_LABELS[order.createdByRole]
+                ? ` · ${ORIGIN_LABELS[order.createdByRole]}`
+                : ""}
             </p>
           </div>
           <div className="text-right flex-shrink-0 space-y-1">

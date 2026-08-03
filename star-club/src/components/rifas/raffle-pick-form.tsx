@@ -23,10 +23,12 @@ interface Props {
   prize?: string | null;
   drawDate?: string | null;
   currentUserId: string;
+  /** Una rifa cerrada se ve, pero ya no admite tomar números. */
+  raffleOpen: boolean;
 }
 
 export default function RafflePickForm({
-  raffleId, tickets, ticketPrice, clubLogo, clubName, raffleName, prize, drawDate, currentUserId,
+  raffleId, tickets, ticketPrice, clubLogo, clubName, raffleName, prize, drawDate, currentUserId, raffleOpen,
 }: Props) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -44,6 +46,7 @@ export default function RafflePickForm({
   const myTickets = tickets.filter((t) => t.takenById === currentUserId);
 
   function toggleNumber(n: number) {
+    if (!raffleOpen) return;
     const t = ticketMap.get(n);
     if (t) return; // already taken
     setSelected((prev) =>
@@ -169,7 +172,7 @@ export default function RafflePickForm({
               let bg = "rgba(255,255,255,0.04)";
               let border = "rgba(255,255,255,0.07)";
               let color = "rgba(255,255,255,0.28)";
-              let cursor = "pointer";
+              let cursor = raffleOpen ? "pointer" : "default";
 
               if (isPaid && isMine) {
                 bg = "rgba(0,255,135,0.18)"; border = "rgba(0,255,135,0.45)"; color = "rgba(0,255,135,0.95)";
@@ -190,7 +193,8 @@ export default function RafflePickForm({
                   style={{ background: bg, border: `1px solid ${border}`, color, cursor }}
                   title={
                     isMine ? `Tuyo — ${isPaid ? "Pagado" : "Por cobrar"}` :
-                    isTaken ? "Ocupado" : label
+                    isTaken ? "Ocupado" :
+                    raffleOpen ? label : "Rifa cerrada"
                   }
                 >
                   {label}
@@ -221,6 +225,12 @@ export default function RafflePickForm({
               Reservado
             </span>
           </div>
+
+          {!raffleOpen && (
+            <p className="text-center text-[10px] mt-3" style={{ color: "var(--warning)" }}>
+              Esta rifa está cerrada — ya no se pueden tomar números.
+            </p>
+          )}
 
           {drawDate && (
             <p className="text-center text-[10px] mt-3" style={{ color: "var(--text-muted)" }}>

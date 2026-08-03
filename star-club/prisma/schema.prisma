@@ -373,6 +373,8 @@ model UniformOrder {
   totalPrice     Float
   status         String   @default("PENDING") // PENDING | CONFIRMED | DELIVERED | CANCELLED
   notes          String?
+  createdById    String?  // usuario que registró el pedido
+  createdByRole  String?  // PARENT | PLAYER | ADMIN — quién originó el pedido
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 

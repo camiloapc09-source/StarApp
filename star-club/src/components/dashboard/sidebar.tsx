@@ -54,6 +54,8 @@ const roleNavigationIds: Record<string, SidebarLink[]> = {
     { key: "missions",  href: "/dashboard/player/missions",    icon: Target },
     { key: "stats",     href: "/dashboard/player/stats",       icon: BarChart3 },
     { key: "rewards",   href: "/dashboard/player/rewards",     icon: Trophy },
+    { key: "uniforms",  href: "/dashboard/player/uniforms",    icon: Shirt,     planFeature: "uniforms" },
+    { key: "rifas",     href: "/dashboard/player/rifas",       icon: Ticket },
     { key: "profile",   href: "/dashboard/player/profile",     icon: User },
   ],
   parent: [

@@ -27,7 +27,7 @@ export default async function AdminRifaDetailPage({
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
   const { id } = await params;
 
-  const [raffle, club, rawParents] = await Promise.all([
+  const [raffle, club, rawParents, rawPlayers] = await Promise.all([
     db.raffle.findUnique({
       where: { id },
       include: {
@@ -61,6 +61,16 @@ export default async function AdminRifaDetailPage({
         },
       },
     }),
+    db.player.findMany({
+      where: { clubId },
+      select: {
+        userId: true,
+        phone: true,
+        user: { select: { name: true, phone: true } },
+        category: { select: { name: true } },
+      },
+      orderBy: { user: { name: "asc" } },
+    }),
   ]);
 
   const parents = rawParents.map((p) => ({
@@ -69,6 +79,24 @@ export default async function AdminRifaDetailPage({
     phone: p.phone ?? p.user.phone ?? null,
     children: p.children.map((c) => c.player.user.name).filter(Boolean) as string[],
   }));
+
+  // El admin puede asignarle un número al acudiente o directamente al deportista.
+  const recipients = [
+    ...parents.map((p) => ({
+      id: p.id,
+      name: p.name,
+      phone: p.phone,
+      role: "PARENT" as const,
+      detail: p.children.join(" · "),
+    })),
+    ...rawPlayers.map((p) => ({
+      id: p.userId,
+      name: p.user.name,
+      phone: p.phone ?? p.user.phone ?? null,
+      role: "PLAYER" as const,
+      detail: p.category?.name ?? "",
+    })),
+  ];
 
   if (!raffle || raffle.clubId !== clubId) notFound();
 
@@ -153,7 +181,7 @@ export default async function AdminRifaDetailPage({
           prize={raffle.prize}
           ticketPrice={raffle.ticketPrice}
           drawDate={raffle.drawDate?.toISOString() ?? null}
-          parents={parents}
+          recipients={recipients}
           raffleOpen={true}
         />
 
@@ -200,7 +228,7 @@ export default async function AdminRifaDetailPage({
                       </span>
                     )}
                     {t.status === "TAKEN" && (() => {
-                      const phone = t.takenBy?.phone ?? parents.find((p) => p.id === t.takenById)?.phone ?? null;
+                      const phone = t.takenBy?.phone ?? recipients.find((r) => r.id === t.takenById)?.phone ?? null;
                       const digits = phone?.replace(/[^0-9]/g, "");
                       if (!digits) return null;
                       const num = String(t.number).padStart(2, "0");

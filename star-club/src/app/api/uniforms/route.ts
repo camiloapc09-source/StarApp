@@ -2,42 +2,82 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireRole, getClubId, isResponse, apiError, apiOk } from "@/lib/api";
-
-const PRICES: Record<string, number> = {
-  TRAINING:     75000,
-  GAME:        100000,
-  PRESENTATION: 150000,
-};
-
-const NAMES: Record<string, string> = {
-  TRAINING:     "Uniforme de entrenamiento",
-  GAME:         "Uniforme de juego (doble faz)",
-  PRESENTATION: "Uniforme de presentación",
-};
-
-const SIZES = ["12", "14", "16", "18", "XS", "S", "M", "L", "XL", "XXL"] as const;
+import {
+  UNIFORM_PRICES,
+  UNIFORM_SIZES,
+  validateGameUniform,
+  notifyAdminsNewOrder,
+} from "@/lib/uniforms";
 
 const orderSchema = z.object({
+  // Opcional: un acudiente con varios hijos elige a cuál pedirle el uniforme.
+  playerId:       z.string().min(1).optional(),
   type:           z.enum(["TRAINING", "GAME", "PRESENTATION"]),
-  jerseySize:     z.enum(SIZES),
-  shortsSize:     z.enum(SIZES),
+  jerseySize:     z.enum(UNIFORM_SIZES),
+  shortsSize:     z.enum(UNIFORM_SIZES),
   nameOnJersey:   z.string().min(1).max(40).trim(),
   numberOnJersey: z.number().int().min(0).max(99).optional().nullable(),
   notes:          z.string().max(300).optional(),
 });
 
-export async function GET() {
-  const session = await requireRole(["PARENT"]);
-  if (isResponse(session)) return session;
+type Requester = {
+  parentId: string | null;
+  role: "PARENT" | "PLAYER";
+  /** Deportistas que este usuario puede pedir. */
+  players: { id: string; name: string }[];
+};
 
-  const parent = await db.parent.findUnique({
-    where: { userId: session.user.id },
-    select: { id: true },
+/**
+ * Resuelve a qué deportistas puede pedirle uniformes quien hace la llamada:
+ * el acudiente a sus hijos vinculados, el deportista solo a sí mismo.
+ */
+async function resolveRequester(
+  userId: string,
+  role: string,
+  clubId: string
+): Promise<Requester | null> {
+  if (role === "PARENT") {
+    const parent = await db.parent.findUnique({
+      where: { userId },
+      include: {
+        children: {
+          include: { player: { include: { user: { select: { name: true } } } } },
+        },
+      },
+    });
+    if (!parent) return null;
+    return {
+      parentId: parent.id,
+      role: "PARENT",
+      players: parent.children
+        .filter((c) => c.player.clubId === clubId)
+        .map((c) => ({ id: c.player.id, name: c.player.user.name })),
+    };
+  }
+
+  const player = await db.player.findUnique({
+    where: { userId },
+    include: { user: { select: { name: true } } },
   });
-  if (!parent) return apiError("Parent not found", 404);
+  if (!player || player.clubId !== clubId) return null;
+  return {
+    parentId: null,
+    role: "PLAYER",
+    players: [{ id: player.id, name: player.user.name }],
+  };
+}
+
+export async function GET() {
+  // COACH entra solo si tiene perfil de deportista; si no, resolveRequester lo rechaza.
+  const session = await requireRole(["PARENT", "PLAYER", "COACH"]);
+  if (isResponse(session)) return session;
+  const clubId = getClubId(session);
+
+  const requester = await resolveRequester(session.user.id, session.user.role, clubId);
+  if (!requester) return apiError("Perfil no encontrado", 404);
 
   const orders = await db.uniformOrder.findMany({
-    where: { parentId: parent.id },
+    where: { playerId: { in: requester.players.map((p) => p.id) } },
     include: { player: { include: { user: { select: { name: true } } } } },
     orderBy: { createdAt: "desc" },
   });
@@ -46,7 +86,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await requireRole(["PARENT"]);
+  // COACH entra solo si tiene perfil de deportista; si no, resolveRequester lo rechaza.
+  const session = await requireRole(["PARENT", "PLAYER", "COACH"]);
   if (isResponse(session)) return session;
   const clubId = getClubId(session);
 
@@ -54,63 +95,73 @@ export async function POST(req: NextRequest) {
   const parsed = orderSchema.safeParse(body);
   if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
-  const parent = await db.parent.findUnique({
-    where: { userId: session.user.id },
-    include: {
-      children: {
-        include: { player: { include: { user: { select: { name: true } } } } },
-      },
-    },
-  });
-  if (!parent) return apiError("Parent not found", 404);
-  if (parent.children.length === 0) return apiError("No tienes un jugador vinculado", 400);
-
-  const { player } = parent.children[0];
-  const playerId   = player.id;
-  const playerName = player.user.name;
-
-  if (parsed.data.type === "GAME") {
-    const words = playerName.trim().split(/\s+/);
-    const submittedName = parsed.data.nameOnJersey.toLowerCase();
-    if (!words.some((w) => w.toLowerCase() === submittedName)) {
-      return apiError(`El nombre en la camiseta debe ser una de las palabras del nombre del deportista (${playerName}).`, 400);
-    }
-
-    if (parsed.data.numberOnJersey == null) {
-      return apiError("El uniforme de juego requiere un número en la camiseta.", 400);
-    }
-
-    const conflict = await db.uniformOrder.findFirst({
-      where: { type: "GAME", numberOnJersey: parsed.data.numberOnJersey, status: { notIn: ["CANCELLED"] } },
-    });
-    if (conflict) return apiError(`El número #${parsed.data.numberOnJersey} ya está en uso en otro pedido.`, 409);
+  const requester = await resolveRequester(session.user.id, session.user.role, clubId);
+  if (!requester) return apiError("Perfil no encontrado", 404);
+  if (requester.players.length === 0) {
+    return apiError(
+      requester.role === "PARENT"
+        ? "No tienes un deportista vinculado"
+        : "Tu cuenta no está vinculada a un deportista",
+      400
+    );
   }
 
-  const unitPrice = PRICES[parsed.data.type];
+  // Sin playerId explícito se usa el único deportista disponible.
+  const target = parsed.data.playerId
+    ? requester.players.find((p) => p.id === parsed.data.playerId)
+    : requester.players.length === 1
+      ? requester.players[0]
+      : null;
+
+  if (!target) {
+    return apiError(
+      parsed.data.playerId
+        ? "No puedes pedir uniformes para ese deportista"
+        : "Selecciona el deportista del pedido",
+      parsed.data.playerId ? 403 : 400
+    );
+  }
+
+  if (parsed.data.type === "GAME") {
+    const problem = await validateGameUniform({
+      clubId,
+      playerName: target.name,
+      nameOnJersey: parsed.data.nameOnJersey,
+      numberOnJersey: parsed.data.numberOnJersey,
+      enforceName: true,
+    });
+    if (problem) return apiError(problem, problem.includes("ya está en uso") ? 409 : 400);
+  }
+
+  const unitPrice = UNIFORM_PRICES[parsed.data.type];
 
   const order = await db.uniformOrder.create({
     data: {
-      parentId: parent.id, playerId,
-      type: parsed.data.type, jerseySize: parsed.data.jerseySize, shortsSize: parsed.data.shortsSize,
-      nameOnJersey: parsed.data.nameOnJersey, numberOnJersey: parsed.data.numberOnJersey ?? null,
-      unitPrice, totalPrice: unitPrice, notes: parsed.data.notes ?? null, status: "PENDING",
+      parentId:       requester.parentId,
+      playerId:       target.id,
+      type:           parsed.data.type,
+      jerseySize:     parsed.data.jerseySize,
+      shortsSize:     parsed.data.shortsSize,
+      nameOnJersey:   parsed.data.nameOnJersey,
+      numberOnJersey: parsed.data.numberOnJersey ?? null,
+      unitPrice,
+      totalPrice:     unitPrice,
+      notes:          parsed.data.notes ?? null,
+      status:         "PENDING",
+      createdById:    session.user.id,
+      createdByRole:  requester.role,
     },
   });
 
-  try {
-    const admins = await db.user.findMany({ where: { clubId, role: "ADMIN" }, select: { id: true } });
-    if (admins.length > 0) {
-      await db.notification.createMany({
-        data: admins.map((a) => ({
-          userId: a.id,
-          title: "Nuevo pedido de uniforme",
-          message: `${playerName} solicitó ${NAMES[parsed.data.type]} - Camiseta ${parsed.data.jerseySize} / Pantaloneta ${parsed.data.shortsSize}${parsed.data.numberOnJersey != null ? ` #${parsed.data.numberOnJersey}` : ""}.`,
-          type: "INFO",
-          link: "/dashboard/admin/uniforms",
-        })),
-      });
-    }
-  } catch { /* non-fatal */ }
+  await notifyAdminsNewOrder({
+    clubId,
+    playerName:     target.name,
+    type:           parsed.data.type,
+    jerseySize:     parsed.data.jerseySize,
+    shortsSize:     parsed.data.shortsSize,
+    numberOnJersey: parsed.data.numberOnJersey,
+    origin:         requester.role,
+  });
 
   return apiOk(order, 201);
 }

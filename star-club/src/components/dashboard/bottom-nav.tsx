@@ -47,6 +47,13 @@ const COACH_MORE: MoreItem[] = [
   { href: "/dashboard/coach/profile",       icon: User,      label: "Perfil",         color: "#A78BFA", bg: "rgba(139,92,246,0.12)" },
 ];
 
+const PLAYER_MORE: MoreItem[] = [
+  { href: "/dashboard/player/uniforms",      icon: Shirt,     label: "Uniformes",      color: "#FB923C", bg: "rgba(251,146,60,0.12)" },
+  { href: "/dashboard/player/rifas",         icon: Ticket,    label: "Rifas",          color: "#DEC4FF", bg: "rgba(139,92,246,0.12)" },
+  { href: "/dashboard/player/notifications", icon: Bell,      label: "Notificaciones", color: "#F87171", bg: "rgba(239,68,68,0.12)"  },
+  { href: "/dashboard/player/profile",       icon: User,      label: "Perfil",         color: "#A78BFA", bg: "rgba(139,92,246,0.12)" },
+];
+
 const ROLE_TABS: Record<string, (notif: number) => TabItem[]> = {
   admin: (notif) => [
     { href: "/dashboard/admin",               icon: LayoutDashboard, label: "Inicio" },
@@ -65,7 +72,6 @@ const ROLE_TABS: Record<string, (notif: number) => TabItem[]> = {
     { href: "/dashboard/player/missions", icon: Target,          label: "Misiones" },
     { href: "/dashboard/player/stats",    icon: BarChart3,       label: "Stats" },
     { href: "/dashboard/player/rewards",  icon: Trophy,          label: "Logros" },
-    { href: "/dashboard/player/profile",  icon: User,            label: "Perfil" },
   ],
   parent: (_notif) => [
     { href: "/dashboard/parent",          icon: LayoutDashboard, label: "Inicio" },
@@ -187,20 +193,23 @@ export function BottomNav({ role, notificationCount = 0, coachCanInvite = false 
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const roleKey = role.toLowerCase();
-  const isAdmin = roleKey === "admin";
-  const isCoach = roleKey === "coach";
-  const hasMore = isAdmin || isCoach;
+  const isAdmin  = roleKey === "admin";
+  const isCoach  = roleKey === "coach";
+  const isPlayer = roleKey === "player";
+  const hasMore  = isAdmin || isCoach || isPlayer;
   const moreItems = isAdmin
     ? ADMIN_MORE
-    : COACH_MORE.filter(item => item.href !== "/dashboard/coach/invites" || coachCanInvite);
+    : isPlayer
+      ? PLAYER_MORE
+      : COACH_MORE.filter(item => item.href !== "/dashboard/coach/invites" || coachCanInvite);
 
   const tabsFn = ROLE_TABS[roleKey];
   if (!tabsFn) return null;
   const tabs = tabsFn(notificationCount);
 
   const moreIsActive = hasMore && moreItems.some(m => pathname.startsWith(m.href));
-  // Show badge on Más button for coach when there are unread notifications
-  const moreBadge = isCoach ? notificationCount : 0;
+  // Show badge on Más button when notifications live inside the sheet
+  const moreBadge = isCoach || isPlayer ? notificationCount : 0;
 
   return (
     <>

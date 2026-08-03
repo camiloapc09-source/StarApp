@@ -16,11 +16,14 @@ interface Ticket {
   takenBy: { name: string; id: string; phone: string | null } | null;
 }
 
-interface ParentSummary {
+/** Alguien a quien el admin le puede asignar un número: acudiente o deportista. */
+interface RecipientSummary {
   id: string;
   name: string;
   phone: string | null;
-  children: string[];
+  role: "PARENT" | "PLAYER";
+  /** Hijos del acudiente, o categoría del deportista. */
+  detail: string;
 }
 
 interface Props {
@@ -32,9 +35,14 @@ interface Props {
   prize?: string | null;
   ticketPrice: number;
   drawDate?: string | null;
-  parents: ParentSummary[];
+  recipients: RecipientSummary[];
   raffleOpen: boolean;
 }
+
+const ROLE_META: Record<RecipientSummary["role"], { label: string; color: string; bg: string }> = {
+  PARENT: { label: "Acudiente",  color: "#60A5FA", bg: "rgba(96,165,250,0.14)" },
+  PLAYER: { label: "Deportista", color: "#34D399", bg: "rgba(52,211,153,0.14)" },
+};
 
 function buildWhatsAppUrl(
   phone: string | null,
@@ -64,7 +72,7 @@ function buildWhatsAppUrl(
 }
 
 export default function RaffleGridAdmin({
-  raffleId, tickets, clubLogo, clubName, raffleName, prize, ticketPrice, drawDate, parents, raffleOpen,
+  raffleId, tickets, clubLogo, clubName, raffleName, prize, ticketPrice, drawDate, recipients, raffleOpen,
 }: Props) {
   const router = useRouter();
 
@@ -82,16 +90,14 @@ export default function RaffleGridAdmin({
 
   const ticketMap = new Map(tickets.map((t) => [t.number, t]));
 
-  // Filter parents client-side — matches parent name OR any child name
-  const filteredParents = useMemo(() => {
+  // Filtro en cliente — busca por nombre propio o por el detalle (hijos / categoría)
+  const filteredRecipients = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return parents;
-    return parents.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        p.children.some((c) => c.toLowerCase().includes(q))
+    if (!q) return recipients;
+    return recipients.filter(
+      (r) => r.name.toLowerCase().includes(q) || r.detail.toLowerCase().includes(q)
     );
-  }, [parents, searchQuery]);
+  }, [recipients, searchQuery]);
 
   function openAssign(num: number) {
     setAssignMode(num);
@@ -106,7 +112,7 @@ export default function RaffleGridAdmin({
     setAssignError("");
   }
 
-  async function handleAssign(parentId: string, parentName: string) {
+  async function handleAssign(userId: string, displayName: string) {
     if (assignMode === null) return;
     setAssigning(true);
     setAssignError("");
@@ -116,8 +122,8 @@ export default function RaffleGridAdmin({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           numbers: [assignMode],
-          ownerName: parentName,
-          assignToUserId: parentId,
+          ownerName: displayName,
+          assignToUserId: userId,
         }),
       });
       if (res.ok) {
@@ -345,7 +351,7 @@ export default function RaffleGridAdmin({
                   Asignar número {String(assignMode).padStart(2, "0")}
                 </p>
                 <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
-                  Busca por nombre del acudiente o del hijo
+                  Busca por nombre del acudiente o del deportista
                 </p>
               </div>
             </div>
@@ -378,15 +384,15 @@ export default function RaffleGridAdmin({
 
           {/* Results list */}
           <div className="space-y-1.5 max-h-64 overflow-y-auto">
-            {filteredParents.length === 0 ? (
+            {filteredRecipients.length === 0 ? (
               <p className="text-center py-6 text-sm" style={{ color: "var(--text-muted)" }}>
-                No se encontraron acudientes con ese nombre
+                No se encontró nadie con ese nombre
               </p>
             ) : (
-              filteredParents.map((parent) => (
+              filteredRecipients.map((recipient) => (
                 <button
-                  key={parent.id}
-                  onClick={() => handleAssign(parent.id, parent.name)}
+                  key={`${recipient.role}-${recipient.id}`}
+                  onClick={() => handleAssign(recipient.id, recipient.name)}
                   disabled={assigning}
                   className="w-full text-left px-4 py-3 rounded-xl transition-all hover:opacity-90 disabled:opacity-50"
                   style={{
@@ -402,12 +408,20 @@ export default function RaffleGridAdmin({
                     e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
                   }}
                 >
-                  <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
-                    {parent.name}
-                  </p>
-                  {parent.children.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold" style={{ color: "var(--text-primary)" }}>
+                      {recipient.name}
+                    </p>
+                    <span
+                      className="text-[9px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wide shrink-0"
+                      style={{ background: ROLE_META[recipient.role].bg, color: ROLE_META[recipient.role].color }}
+                    >
+                      {ROLE_META[recipient.role].label}
+                    </span>
+                  </div>
+                  {recipient.detail && (
                     <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.38)" }}>
-                      {parent.children.join(" · ")}
+                      {recipient.detail}
                     </p>
                   )}
                 </button>
@@ -492,7 +506,7 @@ export default function RaffleGridAdmin({
             {selected.status === "TAKEN" && (() => {
               const waPhone =
                 selected.takenBy?.phone ??
-                parents.find((p) => p.id === selected.takenById)?.phone ??
+                recipients.find((r) => r.id === selected.takenById)?.phone ??
                 null;
               const waUrl = buildWhatsAppUrl(
                 waPhone,
