@@ -6,7 +6,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, Clock, AlertTriangle, CreditCard, FileText, Users } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, CreditCard, FileText, Users, Sparkles } from "lucide-react";
+import { evaluateDiscount } from "@/lib/discount";
+import { dueLabel, dueColor } from "@/lib/dates";
 import PaymentSubmitForm from "@/components/parent/payment-submit-form";
 import { wompiConfigured } from "@/lib/wompi";
 import Link from "next/link";
@@ -57,6 +59,12 @@ export default async function ParentPaymentsPage({
       </div>
     );
   }
+
+  // Config de pronto pago del club, para mostrarle al acudiente cuánto ahorra.
+  const club = await db.club.findUnique({
+    where: { id: (session.user as { clubId?: string }).clubId ?? "club-star" },
+    select: { earlyPaymentDays: true, earlyPaymentDiscount: true },
+  });
 
   const allChildren = parent.children;
   const activeChild = allChildren.find((c) => c.player.id === selectedPlayerId) ?? allChildren[0];
@@ -120,8 +128,9 @@ export default async function ParentPaymentsPage({
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold text-sm">{payment.concept}</p>
-                      <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                        Vence: {format(new Date(payment.dueDate), "d 'de' MMMM yyyy", { locale: es })}
+                      <p className="text-xs mt-0.5" style={{ color: dueColor(payment.dueDate) }}>
+                        {dueLabel(payment.dueDate)}
+                        {" · "}{format(new Date(payment.dueDate), "d 'de' MMMM", { locale: es })}
                       </p>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -131,6 +140,30 @@ export default async function ParentPaymentsPage({
                       </Badge>
                     </div>
                   </div>
+
+                  {/* Descuento por pronto pago. El acudiente NUNCA lo veía:
+                      el club lo configuraba, el admin veía un letrero, y la
+                      familia no se enteraba de que pagando ya se ahorraba. */}
+                  {(() => {
+                    const d = evaluateDiscount(payment.dueDate, payment.amount, club ?? {});
+                    if (!d.applies) return null;
+                    return (
+                      <div className="flex items-center gap-2.5 rounded-xl px-3 py-2.5"
+                        style={{ background: "rgba(52,211,153,0.10)", border: "1px solid rgba(52,211,153,0.28)" }}>
+                        <Sparkles size={15} style={{ color: "#34D399", flexShrink: 0 }} />
+                        <div>
+                          <p className="text-xs font-bold" style={{ color: "#34D399" }}>
+                            Paga ahora y ahorra ${d.amount.toLocaleString("es-CO")}
+                          </p>
+                          <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+                            Quedan ${d.finalAmount.toLocaleString("es-CO")} si pagas{" "}
+                            {d.daysLeft === 1 ? "hoy — último día" : `en los próximos ${d.daysLeft} días`}.
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   {onlinePayEnabled && (
                     <a
                       href={`/api/payments/${payment.id}/wompi-checkout`}

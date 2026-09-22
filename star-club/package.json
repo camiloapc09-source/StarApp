@@ -59,5 +59,12 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5"
+  },
+  "allowScripts": {
+    "@prisma/engines@7.5.0": true,
+    "esbuild@0.27.4": true,
+    "prisma@7.5.0": true,
+    "sharp@0.34.5": true,
+    "unrs-resolver@1.11.1": true
   }
 }

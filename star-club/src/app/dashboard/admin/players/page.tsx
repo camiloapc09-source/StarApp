@@ -14,15 +14,20 @@ import NewInviteForm from "@/components/admin/new-invite-form";
 import AvatarReviewList from "@/components/admin/avatar-review-list";
 import PlayerSearch from "@/components/admin/player-search";
 import { Suspense } from "react";
+import { normalizePhone, whatsappLink } from "@/lib/phone";
 
-type Props = { searchParams: Promise<{ categoryId?: string; gender?: string; zone?: string; q?: string }> };
+type Props = { searchParams: Promise<{ categoryId?: string; gender?: string; zone?: string; q?: string; page?: string }> };
+
+/** Cuántos deportistas se muestran por página. */
+const PAGE_SIZE = 40;
 
 export default async function AdminPlayersPage({ searchParams }: Props) {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
-  const { categoryId: selectedCategory, gender: selectedGender, zone: selectedZone, q } = await searchParams;
-  const query = q?.toLowerCase().trim() ?? "";
+  const { categoryId: selectedCategory, gender: selectedGender, zone: selectedZone, q, page } = await searchParams;
+  const query = q?.trim() ?? "";
+  const currentPage = Math.max(1, Number(page) || 1);
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
   const t = await getDictionary();
@@ -37,55 +42,83 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
   if (clubHasGenderedPlayers && (selectedGender === "F" || selectedGender === "M")) playerWhere.gender = selectedGender;
   if (selectedZone) playerWhere.zone = selectedZone;
 
-  const [players, categories, pendingAvatars, club] = await Promise.all([
+  // La búsqueda se hace en la base, no en memoria. Antes se traían TODOS los
+  // jugadores con TODAS sus asistencias y se filtraba en JavaScript: con 50
+  // alumnos se nota poco, con 500 la página se arrastra.
+  if (query) {
+    playerWhere.OR = [
+      { user: { name: { contains: query, mode: "insensitive" } } },
+      { user: { email: { contains: query, mode: "insensitive" } } },
+      { documentNumber: { contains: query, mode: "insensitive" } },
+      ...(Number.isFinite(Number(query)) && query !== "" ? [{ jerseyNumber: Number(query) }] : []),
+    ];
+  }
+
+  const [totalCount, players, categories, pendingAvatars, club, pendingPlayers] = await Promise.all([
+    db.player.count({ where: playerWhere }),
     db.player.findMany({
       where: playerWhere,
       orderBy: { createdAt: "desc" },
-      include: {
-        user: true,
-        category: true,
-        attendances: { select: { status: true } },
-      },
+      skip: (currentPage - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      include: { user: true, category: true },
     }),
     db.category.findMany({ where: { clubId }, orderBy: { name: "asc" } }),
     db.user.findMany({
       where: { clubId, avatarStatus: "PENDING", avatarPending: { not: null } },
       select: { id: true, name: true, avatarPending: true },
     }),
-    db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true, name: true } }),
+    db.club.findUnique({ where: { id: clubId }, select: { zonePrices: true, name: true, country: true } }),
+    // Los pendientes de activación se consultan aparte para que sigan saliendo
+    // completos aunque el admin esté en la página 3 o filtrando.
+    db.player.findMany({
+      where: { clubId, status: "PENDING" },
+      include: { user: true },
+      orderBy: { createdAt: "desc" },
+    }),
   ]);
+
+  // Tasa de asistencia: una sola agregación en vez de traer cada registro.
+  const attendanceRows = await db.attendance.groupBy({
+    by: ["playerId", "status"],
+    where: { playerId: { in: players.map((p) => p.id) } },
+    _count: { _all: true },
+  });
+  const attendanceStats = new Map<string, { present: number; total: number }>();
+  for (const row of attendanceRows) {
+    const stat = attendanceStats.get(row.playerId) ?? { present: 0, total: 0 };
+    stat.total += row._count._all;
+    if (row.status === "PRESENT") stat.present += row._count._all;
+    attendanceStats.set(row.playerId, stat);
+  }
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const zones = club?.zonePrices ? Object.keys(club.zonePrices as Record<string, unknown>) : [];
   const clubName = club?.name ?? "el club";
-  const pendingPlayers = players.filter((p) => p.status === "PENDING");
+  const clubCountry = club?.country ?? "CO";
 
-  // Text search — filtra por nombre, correo, documento o dorsal
-  const filteredPlayers = query
-    ? players.filter((p) => {
-        const haystack = [
-          p.user.name,
-          p.user.email,
-          p.documentNumber ?? "",
-          p.jerseyNumber != null ? `#${p.jerseyNumber} ${p.jerseyNumber}` : "",
-        ]
-          .join(" ")
-          .toLowerCase();
-        return haystack.includes(query);
-      })
-    : players;
+  // La lista ya viene filtrada y paginada desde la base.
+  const filteredPlayers = players;
 
-  function buildHref(opts: { categoryId?: string; gender?: string; zone?: string }) {
+  function buildHref(opts: { categoryId?: string; gender?: string; zone?: string; page?: number }) {
     const p = new URLSearchParams();
     if (opts.categoryId) p.set("categoryId", opts.categoryId);
     if (opts.gender) p.set("gender", opts.gender);
     if (opts.zone) p.set("zone", opts.zone);
-    const q = p.toString();
-    return `/dashboard/admin/players${q ? `?${q}` : ""}`;
+    if (query) p.set("q", query);
+    if (opts.page && opts.page > 1) p.set("page", String(opts.page));
+    const qs = p.toString();
+    return `/dashboard/admin/players${qs ? `?${qs}` : ""}`;
   }
+
+  /** Conserva los filtros actuales y solo cambia de página. */
+  const pageHref = (n: number) =>
+    buildHref({ categoryId: selectedCategory, gender: selectedGender, zone: selectedZone, page: n });
 
   return (
     <div>
-      <Header title={t.common.players} subtitle={`${players.length} ${t.common.players}`} />
+      <Header title={t.common.players} subtitle={`${totalCount} ${t.common.players}`} />
       <div className="p-4 md:p-8 space-y-6">
 
         {/* Inline invite code generator */}
@@ -116,12 +149,13 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
             </div>
             <div className="space-y-3">
               {pendingPlayers.map((p) => {
-                const phone = p.phone || p.user.phone;
-                const digits = phone?.replace(/[^0-9]/g, "");
-                const waMsg = encodeURIComponent(
+                // `wa.me/3001234567` sin indicativo no abría el chat.
+                // `normalizePhone` le antepone el del país del club.
+                const digits = normalizePhone(p.phone || p.user.phone, clubCountry);
+                const waHref = whatsappLink(
+                  digits,
                   `Hola, te escribimos desde *${clubName}* 🏆\n\nQueremos recordarte que la inscripción de *${p.user.name}* está pendiente de pago para poder activar su cuenta en la plataforma.\n\n¡Quedamos atentos! 😊`
                 );
-                const waHref = digits ? `https://wa.me/${digits}?text=${waMsg}` : null;
                 return (
                   <div key={p.id} className="flex items-center justify-between gap-4 px-4 py-3 rounded-xl"
                     style={{ background: "rgba(255,184,0,0.05)", border: "1px solid rgba(255,184,0,0.15)" }}>
@@ -256,7 +290,7 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
             <h2 className="font-semibold">{t.common.allPlayers}</h2>
             {query && (
               <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                {filteredPlayers.length} resultado{filteredPlayers.length !== 1 ? "s" : ""} para &ldquo;{query}&rdquo;
+                {totalCount} resultado{totalCount !== 1 ? "s" : ""} para &ldquo;{query}&rdquo;
               </span>
             )}
           </div>
@@ -283,11 +317,10 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
             ) : (
               filteredPlayers.map((player) => {
                 const level = calculateLevel(player.xp);
-                const presentCount = player.attendances.filter((a) => a.status === "PRESENT").length;
+                // Viene de la agregación, no de cargar cada registro de asistencia.
+                const att = attendanceStats.get(player.id);
                 const attendancePct =
-                  player.attendances.length > 0
-                    ? Math.round((presentCount / player.attendances.length) * 100)
-                    : 0;
+                  att && att.total > 0 ? Math.round((att.present / att.total) * 100) : 0;
 
                 // Age-category mismatch check
                 let ageCategoryWarning = false;
@@ -355,6 +388,45 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
               })
             )}
           </div>
+
+          {/* Paginación — antes la página traía todos los jugadores de golpe. */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between gap-3 px-5 py-4 flex-wrap"
+              style={{ borderTop: "1px solid var(--border-primary)" }}>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                Mostrando {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, totalCount)} de {totalCount}
+              </p>
+              <div className="flex items-center gap-2">
+                {currentPage > 1 ? (
+                  <Link href={pageHref(currentPage - 1)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all hover:opacity-80"
+                    style={{ borderColor: "var(--border-primary)", color: "var(--text-secondary)" }}>
+                    ← Anterior
+                  </Link>
+                ) : (
+                  <span className="px-3 py-1.5 rounded-xl text-xs font-semibold border"
+                    style={{ borderColor: "var(--border-primary)", color: "rgba(255,255,255,0.18)" }}>
+                    ← Anterior
+                  </span>
+                )}
+                <span className="text-xs font-semibold px-2" style={{ color: "var(--text-muted)" }}>
+                  {currentPage} / {totalPages}
+                </span>
+                {currentPage < totalPages ? (
+                  <Link href={pageHref(currentPage + 1)}
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all hover:opacity-80"
+                    style={{ borderColor: "var(--border-primary)", color: "var(--text-secondary)" }}>
+                    Siguiente →
+                  </Link>
+                ) : (
+                  <span className="px-3 py-1.5 rounded-xl text-xs font-semibold border"
+                    style={{ borderColor: "var(--border-primary)", color: "rgba(255,255,255,0.18)" }}>
+                    Siguiente →
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </Card>
       </div>
     </div>

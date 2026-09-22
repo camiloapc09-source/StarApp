@@ -2,15 +2,19 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { format, differenceInDays } from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import {
   AlertTriangle, CheckSquare, Square, MinusSquare, Banknote,
   Loader2, PhoneCall, X, Check, MessageCircleMore, ChevronLeft, ChevronRight,
-  ChevronDown, ChevronRight as ChevronRightSm, Trash2,
+  ChevronDown, ChevronRight as ChevronRightSm, Trash2, PhoneOff,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import RecordPaymentModal from "@/components/admin/record-payment-modal";
+import AddPhoneButton from "@/components/admin/add-phone-button";
+import { daysUntilDue, dueLabel, dueColor, dueState, clubGreeting } from "@/lib/dates";
+import { resolveContact, whatsappLink } from "@/lib/phone";
+import { evaluateDiscount } from "@/lib/discount";
 
 const METHOD_LABELS: Record<string, string> = {
   CASH:     "Efectivo",
@@ -28,6 +32,9 @@ interface Payment {
   status: string;
   dueDate: string | Date;
   player: {
+    id?: string;
+    /** Celular guardado en el perfil de jugador — el que escribe el admin. */
+    phone?: string | null;
     user: { name: string; avatar?: string | null; phone?: string | null };
     parentLinks?: Array<{
       parent: { phone?: string | null; relation?: string | null; user: { name: string; phone?: string | null } };
@@ -39,31 +46,17 @@ interface Payment {
 interface Props {
   payments: Payment[];
   clubName?: string;
-  billingCycleDay?: number;
+  clubCountry?: string;
+  missingContactCount?: number;
   earlyPaymentDays?: number;
   earlyPaymentDiscount?: number;
-}
-
-function getColombiaGreeting() {
-  const hour = parseInt(
-    new Date().toLocaleString("en-US", { timeZone: "America/Bogota", hour: "numeric", hour12: false }),
-    10
-  );
-  if (hour >= 5 && hour < 12) return "Buenos días";
-  if (hour >= 12 && hour < 19) return "Buenas tardes";
-  return "Buenas noches";
-}
-
-function getColombiaDay(): number {
-  return new Date(
-    new Date().toLocaleString("en-US", { timeZone: "America/Bogota" })
-  ).getDate();
 }
 
 export default function BulkMarkReceivedPanel({
   payments,
   clubName = "el club",
-  billingCycleDay = 0,
+  clubCountry = "CO",
+  missingContactCount = 0,
   earlyPaymentDays = 0,
   earlyPaymentDiscount = 0,
 }: Props) {
@@ -103,8 +96,11 @@ export default function BulkMarkReceivedPanel({
       );
       const oldest = sorted[0];
       const latest = sorted[sorted.length - 1];
-      const daysLeft = differenceInDays(new Date(oldest.dueDate), new Date());
-      const isLate = oldest.status === "OVERDUE" || daysLeft < 0;
+      // El estado se calcula por días de calendario, NO por `status`. Antes un
+      // cobro que vencía HOY ya venía marcado OVERDUE de la base y se pintaba
+      // rojo con la etiqueta "Vencido 0d", como si el alumno estuviera en mora.
+      const daysLeft = daysUntilDue(oldest.dueDate);
+      const isLate = daysLeft < 0;
       return {
         playerId,
         items: sorted,
@@ -149,18 +145,18 @@ export default function BulkMarkReceivedPanel({
   // ─── WhatsApp: un mensaje por jugador (resumiendo todos sus meses) ───
   const bulkWaContacts = groups
     .map((g) => {
-      const parentLink = g.player.parentLinks?.[0]?.parent;
-      const phone = parentLink?.phone || parentLink?.user?.phone || g.player.user.phone;
-      const digits = phone?.replace(/[^0-9]/g, "");
-      if (!digits) return null;
-      const greeting = getColombiaGreeting();
-      const contactName = parentLink?.user?.name || g.player.user.name;
+      // Revisa TODOS los acudientes, luego el celular del jugador, luego el
+      // del usuario. Antes solo miraba el primer acudiente y `User.phone`.
+      const contact = resolveContact(g.player, clubCountry);
+      if (!contact.digits) return null;
+      const greeting = clubGreeting();
+      const contactName = contact.name;
       const conceptList = g.items
         .map((p) => `• ${p.concept} — $${p.amount.toLocaleString("es-CO")}`)
         .join("\n");
       const monthsWord = g.items.length === 1 ? "el siguiente pago" : `los siguientes ${g.items.length} pagos`;
       const msgText = `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. Le recordamos ${monthsWord} pendiente${g.items.length !== 1 ? "s" : ""} del deportista *${g.player.user.name}*:\n\n${conceptList}\n\n*Total: $${g.totalAmount.toLocaleString("es-CO")}*\n\nLe pedimos amablemente ponerse al día para continuar disfrutando de los servicios del club. 🙏\n\n¡Muchas gracias! 💚`;
-      const waHref = `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${encodeURIComponent(msgText)}`;
+      const waHref = whatsappLink(contact.digits, msgText)!;
       return {
         playerName: g.player.user.name,
         contactName,
@@ -265,9 +261,17 @@ export default function BulkMarkReceivedPanel({
           style={{ borderColor: "rgba(255,184,0,0.2)", background: "rgba(255,184,0,0.04)" }}>
           <div className="flex items-center gap-3">
             <AlertTriangle size={16} style={{ color: "var(--warning)" }} />
-            <h2 className="font-semibold text-sm" style={{ color: "var(--warning)" }}>
-              Por cobrar — {payments.length} pago{payments.length !== 1 ? "s" : ""} · {groups.length} {groups.length === 1 ? "alumno" : "alumnos"}
-            </h2>
+            <div>
+              <h2 className="font-semibold text-sm" style={{ color: "var(--warning)" }}>
+                Por cobrar — {payments.length} pago{payments.length !== 1 ? "s" : ""} · {groups.length} {groups.length === 1 ? "alumno" : "alumnos"}
+              </h2>
+              {missingContactCount > 0 && (
+                <p className="text-[11px] mt-0.5 flex items-center gap-1" style={{ color: "rgba(255,255,255,0.40)" }}>
+                  <PhoneOff size={11} />
+                  {missingContactCount} sin celular — no se les puede cobrar por WhatsApp
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
@@ -315,9 +319,9 @@ export default function BulkMarkReceivedPanel({
             const allInMonth = selectedInMonth === monthIds.length && monthIds.length > 0;
             const someInMonth = selectedInMonth > 0 && !allInMonth;
             const isOpen = expandedMonths.has(mg.key);
-            const overdueCount = monthPayments.filter(
-              (p) => p.status === "OVERDUE" || differenceInDays(new Date(p.dueDate), new Date()) < 0,
-            ).length;
+            // Solo cuentan los que YA pasaron su día de vencimiento.
+            const overdueCount = monthPayments.filter((p) => daysUntilDue(p.dueDate) < 0).length;
+            const dueTodayCount = monthPayments.filter((p) => daysUntilDue(p.dueDate) === 0).length;
 
             return (
               <div key={mg.key} style={{ background: selectedInMonth > 0 ? "rgba(52,211,153,0.03)" : "transparent" }}>
@@ -348,6 +352,14 @@ export default function BulkMarkReceivedPanel({
                           {overdueCount} vencido{overdueCount !== 1 ? "s" : ""}
                         </span>
                       )}
+                      {/* Los que vencen hoy salen aparte, en ámbar: todavía
+                          están a tiempo y no deben verse como mora. */}
+                      {dueTodayCount > 0 && (
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                          style={{ background: "rgba(255,184,0,0.12)", color: "var(--warning)" }}>
+                          {dueTodayCount} vence{dueTodayCount !== 1 ? "n" : ""} hoy
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
                       {mg.players.length} alumno{mg.players.length !== 1 ? "s" : ""}
@@ -369,19 +381,16 @@ export default function BulkMarkReceivedPanel({
                       const someInGroup = selectedInGroup > 0 && !allInGroup;
 
                       // WhatsApp consolidado (todos sus meses en un solo mensaje)
-                      const parentLink = g.player.parentLinks?.[0]?.parent;
-                      const phone = parentLink?.phone || parentLink?.user?.phone || g.player.user.phone;
-                      const digits = phone?.replace(/[^0-9]/g, "");
-                      const greeting = getColombiaGreeting();
-                      const contactName = parentLink?.user?.name || g.player.user.name;
+                      const contact = resolveContact(g.player, clubCountry);
+                      const digits = contact.digits;
+                      const greeting = clubGreeting();
+                      const contactName = contact.name;
                       const conceptList = g.items
                         .map((p) => `• ${p.concept} — $${p.amount.toLocaleString("es-CO")}`)
                         .join("\n");
                       const monthsWord = g.items.length === 1 ? "el siguiente pago" : `los siguientes ${g.items.length} pagos`;
                       const groupMsg = `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. Le recordamos ${monthsWord} pendiente${g.items.length !== 1 ? "s" : ""} del deportista *${g.player.user.name}*:\n\n${conceptList}\n\n*Total: $${g.totalAmount.toLocaleString("es-CO")}*\n\nLe pedimos amablemente ponerse al día. 🙏\n\n¡Muchas gracias! 💚`;
-                      const groupWaHref = digits
-                        ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${encodeURIComponent(groupMsg)}`
-                        : null;
+                      const groupWaHref = whatsappLink(digits, groupMsg);
 
                       return (
                         <div key={g.playerId} className="mx-2 sm:mx-3 rounded-xl overflow-hidden"
@@ -413,14 +422,17 @@ export default function BulkMarkReceivedPanel({
                           <div className="px-1.5 sm:px-2 pb-2 space-y-1">
                             {g.items.map((payment) => {
                               const isSelected = selected.has(payment.id);
-                              const daysLeft = differenceInDays(new Date(payment.dueDate), new Date());
-                              const isLate = payment.status === "OVERDUE" || daysLeft < 0;
-                              const pWaMsg = encodeURIComponent(
+                              const isLate = dueState(payment.dueDate) === "overdue";
+                              const rowDiscount = evaluateDiscount(
+                                payment.dueDate, payment.amount,
+                                { earlyPaymentDays, earlyPaymentDiscount },
+                              );
+                              const pWaMsg = (
                                 isLate
                                   ? `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nEsperamos que ${contactName} se encuentre muy bien. El pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${g.player.user.name}* por concepto de *${payment.concept}* se encuentra *vencido* desde el ${format(new Date(payment.dueDate), "dd/MM/yyyy")} 📋.\n\nLe pedimos amablemente ponerse al día. 🙏\n\n¡Muchas gracias! 💚`
                                   : `${greeting} 😊, nos comunicamos del *${clubName}* 🏆.\n\nLe recordamos que el pago de *$${payment.amount.toLocaleString("es-CO")}* del deportista *${g.player.user.name}* por concepto de *${payment.concept}* tiene fecha límite el *${format(new Date(payment.dueDate), "dd/MM/yyyy")}* 📋.\n\n¡Muchas gracias! 💚`
                               );
-                              const pWaHref = digits ? `https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${pWaMsg}` : null;
+                              const pWaHref = whatsappLink(digits, pWaMsg);
 
                               return (
                                 <div key={payment.id} className="px-2.5 sm:px-3 py-2.5 rounded-lg flex items-center gap-3 flex-wrap"
@@ -432,10 +444,19 @@ export default function BulkMarkReceivedPanel({
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium truncate">{payment.concept}</p>
-                                    <p className="text-[11px] mt-0.5" style={{ color: isLate ? "var(--error)" : "var(--warning)" }}>
-                                      {isLate ? `Vencido ${Math.abs(daysLeft)}d` : `Vence ${format(new Date(payment.dueDate), "dd MMM", { locale: es })}`}
+                                    {/* "Vence hoy" (ámbar) / "Vencido hace 3 días" (rojo).
+                                        Antes decía "Vencido 0d" el mismo día del vencimiento. */}
+                                    <p className="text-[11px] mt-0.5" style={{ color: dueColor(payment.dueDate) }}>
+                                      {dueLabel(payment.dueDate)}
                                       {" · "}${payment.amount.toLocaleString("es-CO")}
                                     </p>
+                                    {/* El descuento se ve sin tener que abrir el modal. */}
+                                    {rowDiscount?.applies && (
+                                      <p className="text-[11px] mt-0.5 font-semibold" style={{ color: "#34D399" }}>
+                                        Pronto pago · paga ${rowDiscount.finalAmount.toLocaleString("es-CO")}
+                                        {rowDiscount.daysLeft === 1 ? " (último día)" : ` (${rowDiscount.daysLeft} días)`}
+                                      </p>
+                                    )}
                                   </div>
                                   <div className="flex items-center gap-2 flex-wrap">
                                     <RecordPaymentModal
@@ -443,6 +464,9 @@ export default function BulkMarkReceivedPanel({
                                       playerName={g.player.user.name}
                                       concept={payment.concept}
                                       fullAmount={payment.amount}
+                                      dueDate={payment.dueDate}
+                                      earlyPaymentDays={earlyPaymentDays}
+                                      earlyPaymentDiscount={earlyPaymentDiscount}
                                     />
                                     {pWaHref && (
                                       <a href={pWaHref} target="_blank" rel="noreferrer"
@@ -466,12 +490,20 @@ export default function BulkMarkReceivedPanel({
 
                             {/* Acciones a nivel de alumno */}
                             <div className="px-1.5 pt-1 flex items-center gap-2 flex-wrap">
-                              {groupWaHref && (
+                              {groupWaHref ? (
                                 <a href={groupWaHref} target="_blank" rel="noreferrer"
                                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
                                   style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}>
                                   <MessageCircleMore size={13} /> Cobrar todo por WhatsApp
                                 </a>
+                              ) : (
+                                /* Sin celular el botón desaparecía sin decir por qué.
+                                   Ahora se explica y se puede agregar aquí mismo. */
+                                <AddPhoneButton
+                                  playerId={g.playerId}
+                                  playerName={g.player.user.name}
+                                  onSaved={() => router.refresh()}
+                                />
                               )}
                               {g.items.length > 1 && (
                                 <button

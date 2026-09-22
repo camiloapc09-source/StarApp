@@ -10,6 +10,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import RaffleGridAdmin from "@/components/admin/raffle-grid-admin";
 import RaffleStatusButton from "@/components/admin/raffle-status-button";
+import { normalizePhone, whatsappLink } from "@/lib/phone";
 
 const STATUS_META: Record<string, { label: string; variant: "success" | "warning" | "error" | "default" }> = {
   OPEN:     { label: "Abierta",    variant: "success" },
@@ -229,13 +230,13 @@ export default async function AdminRifaDetailPage({
                     )}
                     {t.status === "TAKEN" && (() => {
                       const phone = t.takenBy?.phone ?? recipients.find((r) => r.id === t.takenById)?.phone ?? null;
-                      const digits = phone?.replace(/[^0-9]/g, "");
+                      const digits = normalizePhone(phone);
                       if (!digits) return null;
                       const num = String(t.number).padStart(2, "0");
                       const msg = `Hola 😊, te comunicamos del *${club?.name ?? "el club"}* 🏆.\n\nTienes asignado el número *${num}* de la rifa *${raffle.title}* con un valor de *$${raffle.ticketPrice.toLocaleString("es-CO")}*.\n\n¡Te agradecemos realizar tu pago a la mayor brevedad! 💚`;
                       return (
                         <a
-                          href={`https://api.whatsapp.com/send?phone=57${digits.replace(/^57/, "")}&text=${encodeURIComponent(msg)}`}
+                          href={whatsappLink(digits, msg)!}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-[10px] px-2 py-1 rounded-lg font-semibold flex items-center gap-1"

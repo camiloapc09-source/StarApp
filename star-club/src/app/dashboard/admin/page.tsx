@@ -13,13 +13,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import OnboardingWizard from "@/components/admin/onboarding-wizard";
-
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Buenos días";
-  if (h < 18) return "Buenas tardes";
-  return "Buenas noches";
-}
+// El saludo usaba `new Date().getHours()`, que en Render es hora UTC: a las
+// 6 p.m. en Colombia decía "Buenas noches".
+import { clubGreeting, currentMonthRange } from "@/lib/dates";
 
 export default async function AdminDashboard() {
   const t = await getDictionary();
@@ -27,6 +23,7 @@ export default async function AdminDashboard() {
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
   const firstName = session.user.name?.split(" ")[0] ?? "";
+  const thisMonth = currentMonthRange();
 
   const [
     totalPlayers, pendingPlayers, completedPayments, pendingPayments,
@@ -35,7 +32,11 @@ export default async function AdminDashboard() {
   ] = await Promise.all([
     db.player.count({ where: { clubId, status: "ACTIVE" } }),
     db.player.count({ where: { clubId, status: "PENDING" } }),
-    db.payment.count({ where: { clubId, status: "COMPLETED" } }),
+    // "Pagado este mes" contaba TODOS los pagos completados desde siempre,
+    // así que el número solo subía y no decía nada útil.
+    db.payment.count({
+      where: { clubId, status: "COMPLETED", paidAt: { gte: thisMonth.start, lte: thisMonth.end } },
+    }),
     db.payment.count({ where: { clubId, status: "PENDING" } }),
     db.category.findMany({ where: { clubId }, include: { _count: { select: { players: true } } } }),
     db.player.findMany({
@@ -78,7 +79,7 @@ export default async function AdminDashboard() {
             style={{ background: "radial-gradient(ellipse 60% 80% at 90% 50%, rgba(139,92,246,0.12) 0%, transparent 70%)" }}
           />
           <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-1 relative" style={{ color: "rgba(167,139,250,0.70)" }}>
-            {getGreeting()}
+            {clubGreeting()}
           </p>
           <h2 className="text-2xl font-black tracking-tight text-white relative">{firstName} 👋</h2>
           <p className="text-sm mt-1 relative" style={{ color: "rgba(255,255,255,0.45)" }}>

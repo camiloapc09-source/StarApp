@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, Users, Calendar, CreditCard, Trophy, Bell,
   BarChart3, Target, UserCheck, Tag, FileImage, User, Shirt, LogOut, Settings,
-  Lock, UserPlus, Ticket, UsersRound, Shield,
+  Lock, UserPlus, Ticket, UsersRound, Shield, CalendarPlus, ClipboardList,
   type LucideIcon,
 } from "lucide-react";
 import { motion } from "framer-motion";
@@ -20,22 +20,33 @@ interface SidebarLink {
   badge?: number;
   // which plan feature gates this item (undefined = always visible)
   planFeature?: "gamification" | "evidence" | "uniforms" | "exportExcel";
+  /** Título de sección que se dibuja ENCIMA de este ítem. */
+  section?: string;
+  /** Texto corto bajo el nombre, para separar ítems que se confunden. */
+  hint?: string;
 }
 
 const roleNavigationIds: Record<string, SidebarLink[]> = {
+  // 14 ítems planos eran difíciles de barrer con la vista. Agrupados en
+  // cuatro bloques, y "Asistencia"/"Sesiones" —que compartían el mismo icono
+  // de calendario y se confundían— quedan separados y con su propia pista.
   admin: [
     { key: "dashboard",    href: "/dashboard/admin",              icon: LayoutDashboard },
-    { key: "players",      href: "/dashboard/admin/players",      icon: Users },
+
+    { key: "players",      href: "/dashboard/admin/players",      icon: Users,      section: "Personas" },
     { key: "coaches",      href: "/dashboard/admin/coaches",      icon: UserCheck },
     { key: "parents",      href: "/dashboard/admin/parents",      icon: UsersRound },
-    { key: "attendance",   href: "/dashboard/admin/attendance",   icon: Calendar },
-    { key: "sessions",     href: "/dashboard/admin/sessions",     icon: Calendar },
-    { key: "payments",     href: "/dashboard/admin/payments",     icon: CreditCard },
     { key: "categories",   href: "/dashboard/admin/categories",   icon: Tag },
-    { key: "gamification", href: "/dashboard/admin/gamification", icon: Trophy,    planFeature: "gamification" },
-    { key: "evidence",     href: "/dashboard/admin/evidence",     icon: FileImage, planFeature: "evidence" },
-    { key: "uniforms",     href: "/dashboard/admin/uniforms",     icon: Shirt,     planFeature: "uniforms" },
+
+    { key: "sessions",     href: "/dashboard/admin/sessions",     icon: CalendarPlus,  section: "Entrenamientos", hint: "Programar y editar" },
+    { key: "attendance",   href: "/dashboard/admin/attendance",   icon: ClipboardList, hint: "Pasar lista e historial" },
+
+    { key: "payments",     href: "/dashboard/admin/payments",     icon: CreditCard, section: "Dinero" },
     { key: "rifas",        href: "/dashboard/admin/rifas",        icon: Ticket },
+    { key: "uniforms",     href: "/dashboard/admin/uniforms",     icon: Shirt,     planFeature: "uniforms" },
+
+    { key: "gamification", href: "/dashboard/admin/gamification", icon: Trophy,    section: "Club", planFeature: "gamification" },
+    { key: "evidence",     href: "/dashboard/admin/evidence",     icon: FileImage, planFeature: "evidence" },
     { key: "reports",      href: "/dashboard/admin/reports",      icon: BarChart3 },
     { key: "settings",     href: "/dashboard/admin/settings",     icon: Settings },
   ],
@@ -129,23 +140,38 @@ export function Sidebar({
             ? !(limits[link.planFeature] as boolean)
             : false;
 
+          const sectionHeading = link.section ? (
+            <p
+              key={`${link.href}-section`}
+              className="px-3 pt-4 pb-1.5 text-[9px] font-bold tracking-[0.2em] uppercase"
+              style={{ color: "rgba(255,255,255,0.22)" }}
+            >
+              {link.section}
+            </p>
+          ) : null;
+
           if (isLocked) {
             return (
-              <div key={link.href} title={`Disponible en Plan PRO`}>
-                <div
-                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium"
-                  style={{ color: "rgba(255,255,255,0.20)", cursor: "not-allowed" }}
-                >
-                  <link.icon size={16} strokeWidth={1.5} />
-                  <span className="tracking-wide flex-1">{(dict as any).common[link.key] ?? link.key}</span>
-                  <Lock size={11} style={{ color: "rgba(255,184,0,0.50)", flexShrink: 0 }} />
+              <div key={link.href}>
+                {sectionHeading}
+                <div title={`Disponible en Plan PRO`}>
+                  <div
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium"
+                    style={{ color: "rgba(255,255,255,0.20)", cursor: "not-allowed" }}
+                  >
+                    <link.icon size={16} strokeWidth={1.5} />
+                    <span className="tracking-wide flex-1">{(dict as any).common[link.key] ?? link.key}</span>
+                    <Lock size={11} style={{ color: "rgba(255,184,0,0.50)", flexShrink: 0 }} />
+                  </div>
                 </div>
               </div>
             );
           }
 
           return (
-            <Link key={link.href} href={link.href} onClick={onClose}>
+            <div key={link.href}>
+            {sectionHeading}
+            <Link href={link.href} onClick={onClose}>
               <motion.div
                 whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative"
@@ -169,7 +195,15 @@ export function Sidebar({
                   />
                 )}
                 <link.icon size={16} strokeWidth={isActive ? 2 : 1.5} />
-                <span className="tracking-wide">{(dict as any).common[link.key] ?? link.key}</span>
+                <span className="tracking-wide flex-1 min-w-0">
+                  {(dict as any).common[link.key] ?? link.key}
+                  {link.hint && (
+                    <span className="block text-[10px] font-normal leading-tight mt-0.5"
+                      style={{ color: "rgba(255,255,255,0.28)" }}>
+                      {link.hint}
+                    </span>
+                  )}
+                </span>
                 {link.badge && link.badge > 0 && (
                   <span className="ml-auto text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-accent/20 text-accent">
                     {link.badge}
@@ -177,6 +211,7 @@ export function Sidebar({
                 )}
               </motion.div>
             </Link>
+            </div>
           );
         })}
 

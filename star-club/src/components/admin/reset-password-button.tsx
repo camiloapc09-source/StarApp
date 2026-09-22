@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { KeyRound, Copy, Check, Loader2, X, MessageCircle } from "lucide-react";
+import { normalizePhone, whatsappLink } from "@/lib/phone";
 
 interface Props {
   userId: string;
@@ -184,7 +185,7 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
 
                 {/* WhatsApp button */}
                 {phone && (() => {
-                  const digits = phone.replace(/[^0-9]/g, "");
+                  const digits = normalizePhone(phone);
                   if (!digits) return null;
                   const appUrl = clubSlug
                     ? `${typeof window !== "undefined" ? window.location.origin : ""}/${clubSlug}`
@@ -195,7 +196,7 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
                     : `Hola ${userName}! 👋\n\nSu contraseña en el portal del club ha sido reseteada.\n\n📧 *Usuario:* ${result.loginEmail}\n🔑 *Contraseña temporal:* *${result.tempPassword}*\n\n📱 Ingrese en: ${appUrl} y cambie su contraseña desde el perfil.\n\n¡Gracias! 🏆`;
                   return (
                     <a
-                      href={`https://wa.me/${digits}?text=${encodeURIComponent(msg)}`}
+                      href={whatsappLink(digits, msg)!}
                       target="_blank"
                       rel="noreferrer"
                       onClick={() => {

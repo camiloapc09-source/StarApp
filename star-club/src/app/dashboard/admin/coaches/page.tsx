@@ -12,6 +12,7 @@ import Link from "next/link";
 import NewInviteForm from "@/components/admin/new-invite-form";
 import { CoachEditButton, CoachDeleteButton, CoachResetPasswordButton } from "@/components/admin/coach-actions";
 import { CoachCategorySelect } from "@/components/admin/coach-category-select";
+import { normalizePhone, whatsappLink } from "@/lib/phone";
 import { CreatePlayerProfileButton, RemovePlayerProfileButton } from "@/components/admin/coach-player-profile-button";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -164,7 +165,7 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
                               <CalendarDays size={11} style={{ color: "var(--accent)" }} />{sessions} sesiones
                             </span>
                             {coach.phone && (
-                              <a href={`https://wa.me/${coach.phone.replace(/[^0-9]/g, "")}`} target="_blank" rel="noreferrer"
+                              <a href={whatsappLink(normalizePhone(coach.phone)) ?? "#"} target="_blank" rel="noreferrer"
                                 className="font-medium" style={{ color: "#25D366" }}>📱 WhatsApp</a>
                             )}
                           </div>

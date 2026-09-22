@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { X, CheckCircle2 } from "lucide-react";
+import { dayOfMonthFromDateOnly, nextDueDate, dueLabel } from "@/lib/dates";
 
 type Props = { playerId: string; playerName: string; dateOfBirth?: string | null };
 
@@ -42,8 +43,10 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
     setLoading(true);
     setError(null);
     try {
-      const join = new Date(joinDate);
-      const paymentDay = join.getDate();
+      // `new Date("2026-09-22").getDate()` devolvía 21 en Colombia (UTC-5),
+      // porque la cadena se lee como medianoche UTC. Eso dejaba a cada
+      // deportista con el día de pago corrido un día.
+      const paymentDay = dayOfMonthFromDateOnly(joinDate);
 
       const patchBody: Record<string, unknown> = {
         status: "ACTIVE",
@@ -62,9 +65,9 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
 
       // Becados: no se genera mensualidad
       if (!isBeca) {
-        const now = new Date();
-        let dueDate = new Date(now.getFullYear(), now.getMonth(), paymentDay);
-        if (dueDate <= now) dueDate = new Date(now.getFullYear(), now.getMonth() + 1, paymentDay);
+        // Si el día de pago de este mes aún no pasa, se cobra este mes;
+        // si ya pasó, el siguiente. Un cobro que vence HOY sigue siendo válido.
+        const dueDate = nextDueDate(paymentDay);
 
         const r2 = await fetch("/api/payments", {
           method: "POST",
@@ -72,7 +75,9 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
           body: JSON.stringify({
             playerId,
             amount: finalAmount,
-            concept: "Mensualidad",
+            // Concepto con el mes, para poder distinguirlo del resto en la
+            // lista de cobros. Antes todas las mensualidades se llamaban igual.
+            concept: `Mensualidad ${dueDate.toLocaleDateString("es-CO", { month: "long", year: "numeric" })}`,
             dueDate: dueDate.toISOString(),
           }),
         });
@@ -121,7 +126,7 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
                 <p className="text-xs text-center" style={{ color: "var(--text-muted)" }}>
                   {isBeca
                     ? "Jugador activado con beca. No se generan mensualidades."
-                    : `Primera mensualidad generada. El dia de pago sera el ${new Date(joinDate).getDate()} de cada mes.`}
+                    : `Primera mensualidad generada — ${dueLabel(nextDueDate(dayOfMonthFromDateOnly(joinDate))).toLowerCase()}. El día de pago será el ${dayOfMonthFromDateOnly(joinDate)} de cada mes.`}
                 </p>
               </div>
             ) : (
@@ -140,7 +145,8 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
                   />
                   {joinDate && (
                     <p className="text-xs mt-1" style={{ color: "var(--accent)" }}>
-                      Dia de pago mensual: el {new Date(joinDate).getDate()} de cada mes
+                      Día de pago mensual: el {dayOfMonthFromDateOnly(joinDate)} de cada mes
+                      {" · "}primer cobro {dueLabel(nextDueDate(dayOfMonthFromDateOnly(joinDate))).toLowerCase()}
                     </p>
                   )}
                 </div>

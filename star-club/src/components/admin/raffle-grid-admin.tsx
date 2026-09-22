@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Clock, XCircle, Eye, EyeOff, Upload, Search, MessageCircle } from "lucide-react";
+import { normalizePhone, whatsappLink } from "@/lib/phone";
 
 interface Ticket {
   id: string;
@@ -53,9 +54,9 @@ function buildWhatsAppUrl(
   ticketPrice: number,
   prize?: string | null
 ): string | null {
-  if (!phone) return null;
-  let cleaned = phone.replace(/[\s\-\(\)\+]/g, "");
-  if (cleaned.length === 10 && !cleaned.startsWith("57")) cleaned = "57" + cleaned;
+  // Normalizador único (antes cada pantalla tenía el suyo, con reglas distintas).
+  const cleaned = normalizePhone(phone);
+  if (!cleaned) return null;
   const num = String(number).padStart(2, "0");
   const name = ownerName ?? "";
   const lines = [
@@ -68,7 +69,7 @@ function buildWhatsAppUrl(
   ]
     .filter((l) => l !== null)
     .join("\n");
-  return `https://wa.me/${cleaned}?text=${encodeURIComponent(lines)}`;
+  return whatsappLink(cleaned, lines);
 }
 
 export default function RaffleGridAdmin({

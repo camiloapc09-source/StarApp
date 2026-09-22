@@ -1,7 +1,19 @@
-name: Reseteo diario de misiones
+name: Tarea diaria (misiones + cobros)
 
 # Corre cada día a las 05:00 UTC = 00:00 (medianoche) hora de Colombia (UTC-5).
 # También se puede disparar manualmente desde la pestaña Actions de GitHub.
+#
+# Hace dos cosas:
+#   1. Misiones y rachas: expira las vencidas y asigna las del día.
+#   2. Cobros: marca como vencidos los que ya pasaron su día de vencimiento y
+#      envía los recordatorios (notificación, push y correo al acudiente).
+#
+# El punto 2 antes NO estaba aquí: los vencidos solo se marcaban cuando el
+# admin abría la pantalla de cobros, y los correos solo si presionaba el botón
+# manual. Si nadie entraba, nadie se enteraba.
+#
+# La medianoche de Colombia es justo el momento correcto: un cobro que vencía
+# ayer termina su día y recién ahí pasa a estar vencido.
 on:
   schedule:
     - cron: "0 5 * * *"
@@ -16,7 +28,11 @@ jobs:
           APP_URL: ${{ vars.APP_URL }}
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
         run: |
-          BASE_URL="${APP_URL:-https://starapp.onrender.com}"
+          # Respaldo alineado con el resto del código (`NEXTAUTH_URL ?? …`).
+          # Antes decía "starapp.onrender.com", que no coincide con ninguna otra
+          # referencia del repo: si `vars.APP_URL` no está configurado en GitHub,
+          # el cron golpeaba una URL equivocada.
+          BASE_URL="${APP_URL:-https://starapp-9qb7.onrender.com}"
           echo "Llamando a $BASE_URL/api/cron/daily-reset"
           HTTP_CODE=$(curl -s -o /tmp/body.txt -w "%{http_code}" \
             -X POST "$BASE_URL/api/cron/daily-reset" \

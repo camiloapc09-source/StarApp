@@ -4,9 +4,9 @@ import { db } from "@/lib/db";
 import { Header } from "@/components/dashboard/header";
 import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
-import { format, differenceInDays } from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CheckCircle2, Clock, AlertTriangle, Eye, Banknote, MessageCircle, ImageOff, PhoneCall, FileSpreadsheet, UserPlus } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle, Eye, Banknote, MessageCircle, ImageOff, FileSpreadsheet, UserPlus } from "lucide-react";
 import { getDictionary } from "@/lib/dict";
 import Link from "next/link";
 import { PaymentConfirmButton, PaymentRejectButton, PaymentDeleteButton } from "@/components/admin/payment-actions";
@@ -17,6 +17,10 @@ import BulkMarkReceivedPanel from "@/components/admin/bulk-mark-received-panel";
 import CompletedPaymentsAccordion from "@/components/admin/completed-payments-accordion";
 import { Suspense } from "react";
 import PaymentSearch from "@/components/admin/payment-search";
+import { syncOverdueStatuses } from "@/lib/payment-reminders";
+
+import { hasContact } from "@/lib/phone";
+import { evaluateDiscount } from "@/lib/discount";
 
 export default async function AdminPaymentsPage({
   searchParams,
@@ -29,86 +33,17 @@ export default async function AdminPaymentsPage({
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
   const clubId = (session.user as { clubId?: string }).clubId ?? "club-star";
 
-  // Auto-mark overdue on every page visit so the admin always sees current state
-  const now = new Date();
-  const overdueToMark = await db.payment.findMany({
-    where: { clubId, status: "PENDING", dueDate: { lt: now } },
-    select: { id: true, playerId: true, concept: true, amount: true },
-  });
-  if (overdueToMark.length > 0) {
-    await db.payment.updateMany({
-      where: { id: { in: overdueToMark.map((p) => p.id) } },
-      data: { status: "OVERDUE" },
-    });
-    // Notify players (fire-and-forget, don't block render)
-    const playerIds = [...new Set(overdueToMark.map((p) => p.playerId))];
-    const affectedPlayers = await db.player.findMany({
-      where: { clubId, id: { in: playerIds } }, select: { id: true, userId: true },
-    });
-    const userIdMap = Object.fromEntries(affectedPlayers.map((p) => [p.id, p.userId]));
-    for (const payment of overdueToMark) {
-      const userId = userIdMap[payment.playerId];
-      if (!userId) continue;
-      const alreadyNotified = await db.notification.findFirst({
-        where: { userId, type: "PAYMENT", message: { contains: payment.concept } },
-      });
-      if (!alreadyNotified) {
-        await db.notification.create({
-          data: {
-            userId,
-            title: "Pago vencido",
-            message: `Tu pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" esta vencido.`,
-            type: "PAYMENT",
-          },
-        });
-      }
-    }
-  }
-
-  // Due-soon notifications: payments due in 1-7 days → notify player + parents once
-  const in7Days  = new Date(Date.now() + 7  * 24 * 60 * 60 * 1000);
-  const tomorrow = new Date(Date.now() + 1  * 24 * 60 * 60 * 1000);
-  const dueSoon  = await db.payment.findMany({
-    where: { clubId, status: "PENDING", dueDate: { gte: tomorrow, lte: in7Days } },
-    select: {
-      id: true, concept: true, amount: true, dueDate: true,
-      player: {
-        select: {
-          userId: true,
-          parentLinks: { select: { parent: { select: { userId: true } } } },
-        },
-      },
-    },
-  });
-  for (const p of dueSoon) {
-    const daysLeft = Math.ceil((new Date(p.dueDate).getTime() - Date.now()) / 86400000);
-    const targetUserIds = [
-      p.player.userId,
-      ...p.player.parentLinks.map((l) => l.parent.userId),
-    ].filter(Boolean) as string[];
-    for (const userId of targetUserIds) {
-      const alreadySent = await db.notification.findFirst({
-        where: { userId, type: "PAYMENT", title: { contains: "próximo" },
-          message: { contains: p.concept },
-          createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } },
-      });
-      if (!alreadySent) {
-        await db.notification.create({
-          data: {
-            userId,
-            title: `Pago próximo a vencer ⏰`,
-            message: `El pago de $${p.amount.toLocaleString("es-CO")} por "${p.concept}" vence en ${daysLeft} día${daysLeft !== 1 ? "s" : ""}.`,
-            type: "PAYMENT",
-            link: "/dashboard/parent/payments",
-          },
-        });
-      }
-    }
-  }
+  // Red de seguridad por si el cron diario no corrió: solo corrige estados.
+  // Las notificaciones, el push y los correos los manda el cron — antes se
+  // disparaban aquí, así que solo salían si el admin abría esta página.
+  await syncOverdueStatuses(clubId);
 
   const club = await db.club.findUnique({
     where: { id: clubId },
-    select: { name: true, billingCycleDay: true, earlyPaymentDays: true, earlyPaymentDiscount: true },
+    select: {
+      name: true, country: true, billingCycleDay: true,
+      earlyPaymentDays: true, earlyPaymentDiscount: true,
+    },
   });
 
   const payments = await db.payment.findMany({
@@ -168,21 +103,30 @@ export default async function AdminPaymentsPage({
   };
 
   const clubName = club?.name ?? "el club";
-  const colombiaLocale = new Date().toLocaleString("en-US", { timeZone: "America/Bogota" });
-  const colombiaHour = parseInt(
-    new Date().toLocaleString("en-US", { timeZone: "America/Bogota", hour: "numeric", hour12: false }),
-    10
-  );
-  const colombiaDay = new Date(colombiaLocale).getDate();
-  const greeting =
-    colombiaHour >= 5 && colombiaHour < 12 ? "Buenos días" :
-    colombiaHour >= 12 && colombiaHour < 19 ? "Buenas tardes" :
-    "Buenas noches";
+  const clubCountry = club?.country ?? "CO";
 
-  const bcd = club?.billingCycleDay ?? 0;
+  // Cuántos alumnos por cobrar no tienen a quién escribirle. Antes el botón de
+  // WhatsApp simplemente desaparecía sin decir por qué.
+  const missingContactCount = new Set(
+    [...overdue, ...pending]
+      .filter((p) => !hasContact(p.player, clubCountry))
+      .map((p) => p.playerId),
+  ).size;
+
   const epd = club?.earlyPaymentDays ?? 0;
   const epdiscount = club?.earlyPaymentDiscount ?? 0;
-  const earlyWindowEnd = bcd + epd;
+
+  // Cuántos cobros abiertos califican HOY para el descuento.
+  //
+  // El letrero anterior calculaba una única ventana global a partir del día de
+  // facturación del club (`billingCycleDay`), pero cada deportista tiene su
+  // propio día de pago según su fecha de ingreso: para un alumno que paga el 3,
+  // una ventana basada en el día 15 no significaba nada. Ahora se evalúa cobro
+  // por cobro, contra su propio vencimiento.
+  const discountEligible = [...pending, ...overdue].filter(
+    (p) => evaluateDiscount(p.dueDate, p.amount, { earlyPaymentDays: epd, earlyPaymentDiscount: epdiscount }).applies,
+  );
+  const discountSavings = discountEligible.length * epdiscount;
 
   const dict = await getDictionary();
 
@@ -277,35 +221,40 @@ export default async function AdminPaymentsPage({
           </div>
         </div>
 
-        {/* Early payment discount indicator */}
-        {epdiscount > 0 && epd > 0 && (() => {
-          const inWindow = colombiaDay >= bcd && colombiaDay < earlyWindowEnd;
-          return (
+        {/* Descuento por pronto pago — ahora cuenta cobros reales, no una
+            ventana global de calendario. */}
+        {epdiscount > 0 && epd > 0 && (
+          <div
+            className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
+            style={discountEligible.length > 0
+              ? { background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.25)" }
+              : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
             <div
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
-              style={inWindow
-                ? { background: "rgba(52,211,153,0.08)", border: "1px solid rgba(52,211,153,0.25)" }
-                : { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
-            >
-              <div
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ background: inWindow ? "#34D399" : "rgba(255,255,255,0.20)" }}
-              />
-              {inWindow ? (
-                <span style={{ color: "#6EE7B7" }}>
-                  <span className="font-bold">Descuento por pronto pago activo</span>
-                  {" · "}${epdiscount.toLocaleString("es-CO")} de descuento · válido hasta el día {earlyWindowEnd - 1} de este mes
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ background: discountEligible.length > 0 ? "#34D399" : "rgba(255,255,255,0.20)" }}
+            />
+            {discountEligible.length > 0 ? (
+              <span style={{ color: "#6EE7B7" }}>
+                <span className="font-bold">
+                  {discountEligible.length} cobro{discountEligible.length !== 1 ? "s" : ""} con descuento por pronto pago
                 </span>
-              ) : (
-                <span style={{ color: "rgba(255,255,255,0.40)" }}>
-                  Descuento por pronto pago <span className="font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>${epdiscount.toLocaleString("es-CO")}</span>
-                  {" · "} próxima ventana: del <span className="font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>día {bcd}</span> al <span className="font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>día {earlyWindowEnd - 1}</span> de cada mes
-                  {" · "}<span style={{ color: "rgba(255,255,255,0.30)" }}>Hoy: día {colombiaDay}</span>
+                {" · "}${epdiscount.toLocaleString("es-CO")} c/u · hasta ${discountSavings.toLocaleString("es-CO")} de ahorro para las familias
+                {" · "}<span style={{ color: "rgba(255,255,255,0.45)" }}>se aplica al registrar el pago</span>
+              </span>
+            ) : (
+              <span style={{ color: "rgba(255,255,255,0.40)" }}>
+                Descuento por pronto pago{" "}
+                <span className="font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>
+                  ${epdiscount.toLocaleString("es-CO")}
                 </span>
-              )}
-            </div>
-          );
-        })()}
+                {" · "}se aplica cuando el pago se registra dentro de los{" "}
+                <span className="font-semibold" style={{ color: "rgba(255,255,255,0.60)" }}>{epd} días</span>
+                {" "}siguientes al vencimiento de cada cobro · ninguno califica hoy
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Action tools */}
         <div className="flex flex-wrap items-center gap-3">
@@ -446,6 +395,11 @@ export default async function AdminPaymentsPage({
                 status: p.status,
                 dueDate: p.dueDate,
                 player: {
+                  id: p.playerId,
+                  // `Player.phone` es lo que escribe el admin en "Nuevo jugador".
+                  // Faltaba aquí, y por eso a esos deportistas no les salía el
+                  // botón de WhatsApp aunque tuvieran el número guardado.
+                  phone: p.player.phone,
                   user: {
                     name: p.player.user.name,
                     avatar: p.player.user.avatar,
@@ -459,7 +413,8 @@ export default async function AdminPaymentsPage({
               };
             })}
             clubName={clubName}
-            billingCycleDay={club?.billingCycleDay}
+            clubCountry={clubCountry}
+            missingContactCount={missingContactCount}
             earlyPaymentDays={club?.earlyPaymentDays}
             earlyPaymentDiscount={club?.earlyPaymentDiscount}
           />

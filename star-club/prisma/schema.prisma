@@ -237,6 +237,13 @@ model Payment {
   playerId      String
   player        Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
   amount        Float
+  /// Monto original del cobro cuando se recibió un abono parcial o se aplicó
+  /// un descuento. `amount` pasa a ser lo efectivamente pagado, así que sin
+  /// este campo el valor real del cobro se perdía y la contabilidad no cuadraba.
+  originalAmount Float?
+  /// Descuento por pronto pago efectivamente aplicado, en COP.
+  /// Se distingue de un abono parcial: aquí el cobro queda SALDADO.
+  discountAmount Float?
   concept       String
   status        String   @default("PENDING") // PENDING | SUBMITTED | COMPLETED | OVERDUE
   dueDate       DateTime

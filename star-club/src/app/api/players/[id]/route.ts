@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireAuth, requireAdmin, getClubId, getCoachCategoryFilter, isResponse, apiError, apiOk } from "@/lib/api";
+import { parseDateOnly } from "@/lib/dates";
 
 const updateSchema = z.object({
   status: z.enum(["ACTIVE", "PENDING", "INACTIVE"]).optional(),
@@ -88,8 +89,14 @@ export async function PATCH(
 
   const { userName, joinDate, dateOfBirth, categoryId, ...playerData } = parsed.data;
 
-  if (userName !== undefined) {
-    await db.user.update({ where: { id: player.userId }, data: { name: userName } });
+  // El nombre y el celular viven en `User`; el resto en `Player`. El celular se
+  // escribe en AMBOS lados: el panel de cobros lee `User.phone` y la ficha del
+  // jugador lee `Player.phone`, y antes se desincronizaban.
+  const userData: Record<string, unknown> = {};
+  if (userName !== undefined) userData.name = userName;
+  if (parsed.data.phone !== undefined) userData.phone = parsed.data.phone || null;
+  if (Object.keys(userData).length > 0) {
+    await db.user.update({ where: { id: player.userId }, data: userData });
   }
 
   const updated = await db.player.update({
@@ -97,8 +104,9 @@ export async function PATCH(
     data: {
       ...playerData,
       ...(categoryId !== undefined && { categoryId: categoryId ?? null }),
-      ...(joinDate !== undefined && { joinDate: joinDate ? new Date(joinDate) : null }),
-      ...(dateOfBirth !== undefined && { dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null }),
+      // `parseDateOnly` evita que la fecha se corra al día anterior (UTC-5).
+      ...(joinDate !== undefined && { joinDate: joinDate ? parseDateOnly(joinDate) : null }),
+      ...(dateOfBirth !== undefined && { dateOfBirth: dateOfBirth ? parseDateOnly(dateOfBirth) : null }),
     },
   });
 

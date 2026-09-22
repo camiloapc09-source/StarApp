@@ -2,7 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Banknote, X, Check, Loader2, AlertCircle } from "lucide-react";
+import { Banknote, X, Check, Loader2, AlertCircle, Receipt, Sparkles } from "lucide-react";
+import { toDateOnlyString, clubToday, parseDateOnly } from "@/lib/dates";
+import { evaluateDiscount } from "@/lib/discount";
 
 const METHOD_LABELS: Record<string, string> = {
   CASH:     "Efectivo",
@@ -17,29 +19,63 @@ interface Props {
   playerName:  string;
   concept:     string;
   fullAmount:  number;
+  /** Vencimiento del cobro — define la ventana de pronto pago. */
+  dueDate?:    string | Date;
+  earlyPaymentDays?: number;
+  earlyPaymentDiscount?: number;
 }
 
-export default function RecordPaymentModal({ paymentId, playerName, concept, fullAmount }: Props) {
+export default function RecordPaymentModal({
+  paymentId, playerName, concept, fullAmount,
+  dueDate, earlyPaymentDays = 0, earlyPaymentDiscount = 0,
+}: Props) {
   const router = useRouter();
   const [open, setOpen]       = useState(false);
   const [method, setMethod]   = useState("CASH");
   const [amount, setAmount]   = useState(fullAmount);
+  const [paidOn, setPaidOn]   = useState(() => toDateOnlyString(clubToday()));
+  const [useDiscount, setUseDiscount] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState<string | null>(null);
+  /** Queda en pantalla tras registrar, para poder abrir el recibo si se quiere. */
+  const [doneId, setDoneId]   = useState<string | null>(null);
 
-  const isPartial  = amount > 0 && amount < fullAmount;
-  const remainder  = fullAmount - amount;
+  const today = toDateOnlyString(clubToday());
+
+  // Descuento por pronto pago. El servidor lo recalcula por su cuenta: esto es
+  // solo para que el admin vea qué va a pasar antes de confirmar.
+  const discount = dueDate
+    ? evaluateDiscount(
+        dueDate, fullAmount,
+        { earlyPaymentDays, earlyPaymentDiscount },
+        parseDateOnly(paidOn),
+      )
+    : null;
+  const discountActive = Boolean(discount?.applies && useDiscount);
+  const discountValue  = discountActive ? discount!.amount : 0;
+  /** Lo que el alumno debe pagar hoy, ya con descuento. */
+  const dueNow = fullAmount - discountValue;
+
+  const isPartial  = amount > 0 && amount < dueNow;
+  const remainder  = dueNow - amount;
 
   function handleOpen() {
-    setAmount(fullAmount);
     setMethod("CASH");
+    setPaidOn(today);
+    setUseDiscount(true);
     setError(null);
+    setDoneId(null);
+    // El monto arranca con el descuento ya restado, que es lo que se va a cobrar.
+    const d = dueDate
+      ? evaluateDiscount(dueDate, fullAmount, { earlyPaymentDays, earlyPaymentDiscount })
+      : null;
+    setAmount(d?.applies ? d.finalAmount : fullAmount);
     setOpen(true);
   }
 
   async function confirm() {
-    if (amount <= 0 || amount > fullAmount) {
-      setError("El monto debe estar entre $1 y $" + fullAmount.toLocaleString("es-CO"));
+    if (amount <= 0 || amount > dueNow) {
+      setError("El monto debe estar entre $1 y $" + dueNow.toLocaleString("es-CO"));
       return;
     }
     setLoading(true);
@@ -51,13 +87,21 @@ export default function RecordPaymentModal({ paymentId, playerName, concept, ful
         body:    JSON.stringify({
           paymentMethod: method,
           paidAmount:    amount,
+          // Permite registrar un pago recibido otro día — antes `paidAt`
+          // siempre quedaba con la fecha en que el admin lo digitaba.
+          paidOn,
+          // Solo se PIDE el descuento; el monto lo calcula el servidor.
+          applyDiscount: discountActive,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Error al registrar");
-      setOpen(false);
-      // Navigate to receipt for the completed payment
-      router.push(`/dashboard/admin/payments/batch-receipt?ids=${paymentId}`);
+      // Antes esto hacía `router.push()` al recibo, sacando al admin de la
+      // lista en CADA cobro. Cobrando a 15 papás en el entrenamiento eran 15
+      // idas y vueltas. Ahora se queda aquí y el recibo es opcional.
+      setDoneId(paymentId);
+      setLoading(false);
+      router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error desconocido");
       setLoading(false);
@@ -83,7 +127,7 @@ export default function RecordPaymentModal({ paymentId, playerName, concept, ful
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>
-                <h2 className="font-bold text-base">Registrar pago</h2>
+                <h2 className="font-bold text-base">{doneId ? "Pago registrado ✓" : "Registrar pago"}</h2>
                 <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>{playerName}</p>
                 <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{concept}</p>
               </div>
@@ -92,19 +136,92 @@ export default function RecordPaymentModal({ paymentId, playerName, concept, ful
               </button>
             </div>
 
+            {doneId ? (
+              /* Confirmación: se queda en la lista. El recibo es una opción,
+                 no un desvío obligatorio. */
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 rounded-xl px-4 py-3"
+                  style={{ background: "rgba(52,211,153,0.10)", border: "1px solid rgba(52,211,153,0.25)" }}>
+                  <Check size={18} style={{ color: "#34D399" }} />
+                  <div>
+                    <p className="text-sm font-semibold" style={{ color: "#34D399" }}>
+                      ${amount.toLocaleString("es-CO")} registrados
+                    </p>
+                    {isPartial ? (
+                      <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>
+                        Queda un saldo de ${remainder.toLocaleString("es-CO")} por cobrar.
+                      </p>
+                    ) : discountValue > 0 ? (
+                      <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>
+                        Con ${discountValue.toLocaleString("es-CO")} de descuento por pronto pago. Cobro saldado.
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button onClick={() => setOpen(false)}
+                    className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
+                    style={{ background: "rgba(52,211,153,0.15)", color: "#34D399", border: "1px solid rgba(52,211,153,0.30)" }}>
+                    Seguir cobrando
+                  </button>
+                  <button
+                    onClick={() => router.push(`/dashboard/admin/payments/batch-receipt?ids=${doneId}`)}
+                    className="flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-medium border hover:opacity-70"
+                    style={{ borderColor: "var(--border-primary)", color: "var(--text-secondary)" }}>
+                    <Receipt size={14} /> Ver recibo
+                  </button>
+                </div>
+              </div>
+            ) : (
+            <>
+
             {/* Amount */}
             <div>
               <label className="block text-xs font-bold tracking-wider uppercase mb-2"
                 style={{ color: "rgba(255,255,255,0.40)" }}>
                 Monto recibido
               </label>
+
+              {/* Descuento por pronto pago. Antes el club podía configurarlo y
+                  la app lo anunciaba en un letrero, pero NUNCA lo aplicaba: se
+                  cobraba el monto completo. Ahora se aplica de verdad, se ve
+                  aquí, y el admin puede quitarlo si el caso lo amerita. */}
+              {discount?.applies && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !useDiscount;
+                    setUseDiscount(next);
+                    setAmount(next ? fullAmount - discount.amount : fullAmount);
+                  }}
+                  className="w-full flex items-center gap-2.5 mb-2.5 rounded-xl px-3 py-2.5 text-left transition-all"
+                  style={discountActive
+                    ? { background: "rgba(52,211,153,0.10)", border: "1px solid rgba(52,211,153,0.30)" }
+                    : { background: "rgba(255,255,255,0.03)", border: "1px dashed rgba(255,255,255,0.15)" }}
+                >
+                  {discountActive
+                    ? <Check size={15} style={{ color: "#34D399", flexShrink: 0 }} />
+                    : <Sparkles size={15} style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0 }} />}
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold"
+                      style={{ color: discountActive ? "#34D399" : "rgba(255,255,255,0.55)" }}>
+                      Pronto pago · −${discount.amount.toLocaleString("es-CO")}
+                    </p>
+                    <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.40)" }}>
+                      {discountActive
+                        ? `Aplicado — paga $${dueNow.toLocaleString("es-CO")} en vez de $${fullAmount.toLocaleString("es-CO")}`
+                        : "Sin aplicar — toca para agregarlo"}
+                    </p>
+                  </div>
+                </button>
+              )}
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold"
                   style={{ color: "rgba(255,255,255,0.40)" }}>$</span>
                 <input
                   type="number"
                   min={1}
-                  max={fullAmount}
+                  max={dueNow}
                   step={1000}
                   value={amount}
                   onChange={(e) => setAmount(Math.max(0, Number(e.target.value)))}
@@ -115,11 +232,16 @@ export default function RecordPaymentModal({ paymentId, playerName, concept, ful
 
               <div className="flex items-center justify-between mt-2">
                 <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                  Total adeudado: <strong>${fullAmount.toLocaleString("es-CO")}</strong>
+                  {discountActive ? "A pagar hoy" : "Total adeudado"}: <strong>${dueNow.toLocaleString("es-CO")}</strong>
+                  {discountActive && (
+                    <span className="ml-1.5 line-through" style={{ color: "rgba(255,255,255,0.22)" }}>
+                      ${fullAmount.toLocaleString("es-CO")}
+                    </span>
+                  )}
                 </span>
-                {amount !== fullAmount && (
+                {amount !== dueNow && (
                   <button
-                    onClick={() => setAmount(fullAmount)}
+                    onClick={() => setAmount(dueNow)}
                     className="text-xs font-semibold underline"
                     style={{ color: "var(--accent)" }}>
                     Poner total
@@ -139,6 +261,30 @@ export default function RecordPaymentModal({ paymentId, playerName, concept, ful
                     </p>
                   </div>
                 </div>
+              )}
+            </div>
+
+            {/* Fecha en que se recibió el dinero — no siempre es hoy.
+                Antes `paidAt` se ponía siempre en el momento de digitarlo, así
+                que un cobro del sábado registrado el lunes quedaba mal fechado
+                en los reportes. */}
+            <div>
+              <label className="block text-xs font-bold tracking-wider uppercase mb-2"
+                style={{ color: "rgba(255,255,255,0.40)" }}>
+                Fecha de pago
+              </label>
+              <input
+                type="date"
+                value={paidOn}
+                max={today}
+                onChange={(e) => setPaidOn(e.target.value)}
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.90)" }}
+              />
+              {paidOn !== today && (
+                <p className="text-xs mt-1.5" style={{ color: "var(--warning)" }}>
+                  Se registrará con fecha anterior a hoy.
+                </p>
               )}
             </div>
 
@@ -182,9 +328,11 @@ export default function RecordPaymentModal({ paymentId, playerName, concept, ful
                 style={{ background: "rgba(52,211,153,0.15)", color: "#34D399", border: "1px solid rgba(52,211,153,0.30)" }}>
                 {loading
                   ? <><Loader2 size={14} className="animate-spin" /> Registrando…</>
-                  : <><Check size={14} /> {isPartial ? "Registrar abono y recibo" : "Confirmar y ver recibo"}</>}
+                  : <><Check size={14} /> {isPartial ? "Registrar abono" : "Confirmar pago"}</>}
               </button>
             </div>
+            </>
+            )}
           </div>
         </div>
       )}

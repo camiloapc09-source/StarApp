@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { apiError, apiOk } from "@/lib/api";
+import { runPaymentReminders } from "@/lib/payment-reminders";
 
 /**
  * POST /api/cron/daily-reset
@@ -160,6 +161,12 @@ export async function POST(req: NextRequest) {
     playersNotified++;
   }
 
+  // 4) Cobros: marcar vencidos y avisar -----------------------------------------
+  // Antes esto NO estaba aquí: los vencidos solo se marcaban cuando el admin
+  // abría la pantalla de cobros, y los correos solo si presionaba el botón
+  // manual. Si nadie entraba, nadie se enteraba. Ahora corre todos los días.
+  const reminders = await runPaymentReminders(null, { notify: true });
+
   return apiOk({
     ok: true,
     expiredDaily: expiredDaily.count,
@@ -168,6 +175,7 @@ export async function POST(req: NextRequest) {
     streaksReset: reset,
     dailyAssigned: assignedCount,
     playersNotified,
+    payments: reminders,
     ranAt: now.toISOString(),
   });
 }

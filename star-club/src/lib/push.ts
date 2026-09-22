@@ -1,14 +1,38 @@
 import webpush from "web-push";
 import { db } from "@/lib/db";
 
-webpush.setVapidDetails(
-  process.env.VAPID_EMAIL ?? "mailto:admin@starclub.com",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY ?? "",
-  process.env.VAPID_PRIVATE_KEY ?? ""
-);
+/**
+ * Las claves VAPID se configuran solo si están COMPLETAS.
+ *
+ * Antes se llamaba a `setVapidDetails` al cargar el módulo usando `??`, que no
+ * protege contra una cadena vacía: con `VAPID_EMAIL=` en el entorno, la llamada
+ * lanzaba "No subject set in vapidDetails.subject" y tumbaba el build entero y
+ * el arranque del servidor. Sin claves, el push simplemente no se envía.
+ */
+const vapidEmail      = process.env.VAPID_EMAIL?.trim() || "";
+const vapidPublicKey  = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY?.trim() || "";
+const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY?.trim() || "";
+
+const pushEnabled = Boolean(vapidPublicKey && vapidPrivateKey);
+
+if (pushEnabled) {
+  try {
+    webpush.setVapidDetails(
+      vapidEmail.startsWith("mailto:") || vapidEmail.startsWith("https://")
+        ? vapidEmail
+        : vapidEmail
+          ? `mailto:${vapidEmail}`
+          : "mailto:admin@starclub.com",
+      vapidPublicKey,
+      vapidPrivateKey,
+    );
+  } catch (err) {
+    console.error("Web push deshabilitado — claves VAPID inválidas:", err);
+  }
+}
 
 export async function sendPushToUser(userId: string, payload: { title: string; body: string; url?: string }) {
-  if (!process.env.VAPID_PRIVATE_KEY) return;
+  if (!pushEnabled) return;
 
   const subs = await db.pushSubscription.findMany({ where: { userId } });
   const data = JSON.stringify(payload);

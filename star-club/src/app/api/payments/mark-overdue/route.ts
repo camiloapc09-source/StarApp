@@ -1,86 +1,34 @@
 import { NextRequest } from "next/server";
-import { db } from "@/lib/db";
 import { requireAdmin, getClubId, isResponse, apiOk } from "@/lib/api";
-import { sendOverduePaymentEmail } from "@/lib/email";
-import { sendPushToUser } from "@/lib/push";
+import { runPaymentReminders } from "@/lib/payment-reminders";
 
-// POST /api/payments/mark-overdue
-// Marks PENDING payments past due date as OVERDUE (scoped to this club)
+/**
+ * POST /api/payments/mark-overdue
+ *
+ * Dispara a mano el mismo ciclo que corre el cron diario: marca vencidos,
+ * avisa a quien corresponda y manda correo al acudiente.
+ *
+ * Toda la lógica vive ahora en `runPaymentReminders`. Antes estaba duplicada
+ * aquí y en el render de `/dashboard/admin/payments`, con comportamientos
+ * distintos: la página no enviaba push ni correo, y hacía una consulta por
+ * cada pago y cada usuario.
+ */
 export async function POST(_req: NextRequest) {
   const session = await requireAdmin();
   if (isResponse(session)) return session;
   const clubId = getClubId(session);
 
-  const now = new Date();
+  const result = await runPaymentReminders(clubId, { notify: true });
 
-  const overdue = await db.payment.findMany({
-    where: { clubId, status: "PENDING", dueDate: { lt: now } },
-    select: { id: true, playerId: true, concept: true, amount: true },
+  const nothingHappened =
+    result.markedOverdue === 0 && result.overdueNotified === 0 && result.dueSoonNotified === 0;
+
+  return apiOk({
+    updated: result.markedOverdue,
+    notified: result.overdueNotified + result.dueSoonNotified,
+    emailsSent: result.emailsSent,
+    message: nothingHappened
+      ? "Todo al día — no hay cobros vencidos ni próximos a vencer."
+      : `${result.markedOverdue} cobro(s) marcados como vencidos · ${result.overdueNotified + result.dueSoonNotified} aviso(s) enviados.`,
   });
-
-  if (overdue.length === 0) {
-    return apiOk({ updated: 0, message: "No hay pagos pendientes vencidos." });
-  }
-
-  await db.payment.updateMany({
-    where: { id: { in: overdue.map((p) => p.id) } },
-    data: { status: "OVERDUE" },
-  });
-
-  const playerIds = [...new Set(overdue.map((p) => p.playerId))];
-  const players = await db.player.findMany({
-    where: { id: { in: playerIds } },
-    select: { id: true, userId: true },
-  });
-  const userIdMap = Object.fromEntries(players.map((p) => [p.id, p.userId]));
-
-  const club = await db.club.findUnique({ where: { id: clubId }, select: { name: true } });
-  const appUrl = process.env.NEXTAUTH_URL ?? "https://starapp-9qb7.onrender.com";
-
-  for (const payment of overdue) {
-    const userId = userIdMap[payment.playerId];
-    if (!userId) continue;
-
-    await db.notification.create({
-      data: {
-        userId,
-        title: "Pago vencido ⚠️",
-        message: `Tu pago de $${payment.amount.toLocaleString("es-CO")} por "${payment.concept}" está vencido.`,
-        type: "PAYMENT",
-      },
-    });
-
-    // Push al usuario del jugador
-    await sendPushToUser(userId, {
-      title: "Pago vencido ⚠️",
-      body: `$${payment.amount.toLocaleString("es-CO")} por "${payment.concept}"`,
-      url: "/dashboard/parent/payments",
-    });
-
-    // Email al padre vinculado
-    const player = await db.player.findUnique({
-      where: { id: payment.playerId },
-      select: {
-        user: { select: { name: true } },
-        parentLinks: {
-          take: 1,
-          include: { parent: { include: { user: { select: { name: true, email: true } } } } },
-        },
-      },
-    });
-    const parentLink = player?.parentLinks[0]?.parent;
-    if (parentLink?.user?.email) {
-      await sendOverduePaymentEmail({
-        to: parentLink.user.email,
-        parentName: parentLink.user.name,
-        playerName: player?.user.name ?? "",
-        concept: payment.concept,
-        amountCOP: payment.amount,
-        clubName: club?.name ?? "Star Club",
-        appUrl,
-      });
-    }
-  }
-
-  return apiOk({ updated: overdue.length });
 }
