@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { isSuperAdminEmail } from "@/lib/superadmin";
+import { mightBeSuperAdminEmail } from "@/lib/superadmin";
 import { DashboardShell } from "@/components/dashboard/shell";
 
 export default async function DashboardLayout({
@@ -41,7 +41,7 @@ export default async function DashboardLayout({
   // (StarApp) nunca queda bloqueado para poder gestionar y reactivar clubes.
   // El redirect va FUERA del try/catch (redirect() lanza y no debe atraparse).
   const email = (session.user as { email?: string }).email ?? "";
-  const isSuperAdmin = isSuperAdminEmail(email);
+  const isSuperAdmin = mightBeSuperAdminEmail(email);
   if (!clubActive && !isSuperAdmin) {
     redirect("/suspended");
   }

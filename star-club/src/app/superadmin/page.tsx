@@ -1,14 +1,17 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { isSuperAdminEmail } from "@/lib/superadmin";
+import { isSuperAdminUser } from "@/lib/superadmin";
 import { db } from "@/lib/db";
 import SuperAdminPanel from "./panel";
 
 export default async function SuperAdminPage() {
   const session = await auth();
-  const email = (session?.user as { email?: string })?.email ?? "";
+  const userId = (session?.user as { id?: string })?.id;
 
-  if (!session?.user || !isSuperAdminEmail(email)) redirect("/");
+  // Se valida contra la fila real del usuario, no contra su email: los emails
+  // son únicos POR CLUB, así que una cuenta con el email del superadmin creada
+  // en otro club abría todo el panel de la plataforma.
+  if (!session?.user || !userId || !(await isSuperAdminUser(userId))) redirect("/");
 
   const [codes, clubs] = await Promise.all([
     db.accessCode.findMany({ orderBy: { createdAt: "desc" }, take: 200 }),

@@ -70,7 +70,9 @@ async function main() {
   if (existingAdmin) {
     await prisma.user.update({
       where: { id: existingAdmin.id },
-      data: { password: adminPassword, clubId: STAR_CLUB_ID },
+      // `isSuperAdmin` es la marca explícita que autoriza /superadmin. Antes el
+      // acceso se decidía solo por el email, que es único POR CLUB.
+      data: { password: adminPassword, clubId: STAR_CLUB_ID, isSuperAdmin: true },
     });
   } else {
     await prisma.user.create({
@@ -80,6 +82,7 @@ async function main() {
         password: adminPassword,
         role: "ADMIN",
         clubId: STAR_CLUB_ID,
+        isSuperAdmin: true,
       },
     });
   }

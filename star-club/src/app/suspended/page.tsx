@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { isSuperAdminEmail } from "@/lib/superadmin";
+import { mightBeSuperAdminEmail } from "@/lib/superadmin";
 import { Lock } from "lucide-react";
 
 export const metadata = { title: "Acceso suspendido" };
@@ -12,7 +12,7 @@ export default async function SuspendedPage() {
 
   const email = (session.user as { email?: string }).email ?? "";
   // El super admin nunca está suspendido.
-  if (isSuperAdminEmail(email)) redirect("/dashboard/admin");
+  if (mightBeSuperAdminEmail(email)) redirect("/dashboard/admin");
 
   const club = await db.club.findUnique({
     where: { id: session.user.clubId },

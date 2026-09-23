@@ -52,6 +52,12 @@ model User {
   email          String
   password       String
   role           String    @default("PLAYER") // ADMIN | COACH | PLAYER | PARENT
+  /// Acceso al panel /superadmin (toda la plataforma, todos los clubes).
+  /// Es una marca explícita en la fila: antes el superadmin se decidía SOLO por
+  /// el email, pero los emails son únicos POR CLUB (@@unique([email, clubId])),
+  /// así que crear un usuario con el email del superadmin en otro club daba
+  /// acceso total a la plataforma.
+  isSuperAdmin   Boolean   @default(false)
   phone          String?
   branch         String?
   emergencyContact String?

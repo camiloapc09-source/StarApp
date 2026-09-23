@@ -1,9 +1,8 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { requireRole, getClubId, isResponse, apiError, apiOk, rateLimit } from "@/lib/api";
+import { saveProofImage, deleteProofImage, UploadError } from "@/lib/uploads";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 // POST /api/payments/[id]/upload - parent uploads proof image
 export async function POST(
@@ -38,14 +37,21 @@ export async function POST(
   const file = formData.get("file") as File | null;
   if (!file) return apiError("No file provided", 400);
 
-  if (!ALLOWED_TYPES.includes(file.type)) return apiError("Solo se permiten imagenes (JPG, PNG, WEBP)", 400);
-  if (file.size > MAX_SIZE_BYTES) return apiError("Imagen demasiado grande (max. 5 MB)", 400);
+  // Antes esto guardaba la imagen como base64 DENTRO de la base de datos
+  // (~6,7 MB de texto por cada foto de 5 MB). Ahora va al disco persistente y
+  // en la columna queda solo la ruta. Ver src/lib/uploads.ts.
+  let saved;
+  try {
+    saved = await saveProofImage(file, "proofs");
+  } catch (err) {
+    if (err instanceof UploadError) return apiError(err.message, 400);
+    throw err;
+  }
 
-  const bytes = await file.arrayBuffer();
-  const base64 = Buffer.from(bytes).toString("base64");
-  const dataUrl = `data:${file.type};base64,${base64}`;
+  // Si ya había un comprobante, se borra para no acumular basura en el disco.
+  await deleteProofImage(payment.proofUrl);
 
-  await db.payment.update({ where: { id }, data: { proofUrl: dataUrl } });
+  await db.payment.update({ where: { id }, data: { proofUrl: saved.url } });
 
-  return apiOk({ url: dataUrl });
+  return apiOk({ url: saved.url });
 }

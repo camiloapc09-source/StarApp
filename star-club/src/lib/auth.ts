@@ -3,6 +3,12 @@ import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
 import { db } from "@/lib/db";
 import { authConfig } from "@/lib/auth.config";
+import { rateLimit } from "@/lib/api";
+
+/** Intentos de contraseña permitidos por cuenta antes de bloquear. */
+const MAX_LOGIN_ATTEMPTS = 8;
+/** Ventana del bloqueo: 10 minutos. */
+const LOGIN_WINDOW_MS = 10 * 60_000;
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -19,6 +25,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const emailInput = (credentials.email as string).trim().toLowerCase();
         const clubSlug   = (credentials.clubSlug as string | undefined)?.trim();
+
+        // Límite de intentos por cuenta. Antes el login no tenía ninguno:
+        // se podían probar contraseñas sin tope. Además cada intento hace 2-3
+        // consultas y un `compare` de bcrypt, así que también servía para
+        // inflar la factura de la base de datos.
+        //
+        // La clave es el email + club, no la IP: una IP compartida (un colegio,
+        // un celular con datos móviles) dejaría fuera a usuarios legítimos.
+        const attemptKey = `login:${clubSlug ?? ""}:${emailInput}`;
+        if (!rateLimit(attemptKey, MAX_LOGIN_ATTEMPTS, LOGIN_WINDOW_MS)) {
+          // Mensaje genérico: no confirma si la cuenta existe.
+          throw new Error("Demasiados intentos. Espera unos minutos e intenta de nuevo.");
+        }
 
         // Resolve clubId from slug when provided
         let clubId: string | undefined;

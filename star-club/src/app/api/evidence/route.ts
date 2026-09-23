@@ -7,12 +7,32 @@ import { randomBytes } from "crypto";
 import { requireAuth, requireRole, getClubId, isResponse, apiError, apiOk, rateLimit } from "@/lib/api";
 import { awardXp } from "@/lib/gamification";
 
+/** Tipos aceptados como evidencia. Solo imágenes. */
+const ALLOWED_MIME = ["image/jpeg", "image/jpg", "image/png", "image/webp"] as const;
+/** Tope de la evidencia ya decodificada. */
+const MAX_EVIDENCE_BYTES = 5 * 1024 * 1024; // 5 MB
+/** base64 ocupa ~4/3 del binario; se deja margen para el encabezado. */
+const MAX_BASE64_CHARS = Math.ceil(MAX_EVIDENCE_BYTES * 1.4);
+
 const uploadSchema = z.object({
   playerMissionId: z.string(),
-  filename: z.string(),
-  mimeType: z.string(),
-  data: z.string(), // base64
+  filename: z.string().max(200),
+  // Antes esto era `mimeType: z.string()` y `data: z.string()`, sin lista de
+  // tipos ni tope de tamaño, y la extensión del archivo guardado salía del
+  // nombre que mandaba el usuario. Un deportista podía subir un ".html" que
+  // quedaba servido desde /uploads/evidence/ en el MISMO origen de la app
+  // — XSS almacenado contra quien lo abriera — y de paso llenar el disco.
+  mimeType: z.enum(ALLOWED_MIME),
+  data: z.string().max(MAX_BASE64_CHARS, "Imagen demasiado grande (máx. 5 MB)"),
 });
+
+/** Extensión derivada del tipo declarado, NUNCA del nombre que envía el usuario. */
+const EXT_BY_MIME: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/jpg":  "jpg",
+  "image/png":  "png",
+  "image/webp": "webp",
+};
 
 export async function GET(req: NextRequest) {
   const session = await requireAuth();
@@ -57,13 +77,21 @@ export async function POST(req: NextRequest) {
   const pm = await db.playerMission.findUnique({ where: { id: playerMissionId } });
   if (!pm || pm.playerId !== player.id) return apiError("PlayerMission not found or not owner", 404);
 
+  // El tope de `data` es sobre el texto base64; aquí se comprueba el tamaño
+  // REAL ya decodificado, que es lo que termina ocupando el disco.
+  const decoded = Buffer.from(data, "base64");
+  if (decoded.length === 0) return apiError("La imagen está vacía o corrupta.", 400);
+  if (decoded.length > MAX_EVIDENCE_BYTES) {
+    return apiError("Imagen demasiado grande (máx. 5 MB)", 400);
+  }
+
   const created = await db.evidence.create({
     data: {
       playerId: player.id,
       playerMissionId,
       url: "/uploads/evidence/pending",
       filename, mimeType,
-      size: Buffer.from(data, "base64").length,
+      size: decoded.length,
     },
   });
 
@@ -72,10 +100,13 @@ export async function POST(req: NextRequest) {
 
   // Use a random token to prevent filename enumeration (not the evidence ID)
   const token = randomBytes(12).toString("hex");
-  const ext = filename.split(".").pop()?.replace(/[^a-zA-Z0-9]/g, "") || "bin";
+  // La extensión sale del tipo validado, no del nombre del usuario: así no se
+  // puede depositar un .html (u otro ejecutable en el navegador) en una carpeta
+  // que se sirve desde el mismo origen de la app.
+  const ext = EXT_BY_MIME[mimeType] ?? "bin";
   const safeFilename = `ev-${token}.${ext}`;
   const filePath = path.join(uploadsDir, safeFilename);
-  fs.writeFileSync(filePath, Buffer.from(data, "base64"));
+  fs.writeFileSync(filePath, decoded);
 
   const urlPath = `/uploads/evidence/${safeFilename}`;
   const updated = await db.evidence.update({ where: { id: created.id }, data: { url: urlPath } });

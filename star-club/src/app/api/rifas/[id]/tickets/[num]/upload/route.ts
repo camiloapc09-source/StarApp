@@ -1,9 +1,8 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { requireRole, getClubId, isResponse, apiOk, apiError, rateLimit } from "@/lib/api";
+import { saveProofImage, deleteProofImage, UploadError } from "@/lib/uploads";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-const MAX_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
 // POST /api/rifas/[id]/tickets/[num]/upload — upload payment proof
 export async function POST(
@@ -34,17 +33,22 @@ export async function POST(
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
   if (!file) return apiError("No se recibió archivo", 400);
-  if (!ALLOWED_TYPES.includes(file.type)) return apiError("Solo se permiten imágenes (JPG, PNG, WEBP)", 400);
-  if (file.size > MAX_SIZE_BYTES) return apiError("Imagen demasiado grande (max. 5 MB)", 400);
 
-  const bytes = await file.arrayBuffer();
-  const base64 = Buffer.from(bytes).toString("base64");
-  const dataUrl = `data:${file.type};base64,${base64}`;
+  // Igual que en los comprobantes de pago: al disco, no a la base de datos.
+  let saved;
+  try {
+    saved = await saveProofImage(file, "raffles");
+  } catch (err) {
+    if (err instanceof UploadError) return apiError(err.message, 400);
+    throw err;
+  }
+
+  await deleteProofImage(ticket.proofUrl);
 
   await db.raffleTicket.update({
     where: { raffleId_number: { raffleId, number } },
-    data: { proofUrl: dataUrl },
+    data: { proofUrl: saved.url },
   });
 
-  return apiOk({ url: dataUrl });
+  return apiOk({ url: saved.url });
 }

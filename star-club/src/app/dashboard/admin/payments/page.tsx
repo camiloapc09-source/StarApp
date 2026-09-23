@@ -46,13 +46,29 @@ export default async function AdminPaymentsPage({
     },
   });
 
+  // El historial de cobros crece para siempre, así que la lista de "pagados"
+  // se limita a los últimos 12 meses. Los cobros abiertos se traen completos:
+  // esos hay que verlos todos, sin importar la antigüedad.
+  const historyFrom = monthRange(-11).start;
+
+  // `proofUrl` NO se pide aquí. Los comprobantes solo se muestran en la sección
+  // "por verificar" (unos pocos), pero se estaban descargando para TODOS los
+  // pagos de la historia del club en cada carga de la página. Se piden aparte,
+  // más abajo, solo para los que de verdad se van a mostrar.
   const payments = await db.payment.findMany({
-    where: { clubId },
+    where: {
+      clubId,
+      OR: [
+        { status: { in: ["PENDING", "OVERDUE", "SUBMITTED"] } },
+        { status: "COMPLETED", paidAt: { gte: historyFrom } },
+        { status: "COMPLETED", paidAt: null, dueDate: { gte: historyFrom } },
+      ],
+    },
     orderBy: { dueDate: "asc" },
     select: {
       id: true, playerId: true, amount: true, concept: true,
       status: true, dueDate: true, paidAt: true,
-      paymentMethod: true, proofUrl: true, proofNote: true,
+      paymentMethod: true, proofNote: true,
       player: {
         include: {
           user: { select: { name: true, avatar: true, phone: true } },
@@ -69,10 +85,21 @@ export default async function AdminPaymentsPage({
     p.player.user.name.toLowerCase().includes(query) ||
     p.concept.toLowerCase().includes(query);
 
-  const submitted = payments.filter((p) => p.status === "SUBMITTED" && matchesQuery(p));
+  const submittedBase = payments.filter((p) => p.status === "SUBMITTED" && matchesQuery(p));
   const pending   = payments.filter((p) => p.status === "PENDING"   && matchesQuery(p));
   const overdue   = payments.filter((p) => p.status === "OVERDUE"   && matchesQuery(p));
   const completed = payments.filter((p) => p.status === "COMPLETED" && matchesQuery(p));
+
+  // Los comprobantes se piden SOLO para los pagos por verificar que de verdad
+  // se van a pintar. Suelen ser un puñado, frente a todo el historial de antes.
+  const proofRows = submittedBase.length > 0
+    ? await db.payment.findMany({
+        where: { id: { in: submittedBase.map((p) => p.id) } },
+        select: { id: true, proofUrl: true },
+      })
+    : [];
+  const proofById = new Map(proofRows.map((r) => [r.id, r.proofUrl]));
+  const submitted = submittedBase.map((p) => ({ ...p, proofUrl: proofById.get(p.id) ?? null }));
 
   // Last paid map: playerId -> most recent completed payment
   const lastPaidMap = new Map<string, typeof payments[0]>();
@@ -109,7 +136,13 @@ export default async function AdminPaymentsPage({
   const collectedLastMonth = completed
     .filter((p) => isWithin(p.paidAt ?? p.dueDate, lastMonth))
     .reduce((s, p) => s + p.amount, 0);
-  const collectedAllTime = completed.reduce((s, p) => s + p.amount, 0);
+  // El histórico completo sale de una suma agregada en la base, no de traer
+  // todas las filas: la lista ya solo carga los últimos 12 meses.
+  const allTimeAgg = await db.payment.aggregate({
+    where: { clubId, status: "COMPLETED" },
+    _sum: { amount: true },
+  });
+  const collectedAllTime = allTimeAgg._sum.amount ?? 0;
 
   // Variación mes contra mes. `null` cuando no hay base de comparación.
   const monthDelta = collectedLastMonth > 0
