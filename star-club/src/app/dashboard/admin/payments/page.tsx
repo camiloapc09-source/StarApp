@@ -18,7 +18,7 @@ import CompletedPaymentsAccordion from "@/components/admin/completed-payments-ac
 import { Suspense } from "react";
 import PaymentSearch from "@/components/admin/payment-search";
 import { syncOverdueStatuses } from "@/lib/payment-reminders";
-
+import { monthRange, isWithin } from "@/lib/dates";
 import { hasContact } from "@/lib/phone";
 import { evaluateDiscount } from "@/lib/discount";
 
@@ -96,8 +96,28 @@ export default async function AdminPaymentsPage({
   // Todos los pagos por cobrar (vencidos + pendientes), se agrupan por mes en el panel
   const toCollect = [...overdue, ...pending];
 
+  // "Recaudado" sumaba TODOS los pagos confirmados desde que existe el club.
+  // Ese número solo sube y no dice nada: no distingue un mes bueno de uno malo.
+  // Ahora la tarjeta muestra el mes en curso, con el histórico como dato
+  // secundario y la comparación contra el mes pasado, que es la señal útil.
+  const thisMonth = monthRange(0);
+  const lastMonth = monthRange(-1);
+
+  const collectedThisMonth = completed
+    .filter((p) => isWithin(p.paidAt ?? p.dueDate, thisMonth))
+    .reduce((s, p) => s + p.amount, 0);
+  const collectedLastMonth = completed
+    .filter((p) => isWithin(p.paidAt ?? p.dueDate, lastMonth))
+    .reduce((s, p) => s + p.amount, 0);
+  const collectedAllTime = completed.reduce((s, p) => s + p.amount, 0);
+
+  // Variación mes contra mes. `null` cuando no hay base de comparación.
+  const monthDelta = collectedLastMonth > 0
+    ? Math.round(((collectedThisMonth - collectedLastMonth) / collectedLastMonth) * 100)
+    : null;
+
   const stats = {
-    collected:  completed.reduce((s, p) => s + p.amount, 0),
+    collected:  collectedThisMonth,
     pendingAmt: [...pending, ...overdue].reduce((s, p) => s + p.amount, 0),
     overdueAmt: overdue.reduce((s, p) => s + p.amount, 0),
   };
@@ -165,13 +185,29 @@ export default async function AdminPaymentsPage({
             style={{ background: "rgba(14,14,44,0.70)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
           >
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.32)" }}>Recaudado</p>
+              <p className="text-[10px] font-bold tracking-[0.18em] uppercase capitalize" style={{ color: "rgba(255,255,255,0.32)" }}>
+                Recaudado · {thisMonth.label.split(" ")[0]}
+              </p>
               <div className="p-1.5 rounded-lg" style={{ background: "rgba(0,255,135,0.10)" }}>
                 <CheckCircle2 size={13} style={{ color: "var(--success)" }} />
               </div>
             </div>
             <p className="text-xl font-black tracking-tight leading-none" style={{ color: "rgba(255,255,255,0.92)" }}>
-              ${stats.collected.toLocaleString("es-CO")}
+              ${collectedThisMonth.toLocaleString("es-CO")}
+            </p>
+            {/* Comparación con el mes pasado — la señal que de verdad dice
+                si el mes va bien. Un acumulado histórico solo sube. */}
+            {monthDelta !== null && (
+              <p className="text-[11px] leading-none flex items-center gap-1"
+                style={{ color: monthDelta >= 0 ? "var(--success)" : "var(--error)" }}>
+                {monthDelta >= 0 ? "▲" : "▼"} {Math.abs(monthDelta)}%
+                <span style={{ color: "rgba(255,255,255,0.28)" }}>
+                  vs ${collectedLastMonth.toLocaleString("es-CO")} en {lastMonth.label.split(" ")[0]}
+                </span>
+              </p>
+            )}
+            <p className="text-[10px] leading-none" style={{ color: "rgba(255,255,255,0.25)" }}>
+              Histórico: ${collectedAllTime.toLocaleString("es-CO")}
             </p>
           </div>
           {/* Por verificar */}

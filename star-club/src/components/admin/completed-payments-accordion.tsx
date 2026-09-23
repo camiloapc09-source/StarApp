@@ -48,6 +48,11 @@ export default function CompletedPaymentsAccordion({ payments }: { payments: Pay
   }
 
   const groups = [...groupMap.values()];
+  const grandTotal = groups.reduce((s, g) => s + g.total, 0);
+
+  // Clave del mes en curso, para marcarlo en la lista.
+  const now = new Date();
+  const currentKey = `${now.getFullYear()}-${now.getMonth()}`;
 
   // Most recent month open by default
   const [open, setOpen] = useState<Set<string>>(
@@ -81,12 +86,19 @@ export default function CompletedPaymentsAccordion({ payments }: { payments: Pay
         style={{ borderColor: "var(--border-primary)" }}
       >
         <CheckCircle2 size={14} style={{ color: "var(--success)" }} />
-        <h2 className="text-sm font-semibold">
-          Pagos confirmados — {payments.length}
-        </h2>
-        <span className="text-xs ml-auto" style={{ color: "var(--text-muted)" }}>
-          {groups.length} {groups.length === 1 ? "mes" : "meses"}
-        </span>
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold">Historial de recaudo</h2>
+          <p className="text-[11px] mt-0.5" style={{ color: "var(--text-muted)" }}>
+            {payments.length} pago{payments.length !== 1 ? "s" : ""} en {groups.length}{" "}
+            {groups.length === 1 ? "mes" : "meses"} · abre un mes para ver el detalle
+          </p>
+        </div>
+        <div className="ml-auto text-right flex-shrink-0">
+          <p className="text-sm font-bold" style={{ color: "var(--success)" }}>
+            ${grandTotal.toLocaleString("es-CO")}
+          </p>
+          <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.28)" }}>histórico</p>
+        </div>
       </div>
 
       {/* Month groups */}
@@ -112,6 +124,12 @@ export default function CompletedPaymentsAccordion({ payments }: { payments: Pay
                 <ChevronRight size={13} style={{ color: "var(--text-muted)" }} />
               )}
               <span className="text-sm font-semibold capitalize">{group.label}</span>
+              {group.key === currentKey && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md"
+                  style={{ background: "rgba(0,255,135,0.12)", color: "var(--success)" }}>
+                  MES ACTUAL
+                </span>
+              )}
               <span className="text-xs ml-1" style={{ color: "var(--text-muted)" }}>
                 · {group.items.length} {group.items.length === 1 ? "pago" : "pagos"}
               </span>

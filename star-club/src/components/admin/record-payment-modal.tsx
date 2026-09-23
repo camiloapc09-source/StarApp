@@ -73,6 +73,18 @@ export default function RecordPaymentModal({
     setOpen(true);
   }
 
+  /**
+   * Cierra el modal y recién ahí refresca la lista.
+   *
+   * El refresco desmonta esta fila cuando el cobro ya quedó pagado, así que
+   * solo puede ocurrir cuando el admin terminó de mirar la confirmación.
+   */
+  function close() {
+    const needsRefresh = doneId !== null;
+    setOpen(false);
+    if (needsRefresh) router.refresh();
+  }
+
   async function confirm() {
     if (amount <= 0 || amount > dueNow) {
       setError("El monto debe estar entre $1 y $" + dueNow.toLocaleString("es-CO"));
@@ -99,9 +111,14 @@ export default function RecordPaymentModal({
       // Antes esto hacía `router.push()` al recibo, sacando al admin de la
       // lista en CADA cobro. Cobrando a 15 papás en el entrenamiento eran 15
       // idas y vueltas. Ahora se queda aquí y el recibo es opcional.
+      //
+      // OJO: NO se refresca aquí. `router.refresh()` vuelve a pedir la página
+      // al servidor, el cobro ya está COMPLETADO y desaparece de "por cobrar",
+      // así que la fila —y este modal, que vive dentro de ella— se desmontan
+      // y la confirmación con "Ver recibo" se esfuma al instante.
+      // El refresco se hace al cerrar (ver `close`).
       setDoneId(paymentId);
       setLoading(false);
-      router.refresh();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error desconocido");
       setLoading(false);
@@ -131,7 +148,7 @@ export default function RecordPaymentModal({
                 <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>{playerName}</p>
                 <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>{concept}</p>
               </div>
-              <button onClick={() => setOpen(false)} className="p-1 rounded-lg hover:opacity-70">
+              <button onClick={close} className="p-1 rounded-lg hover:opacity-70">
                 <X size={18} />
               </button>
             </div>
@@ -159,7 +176,7 @@ export default function RecordPaymentModal({
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button onClick={() => setOpen(false)}
+                  <button onClick={close}
                     className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
                     style={{ background: "rgba(52,211,153,0.15)", color: "#34D399", border: "1px solid rgba(52,211,153,0.30)" }}>
                     Seguir cobrando
@@ -318,7 +335,7 @@ export default function RecordPaymentModal({
 
             {/* Actions */}
             <div className="flex gap-2">
-              <button onClick={() => setOpen(false)}
+              <button onClick={close}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium border hover:opacity-70"
                 style={{ borderColor: "var(--border-primary)", color: "var(--text-secondary)" }}>
                 Cancelar

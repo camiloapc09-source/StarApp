@@ -203,11 +203,33 @@ export function clubGreeting(timeZone: string = CLUB_TIMEZONE): string {
   return "Buenas noches";
 }
 
+/**
+ * Rango [inicio, fin] de un mes calendario en hora del club.
+ *
+ * @param offset  0 = este mes, -1 = el anterior, 1 = el siguiente.
+ */
+export function monthRange(
+  offset = 0,
+  timeZone: string = CLUB_TIMEZONE,
+): { start: Date; end: Date; label: string } {
+  const today = clubToday(timeZone);
+  const start = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+  const end = new Date(start.getFullYear(), start.getMonth() + 1, 0, 23, 59, 59, 999);
+  return {
+    start,
+    end,
+    label: start.toLocaleDateString("es-CO", { month: "long", year: "numeric" }),
+  };
+}
+
 /** Rango [inicio, fin] del mes calendario actual en hora del club. */
 export function currentMonthRange(timeZone: string = CLUB_TIMEZONE): { start: Date; end: Date } {
-  const today = clubToday(timeZone);
-  return {
-    start: new Date(today.getFullYear(), today.getMonth(), 1),
-    end: new Date(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999),
-  };
+  return monthRange(0, timeZone);
+}
+
+/** ¿Este instante cae dentro del rango de mes dado? */
+export function isWithin(date: Date | string | null | undefined, range: { start: Date; end: Date }): boolean {
+  if (!date) return false;
+  const t = new Date(date).getTime();
+  return t >= range.start.getTime() && t <= range.end.getTime();
 }
