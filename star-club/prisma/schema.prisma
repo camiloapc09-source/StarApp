@@ -71,6 +71,9 @@ model User {
   canInvite        Boolean   @default(false) // coach-level permission to create player invites
   documentNumber String?   // used for identity verification & password reset (PARENT / COACH)
   setupCompleted Boolean   @default(false)
+  /// Acudientes: el documento de cualquiera de sus hijos sirve como clave
+  /// (además de la suya). Se apaga cuando el acudiente elige su propia clave.
+  childDocLogin  Boolean   @default(true)
   requestedPlayerProfile Boolean @default(false) // coach requested to also be a player, pending admin approval
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

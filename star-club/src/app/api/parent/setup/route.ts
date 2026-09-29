@@ -92,7 +92,7 @@ export async function PATCH(req: NextRequest) {
   await db.$transaction([
     db.user.update({
       where: { id: userId },
-      data: { email, password: hashed, setupCompleted: true, ...(documentNumber ? { documentNumber } : {}) },
+      data: { email, password: hashed, setupCompleted: true, childDocLogin: false, ...(documentNumber ? { documentNumber } : {}) },
     }),
     db.parentPlayer.deleteMany({ where: { parentId } }),
     ...playerIds.map((playerId) =>

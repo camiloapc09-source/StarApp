@@ -6,9 +6,10 @@ import { Card } from "@/components/ui/card";
 import { Avatar } from "@/components/ui/avatar";
 import ResetPasswordButton from "@/components/admin/reset-password-button";
 import MergeParentsButton from "@/components/admin/merge-parents-button";
-import BulkResetParentsButton from "@/components/admin/bulk-reset-parents-button";
+import ParentAccessMessageButton from "@/components/admin/parent-access-message-button";
+import { formatPhoneDisplay } from "@/lib/phone";
 import NewInviteForm from "@/components/admin/new-invite-form";
-import { AlertTriangle, CheckCircle2, GitMerge, Users } from "lucide-react";
+import { AlertTriangle, CheckCircle2, GitMerge, KeyRound, Users } from "lucide-react";
 import Link from "next/link";
 import { ParentSentBadge } from "@/components/admin/parent-sent-badge";
 
@@ -19,19 +20,20 @@ export default async function AdminParentsPage() {
   const clubId   = (session.user as { clubId?: string; clubSlug?: string }).clubId   ?? "club-star";
   const clubSlug = (session.user as { clubId?: string; clubSlug?: string }).clubSlug ?? "";
 
-  const club = await db.club.findUnique({ where: { id: clubId }, select: { name: true } });
+  const club = await db.club.findUnique({ where: { id: clubId }, select: { name: true, country: true } });
   const clubName = club?.name ?? "el club";
 
   const parents = await db.parent.findMany({
     where: { user: { clubId } },
     include: {
-      user: { select: { id: true, name: true, email: true, phone: true, setupCompleted: true } },
+      user: { select: { id: true, name: true, email: true, phone: true, setupCompleted: true, childDocLogin: true } },
       children: {
         include: {
           player: {
             select: {
               id: true,
               documentNumber: true,
+              phone: true,
               category: { select: { name: true } },
               user: { select: { name: true } },
               payments: {
@@ -53,6 +55,18 @@ export default async function AdminParentsPage() {
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key)!.push(p);
   }
+
+  // Con qué celular entra cada acudiente (mismo orden que usa el login:
+  // su propio número y, si no tiene, el que quedó en la ficha de un hijo).
+  const loginPhone = (p: typeof parents[number]) =>
+    formatPhoneDisplay(
+      p.phone || p.user.phone || p.children.find((c) => c.player.phone)?.player.phone,
+      club?.country,
+    );
+  const hasChildDoc = (p: typeof parents[number]) =>
+    p.children.some((c) => (c.player.documentNumber ?? "").trim().length >= 4);
+  const noPhone = parents.filter((p) => !loginPhone(p));
+  const noDoc   = parents.filter((p) => p.user.childDocLogin && !hasChildDoc(p));
 
   const pendingSetup  = parents.filter((p) => !p.user.setupCompleted);
   const readyCount    = parents.length - pendingSetup.length;
@@ -89,18 +103,34 @@ export default async function AdminParentsPage() {
           </div>
         )}
 
-        {/* Pending setup banner */}
-        {pendingSetup.length > 0 && (
-          <div className="rounded-2xl px-5 py-4 flex items-center gap-3 flex-wrap"
-            style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.20)" }}>
-            <AlertTriangle size={16} style={{ color: "#FCD34D", flexShrink: 0 }} />
-            <p className="text-sm flex-1 min-w-[240px]" style={{ color: "rgba(255,255,255,0.65)" }}>
-              <span className="font-semibold text-yellow-300">{pendingSetup.length} acudiente{pendingSetup.length !== 1 ? "s" : ""}</span>
-              {" "}aún no han configurado su cuenta. Resetéalos todos a una clave temporal y envía el mensaje al grupo.
-            </p>
-            <BulkResetParentsButton pendingCount={pendingSetup.length} clubName={clubName} />
+        {/* Access instructions */}
+        <Card className="p-5 space-y-4">
+          <div className="flex items-start gap-3">
+            <KeyRound size={16} className="mt-0.5 flex-shrink-0" style={{ color: "#C4B5FD" }} />
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold">Cómo entran los acudientes</h3>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                Usuario: <strong>su celular registrado</strong> · Contraseña: <strong>el documento de cualquiera de sus hijos</strong>.
+                Si un acudiente elige su propia clave, desde ahí solo sirve esa.
+              </p>
+            </div>
           </div>
-        )}
+          <ParentAccessMessageButton clubName={clubName} />
+          {(noPhone.length > 0 || noDoc.length > 0) && (
+            <div className="rounded-xl px-4 py-3 space-y-2 text-xs"
+              style={{ background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.20)", color: "rgba(255,255,255,0.65)" }}>
+              <p className="flex items-center gap-2 font-semibold text-yellow-300">
+                <AlertTriangle size={13} /> Estos acudientes no podrán entrar así hasta completar sus datos:
+              </p>
+              {noPhone.length > 0 && (
+                <p><strong>{noPhone.length} sin celular:</strong> {noPhone.map((p) => p.user.name).join(", ")}</p>
+              )}
+              {noDoc.length > 0 && (
+                <p><strong>{noDoc.length} sin hijo con documento:</strong> {noDoc.map((p) => p.user.name).join(", ")}</p>
+              )}
+            </div>
+          )}
+        </Card>
 
         {/* Parents list — grouped */}
         {parents.length === 0 ? (
@@ -118,6 +148,7 @@ export default async function AdminParentsPage() {
                 const emailBroken = !parent.user.email.includes("@") || parent.user.email.endsWith(".internal");
                 const needsSetup  = !parent.user.setupCompleted;
                 const totalPending = parent.children.reduce((s, c) => s + c.player.payments.length, 0);
+                const phone = loginPhone(parent);
 
                 return (
                   <div
@@ -145,7 +176,11 @@ export default async function AdminParentsPage() {
                             )}
                             {needsSetup && <ParentSentBadge userId={parent.user.id} />}
                           </div>
-                          <p className="text-xs mt-0.5" style={{ color: emailBroken ? "#F87171" : "var(--text-muted)" }}>
+                          <p className="text-xs mt-0.5" style={{ color: phone ? "var(--text-muted)" : "#F87171" }}>
+                            {phone ? `Entra con ${phone}` : "Sin celular: no puede entrar con celular"}
+                            {phone && !parent.user.childDocLogin ? " · usa su propia clave" : ""}
+                          </p>
+                          <p className="text-[11px]" style={{ color: emailBroken ? "#F87171" : "var(--text-muted)", opacity: 0.7 }}>
                             {emailBroken ? "Usuario temporal: " : ""}{parent.user.email}
                           </p>
                         </div>
@@ -205,15 +240,6 @@ export default async function AdminParentsPage() {
                       </div>
                     )}
 
-                    {/* Setup hint */}
-                    {needsSetup && parent.children.length > 0 && (
-                      <p className="text-[11px] px-3 py-2 rounded-xl"
-                        style={{ background: "rgba(251,191,36,0.06)", color: "rgba(252,211,77,0.70)" }}>
-                        Dile al acudiente que ingrese con el documento de{" "}
-                        <strong>{parent.children[0].player.user.name}</strong>
-                        {" "}como usuario y contraseña.
-                      </p>
-                    )}
                   </div>
                 );
               });

@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     data: {
       password: hashed,
       // Force parent back through /setup so they can set a real email + password
-      ...(resetToDocument && user.role === "PARENT" ? { setupCompleted: false } : {}),
+      ...(resetToDocument && user.role === "PARENT" ? { setupCompleted: false, childDocLogin: true } : {}),
     },
   });
 

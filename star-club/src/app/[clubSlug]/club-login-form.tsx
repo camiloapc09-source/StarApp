@@ -37,7 +37,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
     const result = await signIn("credentials", { email, password, clubSlug: club.slug, redirect: false });
     setLoading(false);
     if (result?.error) {
-      setError("Correo o contraseña incorrectos.");
+      setError("Usuario o contraseña incorrectos.");
       return;
     }
     window.location.replace("/");
@@ -148,7 +148,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
                 type="text"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Correo o documento"
+                placeholder="Celular, correo o documento"
                 required
                 autoComplete="username"
                 className="flex-1 bg-transparent outline-none text-sm"
@@ -222,6 +222,12 @@ export function ClubLoginForm({ club }: { club: Club }) {
             </motion.button>
           </form>
         </div>
+
+        {/* Parent access hint */}
+        <p className="text-center text-xs mt-5 px-4 leading-relaxed" style={{ color: "rgba(255,255,255,0.40)" }}>
+          <span className="font-semibold" style={{ color: "rgba(196,181,253,0.85)" }}>Acudientes:</span>{" "}
+          entren con su celular registrado y, como contraseña, el documento de su hijo(a).
+        </p>
 
         {/* Register link */}
         <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.28)" }}>

@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { compare, hash } from "bcryptjs";
 import { requireAuth, isResponse, apiError, apiOk, rateLimit } from "@/lib/api";
+import { isChildDocument } from "@/lib/parent-login";
 
 const schema = z.object({
   currentPassword: z.string().min(1),
@@ -21,18 +22,24 @@ export async function POST(req: NextRequest) {
 
   const user = await db.user.findUnique({
     where: { id: session.user.id },
-    select: { password: true },
+    select: { password: true, role: true, childDocLogin: true },
   });
 
   if (!user) return apiError("Usuario no encontrado", 404);
 
-  const valid = await compare(parsed.data.currentPassword, user.password);
+  // Un acudiente que entra con el documento de su hijo puede usarlo como
+  // "clave actual": su clave guardada puede ser una temporal que nunca conoció.
+  const valid =
+    (await compare(parsed.data.currentPassword, user.password)) ||
+    (user.role === "PARENT" && user.childDocLogin &&
+      (await isChildDocument(session.user.id, parsed.data.currentPassword)));
   if (!valid) return apiError("La contraseña actual es incorrecta", 400);
 
   const hashed = await hash(parsed.data.newPassword, 12);
   await db.user.update({
     where: { id: session.user.id },
-    data: { password: hashed },
+    // Eligió su propia clave: el documento del hijo deja de servir como clave.
+    data: { password: hashed, childDocLogin: false },
   });
 
   return apiOk({ ok: true });

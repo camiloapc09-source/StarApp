@@ -4,6 +4,7 @@ import { compare } from "bcryptjs";
 import { db } from "@/lib/db";
 import { authConfig } from "@/lib/auth.config";
 import { rateLimit } from "@/lib/api";
+import { findParentIdsByPhone, isChildDocument, nationalPhone } from "@/lib/parent-login";
 
 /** Intentos de contraseña permitidos por cuenta antes de bloquear. */
 const MAX_LOGIN_ATTEMPTS = 8;
@@ -41,15 +42,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         // Resolve clubId from slug when provided
         let clubId: string | undefined;
+        let clubCountry: string | undefined;
         let resolvedSlug: string | undefined = clubSlug;
         if (clubSlug) {
           const club = await db.club.findUnique({
             where: { slug: clubSlug },
-            select: { id: true, slug: true },
+            select: { id: true, slug: true, country: true },
           });
           clubId      = club?.id   ?? undefined;
+          clubCountry = club?.country ?? undefined;
           resolvedSlug = club?.slug ?? clubSlug;
         }
+
+        const password = credentials.password as string;
 
         let user = await db.user.findFirst({
           where: {
@@ -72,7 +77,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
         }
 
-        // Fallback: parent logging in with their child's document number as username
+        // Acudiente entrando con su celular. Varias cuentas pueden compartir el
+        // número (duplicados, papá y mamá con el mismo celular): se prueban
+        // todas y entra la que acepte la clave.
+        let candidates = user ? [user] : [];
+        if (!user && clubId) {
+          const national = nationalPhone(emailInput, clubCountry);
+          if (national) {
+            const ids = await findParentIdsByPhone(clubId, national);
+            if (ids.length > 0) candidates = await db.user.findMany({ where: { id: { in: ids } } });
+          }
+        }
+
+        // Fallback: parent logging in with their child's document number as username.
+        // Se prueba aunque haya coincidencias por celular: un documento puede
+        // parecer un celular ("5712345678" → +57 12345678).
         if (!user && !emailInput.includes("@")) {
           const link = await db.parentPlayer.findFirst({
             where: {
@@ -83,17 +102,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
             select: { parent: { select: { user: true } } },
           });
-          if (link?.parent?.user) user = link.parent.user;
+          const byDoc = link?.parent?.user;
+          if (byDoc && !candidates.some((c) => c.id === byDoc.id)) candidates.push(byDoc);
+        }
+
+        user = null;
+        for (const candidate of candidates) {
+          const ok =
+            (await compare(password, candidate.password)) ||
+            (candidate.role === "PARENT" && candidate.childDocLogin &&
+              (await isChildDocument(candidate.id, password)));
+          if (ok) { user = candidate; break; }
         }
 
         if (!user) return null;
-
-        const isValid = await compare(
-          credentials.password as string,
-          user.password
-        );
-
-        if (!isValid) return null;
 
         // Resolve slug if not already known (e.g. login from global /login page)
         if (!resolvedSlug) {
