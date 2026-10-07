@@ -185,7 +185,7 @@ export function NewPlayerForm({ categories, zonePrices }: NewPlayerFormProps) {
               <Input id="monthlyFee" type="number" label={dict.form.monthlyFee ?? "Monthly fee"} value={form.monthlyFee} onChange={(e) => update("monthlyFee", e.target.value)} />
 
               <h3 className="font-semibold mt-3">Acudiente / Tutor (opcional)</h3>
-              <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>El acudiente inicia sesión con el número de documento del deportista como usuario y contraseña.</p>
+              <p className="text-xs mb-1" style={{ color: "var(--text-muted)" }}>El deportista entra con su documento como usuario y contraseña. El acudiente entra con su celular y, como contraseña, el documento del deportista.</p>
               <Input id="parentName" label={dict.form.parentName ?? "Parent name"} value={form.parentName} onChange={(e) => update("parentName", e.target.value)} />
               <Input id="parentPhone" label={dict.form.parentPhone ?? "Parent phone"} value={form.parentPhone} onChange={(e) => update("parentPhone", e.target.value)} />
               <Input id="parentRelation" label={dict.form.parentRelation ?? "Relation"} value={form.parentRelation} onChange={(e) => update("parentRelation", e.target.value)} />

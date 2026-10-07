@@ -1,9 +1,10 @@
 /**
- * Acceso de acudientes con celular + documento del hijo.
+ * Acceso con documento de identidad.
  *
- *   Usuario:     el celular registrado del acudiente
- *   Contraseña:  el documento de CUALQUIERA de sus hijos (mientras
- *                `User.childDocLogin` sea true) o la clave que él haya elegido.
+ * Deportistas:  usuario y contraseña = su propio documento.
+ * Acudientes:   usuario = su celular registrado; contraseña = el documento de
+ *               CUALQUIERA de sus hijos. La clave guardada (si eligieron una)
+ *               sigue funcionando también.
  *
  * El celular vive en tres sitios (`User.phone`, `Parent.phone` y, cuando el
  * admin lo escribió ahí, `Player.phone` del hijo) y guardado con formatos
@@ -60,13 +61,51 @@ export async function findParentIdsByPhone(clubId: string, national: string): Pr
   return byPlayer.map((r) => r.id);
 }
 
+/** Documento sin puntos, espacios ni guiones, en minúsculas: "1.043.123-4" → "10431234". */
+export function normalizeDocument(input: string | null | undefined): string {
+  return (input ?? "").replace(/[\s.,-]/g, "").toLowerCase();
+}
+
+/**
+ * IDs de deportistas cuyo documento coincide con lo escrito como usuario.
+ * Sin club (login global) se busca en todos; por eso el tope.
+ */
+export async function findPlayerIdsByDocument(input: string, clubId?: string): Promise<string[]> {
+  const doc = normalizeDocument(input);
+  if (doc.length < 4) return [];
+  const rows = await db.$queryRaw<{ id: string }[]>`
+    SELECT u.id
+    FROM "User" u
+    JOIN "Player" pl ON pl."userId" = u.id
+    WHERE u.role = 'PLAYER'
+      AND (${clubId ?? null}::text IS NULL OR u."clubId" = ${clubId ?? null})
+      AND lower(regexp_replace(coalesce(pl."documentNumber", ''), '[[:space:].,-]', '', 'g')) = ${doc}
+    LIMIT ${MAX_CANDIDATES}`;
+  return rows.map((r) => r.id);
+}
+
+/** ¿La clave escrita es el documento del propio deportista? */
+export async function isOwnDocument(userId: string, password: string): Promise<boolean> {
+  const doc = normalizeDocument(password);
+  if (doc.length < 4) return false;
+  const player = await db.player.findUnique({ where: { userId }, select: { documentNumber: true } });
+  return normalizeDocument(player?.documentNumber) === doc;
+}
+
 /** ¿La clave escrita es el documento de alguno de los hijos de este acudiente? */
 export async function isChildDocument(userId: string, password: string): Promise<boolean> {
-  const doc = password.replace(/[\s.,-]/g, "");
+  const doc = normalizeDocument(password);
   if (doc.length < 4) return false;
   const children = await db.parentPlayer.findMany({
     where: { parent: { userId } },
     select: { player: { select: { documentNumber: true } } },
   });
-  return children.some((c) => c.player.documentNumber?.replace(/[\s.,-]/g, "") === doc);
+  return children.some((c) => normalizeDocument(c.player.documentNumber) === doc);
+}
+
+/** El documento siempre sirve como clave: el propio (deportista) o el de un hijo (acudiente). */
+export async function isDocumentPassword(user: { id: string; role: string }, password: string): Promise<boolean> {
+  if (user.role === "PLAYER") return isOwnDocument(user.id, password);
+  if (user.role === "PARENT") return isChildDocument(user.id, password);
+  return false;
 }

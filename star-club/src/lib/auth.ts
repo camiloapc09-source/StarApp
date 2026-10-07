@@ -4,7 +4,7 @@ import { compare } from "bcryptjs";
 import { db } from "@/lib/db";
 import { authConfig } from "@/lib/auth.config";
 import { rateLimit } from "@/lib/api";
-import { findParentIdsByPhone, isChildDocument, nationalPhone } from "@/lib/parent-login";
+import { findParentIdsByPhone, findPlayerIdsByDocument, isDocumentPassword, nationalPhone } from "@/lib/parent-login";
 
 /** Intentos de contraseña permitidos por cuenta antes de bloquear. */
 const MAX_LOGIN_ATTEMPTS = 8;
@@ -77,16 +77,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
         }
 
+        // Deportista entrando con su documento. Va primero: si un documento
+        // coincide con el de un deportista, es él quien entra.
+        const candidates = user ? [user] : [];
+        const addCandidates = async (ids: string[]) => {
+          const fresh = ids.filter((id) => !candidates.some((c) => c.id === id));
+          if (fresh.length > 0) candidates.push(...(await db.user.findMany({ where: { id: { in: fresh } } })));
+        };
+        if (!user && !emailInput.includes("@")) {
+          await addCandidates(await findPlayerIdsByDocument(emailInput, clubId));
+        }
+
         // Acudiente entrando con su celular. Varias cuentas pueden compartir el
         // número (duplicados, papá y mamá con el mismo celular): se prueban
         // todas y entra la que acepte la clave.
-        let candidates = user ? [user] : [];
         if (!user && clubId) {
           const national = nationalPhone(emailInput, clubCountry);
-          if (national) {
-            const ids = await findParentIdsByPhone(clubId, national);
-            if (ids.length > 0) candidates = await db.user.findMany({ where: { id: { in: ids } } });
-          }
+          if (national) await addCandidates(await findParentIdsByPhone(clubId, national));
         }
 
         // Fallback: parent logging in with their child's document number as username.
@@ -110,8 +117,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         for (const candidate of candidates) {
           const ok =
             (await compare(password, candidate.password)) ||
-            (candidate.role === "PARENT" && candidate.childDocLogin &&
-              (await isChildDocument(candidate.id, password)));
+            (await isDocumentPassword(candidate, password));
           if (ok) { user = candidate; break; }
         }
 

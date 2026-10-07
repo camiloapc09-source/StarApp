@@ -223,8 +223,11 @@ export function ClubLoginForm({ club }: { club: Club }) {
           </form>
         </div>
 
-        {/* Parent access hint */}
+        {/* Access hint */}
         <p className="text-center text-xs mt-5 px-4 leading-relaxed" style={{ color: "rgba(255,255,255,0.40)" }}>
+          <span className="font-semibold" style={{ color: "rgba(196,181,253,0.85)" }}>Deportistas:</span>{" "}
+          entren con su documento como usuario y contraseña.
+          <br />
           <span className="font-semibold" style={{ color: "rgba(196,181,253,0.85)" }}>Acudientes:</span>{" "}
           entren con su celular registrado y, como contraseña, el documento de su hijo(a).
         </p>
