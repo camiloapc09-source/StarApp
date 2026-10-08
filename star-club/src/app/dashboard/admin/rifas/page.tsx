@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import RaffleCreateForm from "@/components/admin/raffle-create-form";
 import RaffleStatusButton from "@/components/admin/raffle-status-button";
+import RaffleDeleteButton from "@/components/admin/raffle-delete-button";
 
 const STATUS_META: Record<string, { label: string; variant: "success" | "warning" | "error" | "default" }> = {
   OPEN:     { label: "Abierta",    variant: "success" },
@@ -181,6 +182,9 @@ function RaffleRow({
             <p className="text-sm font-bold" style={{ color: "var(--success)" }}>
               ${(paid * raffle.ticketPrice).toLocaleString("es-CO")}
             </p>
+            {raffle.status === "FINISHED" && (
+              <RaffleDeleteButton raffleId={raffle.id} title={raffle.title} />
+            )}
           </div>
         </div>
         {!compact && (

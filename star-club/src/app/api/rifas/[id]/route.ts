@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { db } from "@/lib/db";
 import { requireAuth, requireAdmin, getClubId, isResponse, apiOk, apiError } from "@/lib/api";
+import { deleteProofImage } from "@/lib/uploads";
 
 // GET /api/rifas/[id] — single raffle with all tickets
 export async function GET(
@@ -67,7 +68,7 @@ export async function PUT(
   return apiOk(updated);
 }
 
-// DELETE /api/rifas/[id] — admin deletes raffle
+// DELETE /api/rifas/[id] — admin deletes a finished raffle
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -77,9 +78,16 @@ export async function DELETE(
   const clubId = getClubId(session);
   const { id } = await params;
 
-  const raffle = await db.raffle.findUnique({ where: { id } });
+  const raffle = await db.raffle.findUnique({
+    where: { id },
+    include: { tickets: { select: { proofUrl: true } } },
+  });
   if (!raffle || raffle.clubId !== clubId) return apiError("Rifa no encontrada", 404);
+  // Solo se borran rifas finalizadas: una abierta o cerrada aún tiene números por cobrar.
+  if (raffle.status !== "FINISHED") return apiError("Solo se pueden borrar rifas finalizadas", 400);
 
+  // Los números se van en cascada; los comprobantes viven en disco y hay que borrarlos aparte.
   await db.raffle.delete({ where: { id } });
+  await Promise.all(raffle.tickets.map((t) => deleteProofImage(t.proofUrl)));
   return apiOk({ ok: true });
 }
