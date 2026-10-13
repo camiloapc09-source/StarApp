@@ -1,3 +1,4 @@
+
 # Schema de Base de Datos
 
 ← [[000 - Inicio]] | [[Stack Tecnológico]]
