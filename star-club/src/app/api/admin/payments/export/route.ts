@@ -39,6 +39,7 @@ export async function GET(req: NextRequest) {
     OVERDUE:   "Vencido",
     SUBMITTED: "En revisión",
     COMPLETED: "Pagado",
+    SKIPPED:   "No vino (no se cobra)",
   };
 
   const rows = payments.map((p, i) => {

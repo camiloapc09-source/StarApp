@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { z } from "zod";
 import { requireAuth, requireAdmin, getClubId, getCoachCategoryFilter, isResponse, apiError, apiOk } from "@/lib/api";
 import { parseDateOnly } from "@/lib/dates";
+import { ensureReactivationPayment } from "@/lib/billing";
 
 const updateSchema = z.object({
   status: z.enum(["ACTIVE", "PENDING", "INACTIVE"]).optional(),
@@ -84,7 +85,7 @@ export async function PATCH(
 
   if (!parsed.success) return apiError(parsed.error.issues[0].message, 400);
 
-  const player = await db.player.findUnique({ where: { id }, select: { userId: true, clubId: true } });
+  const player = await db.player.findUnique({ where: { id }, select: { userId: true, clubId: true, status: true } });
   if (!player || player.clubId !== clubId) return apiError("Not found", 404);
 
   const { userName, joinDate, dateOfBirth, categoryId, ...playerData } = parsed.data;
@@ -147,7 +148,19 @@ export async function PATCH(
     }
   }
 
-  return apiOk({ ...updated, canceledPayments, updatedPayments });
+  // Reactivado tras estar inactivo: al desactivarlo se borraron sus
+  // mensualidades abiertas y nada volvía a generarlas, así que el alumno
+  // regresaba pero nunca le salía un cobro. Se crea el del próximo día de pago.
+  let reactivationPaymentId: string | null = null;
+  if (player.status === "INACTIVE" && parsed.data.status === "ACTIVE") {
+    try {
+      reactivationPaymentId = await ensureReactivationPayment(id);
+    } catch (e) {
+      console.error("Failed to create reactivation payment", e);
+    }
+  }
+
+  return apiOk({ ...updated, canceledPayments, updatedPayments, reactivationPaymentId });
 }
 
 export async function DELETE(

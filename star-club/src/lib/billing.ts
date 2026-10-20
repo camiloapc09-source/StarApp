@@ -1,11 +1,14 @@
 import { db } from "@/lib/db";
+import { buildDueDate, nextDueDate } from "@/lib/dates";
 
 const OPEN_STATUSES = ["PENDING", "OVERDUE", "SUBMITTED"] as const;
 
 /**
  * Genera, si corresponde, el cobro mensual del SIGUIENTE mes para un jugador.
  *
- * Se llama tras confirmar un pago (individual o masivo). Reglas:
+ * Se llama tras confirmar un pago (individual o masivo) o al marcar un mes como
+ * "No vino" (SKIPPED). Un cobro SKIPPED no cuenta como abierto pero sí como
+ * referencia de fecha, así que el siguiente sale del mes que se saltó. Reglas:
  *  - No genera si el jugador tiene beca 100% o mensualidad en 0 (no debe pagar).
  *  - No genera si el jugador aún tiene algún cobro abierto (PENDING/OVERDUE/SUBMITTED):
  *    primero debe ponerse al día; el siguiente mes se crea cuando quede en cero.
@@ -79,6 +82,51 @@ export async function ensureNextMonthlyPayment(
       concept: `Mensualidad ${periodLabel}`,
       status: "PENDING",
       dueDate: nextDue,
+    },
+  });
+  return created.id;
+}
+
+/**
+ * Cobro para un deportista que vuelve a estar ACTIVO tras estar inactivo.
+ *
+ * Al desactivarlo se borran sus mensualidades abiertas; sin esto, al
+ * reactivarlo no tenía ningún cobro y la cadena (que solo avanza al confirmar
+ * un pago) nunca volvía a arrancar. Se crea el del próximo día de pago, salvo
+ * que ya tenga una mensualidad abierta o no deba pagar (beca 100%, exento o
+ * mensualidad en 0).
+ */
+export async function ensureReactivationPayment(playerId: string): Promise<string | null> {
+  const player = await db.player.findUnique({
+    where: { id: playerId },
+    select: {
+      id: true, clubId: true, monthlyAmount: true, paymentDay: true,
+      scholarshipPct: true, paymentExempt: true, joinDate: true,
+      payments: {
+        where: { status: { in: [...OPEN_STATUSES] }, concept: { startsWith: "Mensualidad" } },
+        select: { id: true },
+      },
+    },
+  });
+  if (!player) return null;
+  if (player.paymentExempt || (player.scholarshipPct ?? 0) === 100) return null;
+  const amount = player.monthlyAmount ?? 0;
+  if (amount <= 0) return null;
+  if (player.payments.length > 0) return null;
+
+  const paymentDay = player.paymentDay ?? player.joinDate?.getDate() ?? 1;
+  const due = nextDueDate(paymentDay);
+  const periodEnd = new Date(buildDueDate(due.getFullYear(), due.getMonth() + 1, paymentDay).getTime() - 86_400_000);
+  const periodLabel = `${due.toLocaleDateString("es-CO", { day: "numeric", month: "short" })} – ${periodEnd.toLocaleDateString("es-CO", { day: "numeric", month: "short", year: "numeric" })}`;
+
+  const created = await db.payment.create({
+    data: {
+      clubId: player.clubId,
+      playerId: player.id,
+      amount,
+      concept: `Mensualidad ${periodLabel}`,
+      status: "PENDING",
+      dueDate: due,
     },
   });
   return created.id;

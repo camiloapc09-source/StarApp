@@ -18,6 +18,7 @@ const statusMeta: Record<string, { label: string; variant: "success" | "warning"
   PENDING:   { label: "Pendiente",    variant: "warning" },
   OVERDUE:   { label: "Vencido",      variant: "error"   },
   SUBMITTED: { label: "En revisión",  variant: "default" },
+  SKIPPED:   { label: "No vino",      variant: "default" },
 };
 
 export default async function ParentPaymentsPage({

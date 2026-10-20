@@ -58,7 +58,8 @@ export default async function AdminReportsPage() {
       take: 10,
       include: { user: { select: { name: true, avatar: true } }, category: true },
     }),
-    db.payment.groupBy({ by: ["status"], _count: true, _sum: { amount: true }, where: { clubId } }),
+    // "No vino" no es ni pagado ni deuda: no entra en la torta de estados.
+    db.payment.groupBy({ by: ["status"], _count: true, _sum: { amount: true }, where: { clubId, status: { not: "SKIPPED" } } }),
     db.attendance.findMany({
       where: { session: { clubId, date: { gte: sixMonthsAgo } } },
       select: { status: true, session: { select: { date: true } } },
@@ -108,7 +109,7 @@ export default async function AdminReportsPage() {
       .filter((p) => fmtMonth(p.createdAt) === key && p.status === "COMPLETED")
       .reduce((s, p) => s + p.amount, 0),
     pending: recentPayments
-      .filter((p) => fmtMonth(p.createdAt) === key && p.status !== "COMPLETED")
+      .filter((p) => fmtMonth(p.createdAt) === key && (p.status === "PENDING" || p.status === "OVERDUE" || p.status === "SUBMITTED"))
       .reduce((s, p) => s + p.amount, 0),
   }));
 

@@ -104,6 +104,7 @@ export default async function ParentReportsPage({
     PENDING:   { label: "Pendiente", variant: "warning" },
     OVERDUE:   { label: "Vencido",   variant: "error"   },
     SUBMITTED: { label: "En revisión", variant: "default" },
+    SKIPPED:   { label: "No vino",     variant: "default" },
   };
 
   const typeLabel: Record<string, string> = {

@@ -306,6 +306,7 @@ export default async function PlayerProfilePage({ params }: Props) {
               {player.payments.map((payment) => {
                 const isPaid = payment.status === "COMPLETED";
                 const isOverdue = payment.status === "OVERDUE";
+                const isSkipped = payment.status === "SKIPPED";
                 return (
                   <div key={payment.id} className="flex items-center justify-between px-6 py-3 text-sm">
                     <div>
@@ -319,10 +320,10 @@ export default async function PlayerProfilePage({ params }: Props) {
                       <span
                         className="text-xs font-medium"
                         style={{
-                          color: isPaid ? "var(--success)" : isOverdue ? "var(--error)" : "var(--warning)",
+                          color: isPaid ? "var(--success)" : isOverdue ? "var(--error)" : isSkipped ? "var(--text-muted)" : "var(--warning)",
                         }}
                       >
-                        {isPaid ? "Pagado" : isOverdue ? "Vencido" : "Pendiente"}
+                        {isPaid ? "Pagado" : isOverdue ? "Vencido" : isSkipped ? "No vino" : "Pendiente"}
                       </span>
                     </div>
                   </div>

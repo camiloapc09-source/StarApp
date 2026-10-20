@@ -7,7 +7,7 @@ import { es } from "date-fns/locale";
 import {
   AlertTriangle, CheckSquare, Square, MinusSquare, Banknote,
   Loader2, PhoneCall, X, Check, MessageCircleMore, ChevronLeft, ChevronRight,
-  ChevronDown, ChevronRight as ChevronRightSm, Trash2, PhoneOff,
+  ChevronDown, ChevronRight as ChevronRightSm, Trash2, PhoneOff, CalendarX,
 } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import RecordPaymentModal from "@/components/admin/record-payment-modal";
@@ -78,6 +78,7 @@ export default function BulkMarkReceivedPanel({
   const [showBulkWa, setShowBulkWa] = useState(false);
   const [bulkWaIdx, setBulkWaIdx] = useState(0);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [skippingId, setSkippingId] = useState<string | null>(null);
 
   const allSelected = selected.size === payments.length && payments.length > 0;
   const total = payments.filter((p) => selected.has(p.id)).reduce((s, p) => s + p.amount, 0);
@@ -204,12 +205,40 @@ export default function BulkMarkReceivedPanel({
     });
   }
 
+  // El alumno no vino este mes: el cobro se cierra sin cobrarlo y se genera el
+  // del mes siguiente. Borrarlo cortaba la cadena y el alumno no volvía a tener
+  // cobros nunca más.
+  async function skipPayment(payment: Payment, label: string) {
+    if (!window.confirm(
+      `¿${label} no vino en este periodo?
+
+"${payment.concept}" quedará como "No vino" (no se cobra) y se creará el cobro del mes siguiente.`,
+    )) return;
+    setSkippingId(payment.id);
+    try {
+      const res = await fetch(`/api/payments/${payment.id}/skip`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        window.alert(data.error ?? "No se pudo marcar el cobro");
+        return;
+      }
+      setSelected((prev) => {
+        const next = new Set(prev);
+        next.delete(payment.id);
+        return next;
+      });
+      router.refresh();
+    } finally {
+      setSkippingId(null);
+    }
+  }
+
   async function deletePayments(ids: string[], label: string) {
     if (ids.length === 0) return;
     if (!window.confirm(
       ids.length === 1
         ? `¿Eliminar este cobro de ${label}? Esta acción no se puede deshacer.`
-        : `¿Eliminar los ${ids.length} cobros pendientes de ${label}? Úsalo para deportistas retirados. No se puede deshacer.`,
+        : `¿Eliminar los ${ids.length} cobros pendientes de ${label}? Úsalo para deportistas retirados (si solo faltó un mes, usa "No vino"). No se puede deshacer.`,
     )) return;
     setDeletingId(ids[0]);
     try {
@@ -474,6 +503,16 @@ export default function BulkMarkReceivedPanel({
                                         style={{ background: "rgba(37,211,102,0.12)", color: "#25D366", border: "1px solid rgba(37,211,102,0.25)" }}>
                                         <PhoneCall size={12} /> WhatsApp
                                       </a>
+                                    )}
+                                    {!/^(saldo pendiente|uniforme|rifa)/i.test(payment.concept) && (
+                                      <button
+                                        onClick={() => skipPayment(payment, g.player.user.name)}
+                                        disabled={skippingId === payment.id}
+                                        title="No vino este mes: no se cobra y se crea el del mes siguiente"
+                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80 disabled:opacity-40"
+                                        style={{ background: "rgba(148,163,184,0.10)", color: "var(--text-secondary)", border: "1px solid rgba(148,163,184,0.25)" }}>
+                                        {skippingId === payment.id ? <Loader2 size={12} className="animate-spin" /> : <CalendarX size={12} />} No vino
+                                      </button>
                                     )}
                                     <button
                                       onClick={() => deletePayments([payment.id], g.player.user.name)}
