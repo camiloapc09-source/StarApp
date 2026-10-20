@@ -1,10 +1,11 @@
 import { db } from "@/lib/db";
 import { Card } from "@/components/ui/card";
 import { CalendarDays } from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { sessionClockNow, formatSessionDate, formatSessionTime, capitalizeFirst } from "@/lib/dates";
 
 interface Props {
+  /** Club dueño de las sesiones. Obligatorio: sin él se mezclaban las de todos los clubes. */
+  clubId: string;
   /** Filter sessions by category. null/undefined = show all upcoming sessions */
   categoryId?: string | null;
   /** Max number of sessions to show */
@@ -23,11 +24,13 @@ const TYPE_COLORS: Record<string, string> = {
   EVENT:    "var(--info, #38bdf8)",
 };
 
-export async function UpcomingSessionsCard({ categoryId, limit = 5 }: Props) {
-  const now = new Date();
+export async function UpcomingSessionsCard({ clubId, categoryId, limit = 5 }: Props) {
+  // Hora de reloj del club en la convención de sesiones (ver lib/dates).
+  const now = sessionClockNow();
 
   const sessions = await db.session.findMany({
     where: {
+      clubId,
       date: { gte: now },
       // Show sessions assigned to this specific category OR sessions with no category (= applies to all)
       ...(categoryId
@@ -59,7 +62,7 @@ export async function UpcomingSessionsCard({ categoryId, limit = 5 }: Props) {
           {sessions.map((s) => {
             const typeColor = TYPE_COLORS[s.type] ?? "var(--text-muted)";
             const typeLabel = TYPE_LABELS[s.type] ?? s.type;
-            const dateStr  = format(new Date(s.date), "EEEE dd 'de' MMMM · HH:mm", { locale: es });
+            const dateStr  = `${capitalizeFirst(formatSessionDate(s.date, { weekday: "long", day: "numeric", month: "long" }))} · ${formatSessionTime(s.date)}`;
 
             return (
               <div
@@ -77,7 +80,7 @@ export async function UpcomingSessionsCard({ categoryId, limit = 5 }: Props) {
                     <span className="font-medium text-sm">{s.title}</span>
                     <span
                       className="text-xs px-2 py-0.5 rounded-full font-medium"
-                      style={{ background: `${typeColor}22`, color: typeColor }}
+                      style={{ background: `color-mix(in srgb, ${typeColor} 14%, transparent)`, color: typeColor }}
                     >
                       {typeLabel}
                     </span>
@@ -90,7 +93,7 @@ export async function UpcomingSessionsCard({ categoryId, limit = 5 }: Props) {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs mt-1 capitalize" style={{ color: "var(--text-muted)" }}>
+                  <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
                     {dateStr}
                   </p>
                   {s.location && (

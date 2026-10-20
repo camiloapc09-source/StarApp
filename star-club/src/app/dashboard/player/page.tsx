@@ -8,19 +8,21 @@ import { XPProgressCard } from "@/components/gamification/xp-progress-card";
 import { MissionsList } from "@/components/gamification/missions-list";
 import { UpcomingSessionsCard } from "@/components/shared/upcoming-sessions-card";
 import { Calendar, Trophy, Zap, ArrowRight } from "lucide-react";
-import { format, startOfMonth, endOfMonth } from "date-fns";
+import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import Link from "next/link";
 import { CoachPlayerBanner } from "@/components/coach/coach-player-banner";
+import { clubGreeting, sessionClockNow } from "@/lib/dates";
 
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Buenos días";
-  if (h < 18) return "Buenas tardes";
-  return "Buenas noches";
-}
+// Saludo con la hora del club: `new Date().getHours()` en Render es UTC y a
+// las 10 p.m. de Colombia decía "Buenos días".
+const getGreeting = () => clubGreeting();
 
 export default async function PlayerDashboard() {
+  // Sesiones: hora de reloj en UTC (ver lib/dates). La asistencia del mes
+  // cuenta solo sesiones que ya pasaron.
+  const now = sessionClockNow();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
   const session = await auth();
   const isCoachPlayer = session?.user?.role === "COACH";
   if (!session?.user || (session.user.role !== "PLAYER" && !(isCoachPlayer && session.user.linkedPlayerId))) redirect("/");
@@ -35,7 +37,7 @@ export default async function PlayerDashboard() {
       attendances: {
         include: { session: true },
         where: {
-          session: { date: { gte: startOfMonth(new Date()), lte: endOfMonth(new Date()) } },
+          session: { date: { gte: monthStart, lt: now } },
         },
       },
     },
@@ -53,9 +55,12 @@ export default async function PlayerDashboard() {
     db.notification.count({ where: { userId: session.user.id, isRead: false } }),
     db.session.count({
       where: {
-        // Only count sessions for this player's category, not all club sessions
-        ...(player.categoryId ? { categoryId: player.categoryId } : {}),
-        date: { gte: startOfMonth(new Date()), lte: endOfMonth(new Date()) },
+        // Solo sesiones de su club y su categoría (o generales) que ya pasaron.
+        // Antes, sin categoría, contaba las sesiones de TODOS los clubes, y
+        // contaba también las futuras del mes.
+        clubId: player.clubId,
+        ...(player.categoryId ? { OR: [{ categoryId: player.categoryId }, { categoryId: null }] } : {}),
+        date: { gte: monthStart, lt: now },
       },
     }),
     db.player.findMany({
@@ -66,7 +71,7 @@ export default async function PlayerDashboard() {
   ]);
 
   const myRank       = clubPlayers.findIndex((p) => p.id === player.id) + 1;
-  const presentCount = player.attendances?.filter((a: any) => a.status === "PRESENT").length || 0;
+  const presentCount = player.attendances?.filter((a: any) => a.status === "PRESENT" || a.status === "LATE").length || 0;
   const attendanceRate = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 0;
 
   const missions = player.playerMissions?.map((pm: any) => ({
@@ -202,7 +207,7 @@ export default async function PlayerDashboard() {
         </div>
 
         {/* Upcoming sessions */}
-        <UpcomingSessionsCard categoryId={player.categoryId} />
+        <UpcomingSessionsCard clubId={player.clubId} categoryId={player.categoryId} />
 
         {/* Recent attendance */}
         <Card>

@@ -9,8 +9,12 @@ export default async function NewPaymentPage() {
   const session = await auth();
   if (!session?.user || session.user.role !== "ADMIN") redirect("/");
 
+  // Solo los deportistas de ESTE club: antes la lista traía los de todos los
+  // clubes (el admin de un club veía los niños de otro).
+  const clubId = (session.user as { clubId?: string }).clubId;
+  if (!clubId) redirect("/");
   const players = await db.player.findMany({
-    where: { status: "ACTIVE" },
+    where: { clubId, status: "ACTIVE" },
     orderBy: { createdAt: "asc" },
     include: { user: { select: { name: true } } },
   });

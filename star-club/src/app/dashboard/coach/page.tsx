@@ -19,6 +19,7 @@ export default async function CoachDashboard() {
   const dict = await getDictionary();
 
   const linkedPlayerId = (session.user as any).linkedPlayerId as string | null;
+  const clubId = (session.user as { clubId?: string }).clubId ?? "";
 
   // Check if coach has a pending player profile request
   const coachUser = await db.user.findUnique({
@@ -29,7 +30,7 @@ export default async function CoachDashboard() {
   const [sessionsCount, playersCount, recentSessions, upcomingSessions, pendingEvidences, unreadNotifications] =
     await Promise.all([
       db.session.count({ where: { coachId: session.user.id } }),
-      db.player.count({ where: { status: "ACTIVE" } }),
+      db.player.count({ where: { clubId, status: "ACTIVE" } }),
       db.session.findMany({
         take: 5,
         where: { coachId: session.user.id },
@@ -42,8 +43,9 @@ export default async function CoachDashboard() {
         orderBy: { date: "asc" },
         include: { category: true },
       }),
+      // Solo evidencias de deportistas de su club: antes traía las de todos.
       db.evidence.findMany({
-        where: { status: "PENDING" },
+        where: { status: "PENDING", player: { clubId } },
         include: { player: { include: { user: true } }, playerMission: { include: { mission: true } } },
         orderBy: { submittedAt: "desc" },
         take: 20,

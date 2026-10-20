@@ -75,9 +75,10 @@ export default async function PlayerStatsPage() {
       const d = new Date(a.session.date);
       return d >= start && d <= end;
     });
-    const present = inMonth.filter((a) => a.status === "PRESENT").length;
+    const present = inMonth.filter((a) => a.status === "PRESENT" || a.status === "LATE").length;
     const total   = inMonth.length;
-    return { label: format(ref, "MMM", { locale: es }), present, total, rate: total > 0 ? Math.round((present / total) * 100) : 0 };
+    // Sin sesiones no es 0% en rojo: no hay dato.
+    return { label: format(ref, "MMM", { locale: es }), present, total, rate: total > 0 ? Math.round((present / total) * 100) : null };
   });
 
   const statusIcon: Record<string, React.ReactNode> = {
@@ -132,12 +133,12 @@ export default async function PlayerStatsPage() {
             {monthStats.map(({ label, rate, present, total }) => (
               <div key={label} className="text-center">
                 <p className="text-xl font-black"
-                  style={{ color: rate >= 80 ? "var(--success)" : rate >= 50 ? "var(--warning)" : "var(--error)" }}>
-                  {rate}%
+                  style={{ color: rate === null ? "var(--text-muted)" : rate >= 80 ? "var(--success)" : rate >= 50 ? "var(--warning)" : "var(--error)" }}>
+                  {rate === null ? "—" : `${rate}%`}
                 </p>
                 <p className="text-xs font-semibold capitalize mt-0.5">{label}</p>
                 <p className="text-[10px] mb-1.5" style={{ color: "var(--text-muted)" }}>{present}/{total}</p>
-                <ProgressBar value={rate} max={100} height="sm" animated={false} />
+                <ProgressBar value={rate ?? 0} max={100} height="sm" animated={false} />
               </div>
             ))}
           </div>
