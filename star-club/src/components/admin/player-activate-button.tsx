@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X, CheckCircle2 } from "lucide-react";
-import { dayOfMonthFromDateOnly, firstDueDate, dueLabel } from "@/lib/dates";
+import { dayOfMonthFromDateOnly, nextDueDate, dueLabel } from "@/lib/dates";
 
 type Props = { playerId: string; playerName: string; dateOfBirth?: string | null };
 
@@ -65,10 +65,9 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
 
       // Becados: no se genera mensualidad
       if (!isBeca) {
-        // La primera mensualidad es la del periodo que arranca en el ingreso.
-        // Antes saltaba al mes siguiente si el día ya había pasado, y ese mes
-        // quedaba sin cobro (ver `firstDueDate`).
-        const dueDate = firstDueDate(joinDate);
+        // Si el día de pago de este mes aún no pasa, se cobra este mes;
+        // si ya pasó, el siguiente. Un cobro que vence HOY sigue siendo válido.
+        const dueDate = nextDueDate(paymentDay);
 
         const r2 = await fetch("/api/payments", {
           method: "POST",
@@ -127,7 +126,7 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
                 <p className="text-xs text-center" style={{ color: "var(--text-muted)" }}>
                   {isBeca
                     ? "Jugador activado con beca. No se generan mensualidades."
-                    : `Primera mensualidad generada — ${dueLabel(firstDueDate(joinDate)).toLowerCase()}. El día de pago será el ${dayOfMonthFromDateOnly(joinDate)} de cada mes.`}
+                    : `Primera mensualidad generada — ${dueLabel(nextDueDate(dayOfMonthFromDateOnly(joinDate))).toLowerCase()}. El día de pago será el ${dayOfMonthFromDateOnly(joinDate)} de cada mes.`}
                 </p>
               </div>
             ) : (
@@ -147,7 +146,7 @@ export default function PlayerActivateButton({ playerId, playerName, dateOfBirth
                   {joinDate && (
                     <p className="text-xs mt-1" style={{ color: "var(--accent)" }}>
                       Día de pago mensual: el {dayOfMonthFromDateOnly(joinDate)} de cada mes
-                      {" · "}primer cobro {dueLabel(firstDueDate(joinDate)).toLowerCase()}
+                      {" · "}primer cobro {dueLabel(nextDueDate(dayOfMonthFromDateOnly(joinDate))).toLowerCase()}
                     </p>
                   )}
                 </div>
