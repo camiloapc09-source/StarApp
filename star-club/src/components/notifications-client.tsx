@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, CheckCheck, MessageSquare, AlertTriangle, Zap, CreditCard, CalendarCheck, type LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import Link from "next/link";
 
 type Notification = {
@@ -16,6 +14,14 @@ type Notification = {
   isRead: boolean;
   link: string | null;
   createdAt: string;
+};
+
+const TYPE_LABELS: Record<string, string> = {
+  INFO: "Aviso",
+  ALERT: "Alerta",
+  ACHIEVEMENT: "Logro",
+  PAYMENT: "Pago",
+  ATTENDANCE: "Asistencia",
 };
 
 const TYPE_ICONS: Record<string, LucideIcon> = {
@@ -108,7 +114,9 @@ export default function NotificationsClient({ initial }: { initial: Notification
                       {n.message}
                     </p>
                     <p className="text-xs mt-1.5" style={{ color: "var(--text-muted)" }}>
-                      {format(new Date(n.createdAt), "d 'de' MMMM, HH:mm", { locale: es })}
+                      {/* Hora fija de Colombia: con la zona del servidor (UTC) y la del
+                          celular salían horas distintas y la lista se rearmaba. */}
+                      {new Date(n.createdAt).toLocaleString("es-CO", { timeZone: "America/Bogota", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" })}
                     </p>
                   </div>
                   {!n.isRead && (
@@ -125,7 +133,7 @@ export default function NotificationsClient({ initial }: { initial: Notification
                         : "default"
                     }
                   >
-                    {n.type}
+                    {TYPE_LABELS[n.type] ?? "Aviso"}
                   </Badge>
                 </div>
               );

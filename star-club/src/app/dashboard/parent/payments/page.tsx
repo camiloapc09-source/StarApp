@@ -8,7 +8,8 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { CheckCircle2, Clock, AlertTriangle, CreditCard, FileText, Users, Sparkles } from "lucide-react";
 import { evaluateDiscount } from "@/lib/discount";
-import { dueLabel, dueColor } from "@/lib/dates";
+import { dueLabel, dueColor, daysUntilDue } from "@/lib/dates";
+import { methodLabel } from "@/lib/payment-labels";
 import PaymentSubmitForm from "@/components/parent/payment-submit-form";
 import { wompiConfigured } from "@/lib/wompi";
 import Link from "next/link";
@@ -131,7 +132,8 @@ export default async function ParentPaymentsPage({
                       <p className="font-semibold text-sm">{payment.concept}</p>
                       <p className="text-xs mt-0.5" style={{ color: dueColor(payment.dueDate) }}>
                         {dueLabel(payment.dueDate)}
-                        {" · "}{format(new Date(payment.dueDate), "d 'de' MMMM", { locale: es })}
+                        {/* "Vence 3 nov" ya trae la fecha; solo se agrega en "Vence hoy" o "Vencido hace…". */}
+                        {daysUntilDue(payment.dueDate) <= 1 && <>{" · "}{format(new Date(payment.dueDate), "d 'de' MMMM", { locale: es })}</>}
                       </p>
                     </div>
                     <div className="text-right flex-shrink-0">
@@ -169,7 +171,7 @@ export default async function ParentPaymentsPage({
                     <a
                       href={`/api/payments/${payment.id}/wompi-checkout`}
                       className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-90"
-                      style={{ background: "linear-gradient(135deg, #3B82F6, #6366F1)", color: "#fff" }}
+                      style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-dim))", color: "var(--on-accent)" }}
                     >
                       <CreditCard size={16} /> Pagar en línea
                     </a>
@@ -203,7 +205,7 @@ export default async function ParentPaymentsPage({
                   <div>
                     <p className="text-sm font-medium">{payment.concept}</p>
                     <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                      {payment.paymentMethod ?? "—"} · {format(new Date(payment.dueDate), "d MMM yyyy", { locale: es })}
+                      {methodLabel(payment.paymentMethod) || "—"} · {format(new Date(payment.dueDate), "d MMM yyyy", { locale: es })}
                     </p>
                   </div>
                   <div className="text-right">
@@ -230,7 +232,7 @@ export default async function ParentPaymentsPage({
                     <p className="text-sm font-medium">{payment.concept}</p>
                     <p className="text-xs" style={{ color: "var(--text-muted)" }}>
                       {payment.paidAt ? format(new Date(payment.paidAt), "d MMM yyyy", { locale: es }) : "—"}
-                      {payment.paymentMethod ? ` · ${payment.paymentMethod}` : ""}
+                      {payment.paymentMethod ? ` · ${methodLabel(payment.paymentMethod)}` : ""}
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">

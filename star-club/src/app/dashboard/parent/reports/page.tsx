@@ -89,13 +89,15 @@ export default async function ParentReportsPage({
       const d = new Date(a.session.date);
       return d >= start && d <= end;
     });
-    const present = inMonth.filter((a) => a.status === "PRESENT").length;
+    // Presente o tarde cuentan como asistencia (igual que en el inicio).
+    const present = inMonth.filter((a) => a.status === "PRESENT" || a.status === "LATE").length;
     const total   = inMonth.length;
     return {
       label: format(ref, "MMM", { locale: es }),
       present,
       total,
-      rate: total > 0 ? Math.round((present / total) * 100) : 0,
+      // Sin sesiones no es 0% (salía en rojo): no hay dato.
+      rate: total > 0 ? Math.round((present / total) * 100) : null,
     };
   });
 
@@ -177,14 +179,14 @@ export default async function ParentReportsPage({
               <div key={label} className="text-center">
                 <p
                   className="text-2xl font-bold"
-                  style={{ color: rate >= 80 ? "var(--success)" : rate >= 50 ? "var(--warning)" : "var(--error)" }}
+                  style={{ color: rate === null ? "var(--text-muted)" : rate >= 80 ? "var(--success)" : rate >= 50 ? "var(--warning)" : "var(--error)" }}
                 >
-                  {rate}%
+                  {rate === null ? "—" : `${rate}%`}
                 </p>
                 <p className="text-xs font-medium capitalize mt-1">{label}</p>
                 <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>{present}/{total}</p>
                 <div className="mt-2">
-                  <ProgressBar value={rate} max={100} height="sm" animated={false} />
+                  <ProgressBar value={rate ?? 0} max={100} height="sm" animated={false} />
                 </div>
               </div>
             ))}

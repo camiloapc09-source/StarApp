@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { formatClubDateTime } from "@/lib/dates";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 import { StickyNote, Plus, Trash2, Loader2 } from "lucide-react";
 
 interface Note {
@@ -118,7 +117,7 @@ export default function PlayerNotesPanel({ playerId, initialNotes, authorName }:
               <div className="flex-1 min-w-0">
                 <p className="text-sm whitespace-pre-wrap" style={{ color: "var(--text-secondary)" }}>{note.body}</p>
                 <p className="text-[11px] mt-1.5" style={{ color: "var(--text-muted)" }}>
-                  {format(new Date(note.createdAt), "d 'de' MMM yyyy, HH:mm", { locale: es })}
+                  {formatClubDateTime(note.createdAt, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" })}
                 </p>
               </div>
               <button

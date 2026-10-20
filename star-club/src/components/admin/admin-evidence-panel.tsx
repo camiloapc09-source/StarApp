@@ -1,11 +1,10 @@
 "use client";
 
 import { confirmDialog } from "@/components/ui/feedback";
+import { formatClubDateTime } from "@/lib/dates";
 import { useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { CheckCircle2, XCircle, Zap, Clock, ExternalLink } from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
 
 type EvidenceItem = {
   id: string;
@@ -128,7 +127,7 @@ export default function AdminEvidencePanel({ initialPending, initialRecent }: Pr
                     </span>
                     <span className="flex items-center gap-1 text-xs" style={{ color: "var(--text-muted)" }}>
                       <Clock size={11} />
-                      {format(new Date(ev.submittedAt), "dd MMM, HH:mm", { locale: es })}
+                      {formatClubDateTime(ev.submittedAt)}
                     </span>
                   </div>
                   {ev.notes && (

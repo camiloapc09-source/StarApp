@@ -269,3 +269,16 @@ export function formatSessionTime(date: Date | string): string {
 export function capitalizeFirst(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
+
+/**
+ * Fecha y hora de un instante real (creado, enviado, pagado…) en hora del club.
+ * Úsalo en componentes de cliente: con la zona del servidor (UTC) y la del
+ * navegador salían horas distintas y React rearmaba la vista (hydration).
+ */
+export function formatClubDateTime(
+  date: Date | string,
+  options: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" },
+  timeZone: string = CLUB_TIMEZONE,
+): string {
+  return new Date(date).toLocaleString("es-CO", { ...options, timeZone });
+}
