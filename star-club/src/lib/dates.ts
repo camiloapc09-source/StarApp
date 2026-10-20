@@ -193,6 +193,32 @@ export function nextDueDate(paymentDay: number, timeZone: string = CLUB_TIMEZONE
   return buildDueDate(today.getFullYear(), today.getMonth() + 1, paymentDay);
 }
 
+/**
+ * Vencimiento de la PRIMERA mensualidad de un deportista que se activa.
+ *
+ * La primera mensualidad cubre el periodo que arranca en la fecha de ingreso.
+ * Antes se usaba `nextDueDate`, que salta al mes siguiente si el día de pago
+ * ya pasó: un alumno que ingresó el 4 de septiembre y se activó el 12 quedaba
+ * con su primer cobro el 4 de OCTUBRE. Ese cobro en realidad era septiembre,
+ * así que al pagarlo el siguiente se generaba para noviembre y octubre nunca
+ * aparecía.
+ *
+ *  - Ingreso hoy o en el futuro → vence el día de ingreso.
+ *  - Ingreso en el pasado → el periodo en curso: la última vez que cayó su día
+ *    de pago (hoy incluido). Los meses anteriores a ese, si se deben, los
+ *    registra el admin a mano.
+ */
+export function firstDueDate(joinDate: string, timeZone: string = CLUB_TIMEZONE): Date {
+  const join = parseDateOnly(joinDate);
+  const today = clubToday(timeZone);
+  if (join.getTime() >= today.getTime()) return join;
+
+  const day = join.getDate();
+  const thisMonth = buildDueDate(today.getFullYear(), today.getMonth(), day);
+  if (thisMonth.getTime() <= today.getTime()) return thisMonth;
+  return buildDueDate(today.getFullYear(), today.getMonth() - 1, day);
+}
+
 /** Saludo según la hora real del club, no la del servidor. */
 export function clubGreeting(timeZone: string = CLUB_TIMEZONE): string {
   const hour = Number(
