@@ -20,7 +20,7 @@ interface NovaIconProps {
   rounded?: boolean;
 }
 
-export function NovaIcon({ size = 200, bg = "#07071A", rounded = true }: NovaIconProps) {
+export function NovaIcon({ size = 200, bg = "var(--bg-primary)", rounded = true }: NovaIconProps) {
   const rx = rounded ? size * 0.225 : 0;
   const uid = `nova_${size}`;
 
@@ -34,7 +34,7 @@ export function NovaIcon({ size = 200, bg = "#07071A", rounded = true }: NovaIco
     >
       <defs>
         <linearGradient id={`${uid}_fill`} x1="50" y1="20" x2="150" y2="180" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#DEC4FF" />
+          <stop offset="0%" stopColor="var(--accent-lighter)" />
           <stop offset="40%" stopColor="#7F47DD" />
           <stop offset="100%" stopColor="#3A0E9E" />
         </linearGradient>
@@ -88,9 +88,9 @@ export function NovaWordmark({ dark = true, showTag = true, height = 48 }: NovaW
   const H = height;
   const scale = H / 48;
 
-  const bg = dark ? "#07071A" : "#FAFAFA";
-  const textMain = dark ? "#FFFFFF" : "#0E0E2C";
-  const textAccent = dark ? "#DEC4FF" : "#7F47DD";
+  const bg = dark ? "var(--bg-primary)" : "#FAFAFA";
+  const textMain = dark ? "#FFFFFF" : "var(--bg-card)";
+  const textAccent = dark ? "var(--accent-lighter)" : "#7F47DD";
   const tagColor = dark ? "rgba(180,144,245,0.50)" : "rgba(127,71,221,0.45)";
   const uid = `wm_${dark ? "d" : "l"}`;
   // Star at scale 0.40: top arm = 66*0.40 = 26.4px, bottom = 46*0.40 = 18.4px, total 44.8 → fits in 48px
@@ -120,7 +120,7 @@ export function NovaWordmark({ dark = true, showTag = true, height = 48 }: NovaW
     >
       <defs>
         <linearGradient id={`${uid}_ig`} x1="14" y1="9" x2="36" y2="46" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="#DEC4FF" />
+          <stop offset="0%" stopColor="var(--accent-lighter)" />
           <stop offset="100%" stopColor="#3A0E9E" />
         </linearGradient>
         <linearGradient id={`${uid}_igw`} x1="14" y1="9" x2="36" y2="46" gradientUnits="userSpaceOnUse">

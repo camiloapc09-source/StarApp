@@ -65,7 +65,7 @@ export default function MergeParentsButton({ options }: Props) {
       <button
         onClick={() => { setOpen(true); setKeepIdx(suggested); setError(null); setDone(false); }}
         className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
-        style={{ background: "rgba(139,92,246,0.12)", color: "#A78BFA", border: "1px solid rgba(139,92,246,0.25)" }}
+        style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)" }}
       >
         <GitMerge size={13} />
         Fusionar cuentas duplicadas
@@ -80,7 +80,7 @@ export default function MergeParentsButton({ options }: Props) {
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="font-bold text-base flex items-center gap-2">
-                  <GitMerge size={16} style={{ color: "#A78BFA" }} />
+                  <GitMerge size={16} style={{ color: "var(--accent-light)" }} />
                   Fusionar cuentas duplicadas
                 </h2>
                 <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
@@ -104,14 +104,14 @@ export default function MergeParentsButton({ options }: Props) {
                     onClick={() => setKeepIdx(idx as 0 | 1)}
                     className="w-full text-left rounded-xl p-4 transition-all"
                     style={{
-                      background: isSelected ? "rgba(139,92,246,0.12)" : "var(--bg-elevated)",
-                      border: `1.5px solid ${isSelected ? "rgba(139,92,246,0.45)" : "var(--border-subtle)"}`,
+                      background: isSelected ? "color-mix(in srgb, var(--accent) 12%, transparent)" : "var(--bg-elevated)",
+                      border: `1.5px solid ${isSelected ? "color-mix(in srgb, var(--accent) 45%, transparent)" : "var(--border-subtle)"}`,
                     }}
                   >
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                          style={{ borderColor: isSelected ? "#A78BFA" : "rgba(255,255,255,0.25)", background: isSelected ? "#7C3AED" : "transparent" }}>
+                          style={{ borderColor: isSelected ? "var(--accent-light)" : "rgba(255,255,255,0.25)", background: isSelected ? "var(--accent-dim)" : "transparent" }}>
                           {isSelected && <Check size={9} color="white" strokeWidth={3} />}
                         </div>
                         <span className="text-sm font-semibold">Cuenta {idx + 1}</span>
@@ -146,7 +146,7 @@ export default function MergeParentsButton({ options }: Props) {
 
             {keepIdx !== null && (
               <p className="text-xs px-3 py-2 rounded-xl"
-                style={{ background: "rgba(139,92,246,0.08)", color: "rgba(196,181,253,0.70)" }}>
+                style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)", color: "color-mix(in srgb, var(--accent-lighter) 70%, transparent)" }}>
                 Se conservará la Cuenta {keepIdx + 1} con todos los hijos vinculados. La otra cuenta será eliminada.
               </p>
             )}
@@ -168,7 +168,7 @@ export default function MergeParentsButton({ options }: Props) {
                 onClick={merge}
                 disabled={keepIdx === null || loading || done}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                style={{ background: done ? "rgba(52,211,153,0.20)" : "rgba(139,92,246,0.25)", color: done ? "#34D399" : "#C4B5FD" }}
+                style={{ background: done ? "rgba(52,211,153,0.20)" : "color-mix(in srgb, var(--accent) 25%, transparent)", color: done ? "#34D399" : "var(--accent-lighter)" }}
               >
                 {done ? <><Check size={14} /> Fusionado</> :
                  loading ? <><Loader2 size={14} className="animate-spin" /> Fusionando…</> :

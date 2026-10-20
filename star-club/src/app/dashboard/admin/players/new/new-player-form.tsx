@@ -260,8 +260,8 @@ function ParentCredentialsModal({
         </div>
 
         <div className="rounded-xl p-4 space-y-3"
-          style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)" }}>
-          <p className="text-xs font-bold tracking-wider uppercase" style={{ color: "rgba(167,139,250,0.70)" }}>
+          style={{ background: "color-mix(in srgb, var(--accent) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)" }}>
+          <p className="text-xs font-bold tracking-wider uppercase" style={{ color: "color-mix(in srgb, var(--accent-light) 70%, transparent)" }}>
             Acceso de {credentials.name}
           </p>
 
@@ -277,7 +277,7 @@ function ParentCredentialsModal({
                     {row.label}
                   </p>
                   <p className={`font-mono font-bold mt-0.5 ${row.field === "password" ? "text-xl tracking-widest" : "text-sm"}`}
-                    style={{ color: row.field === "password" ? "#C4B5FD" : "rgba(255,255,255,0.85)" }}>
+                    style={{ color: row.field === "password" ? "var(--accent-lighter)" : "rgba(255,255,255,0.85)" }}>
                     {row.value}
                   </p>
                 </div>
@@ -297,7 +297,7 @@ function ParentCredentialsModal({
 
         <button onClick={onClose}
           className="w-full py-3 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-          style={{ background: "var(--accent)", color: "#000" }}>
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
           Listo, ya la compartí
         </button>
       </div>

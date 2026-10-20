@@ -141,7 +141,7 @@ export default async function AdminReportsPage() {
 
         {/* Overview KPIs */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard label={t.common.activePlayers} value={totalPlayers} icon={<Users size={20} />} gradient="linear-gradient(135deg, rgba(139,92,246,0.25), rgba(109,40,217,0.12))" />
+          <StatCard label={t.common.activePlayers} value={totalPlayers} icon={<Users size={20} />} gradient="linear-gradient(135deg, color-mix(in srgb, var(--accent) 25%, transparent), color-mix(in srgb, var(--accent-secondary) 12%, transparent))" />
           <StatCard
             label={t.reports.totalRevenue}
             value={formatCurrency(totalRevenue._sum.amount || 0)}
@@ -191,7 +191,7 @@ export default async function AdminReportsPage() {
                 value:    playersActive3Months,
                 total:    totalPlayers,
                 color:    "#A78BFA",
-                bg:       "rgba(167,139,250,0.08)",
+                bg:       "color-mix(in srgb, var(--accent-light) 8%, transparent)",
                 desc:     "llevan más de 3 meses activos",
               },
               {

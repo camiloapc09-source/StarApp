@@ -138,7 +138,7 @@ export default function AdminPlayerPhotoButton({ playerId, playerName, currentPh
                 type="button"
                 onClick={() => inputRef.current?.click()}
                 className="w-full py-2.5 rounded-xl text-sm font-semibold border transition-all hover:opacity-80"
-                style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "rgba(139,92,246,0.08)" }}
+                style={{ borderColor: "var(--accent)", color: "var(--accent)", background: "color-mix(in srgb, var(--accent) 8%, transparent)" }}
               >
                 {preview ? "Cambiar foto" : "Seleccionar foto"}
               </button>
@@ -149,7 +149,7 @@ export default function AdminPlayerPhotoButton({ playerId, playerName, currentPh
                   onClick={handleUpload}
                   disabled={uploading}
                   className="w-full py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  style={{ background: "var(--accent)", color: "#000" }}
+                  style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                 >
                   {uploading && <Loader2 size={14} className="animate-spin" />}
                   {uploading ? "Subiendo..." : "Guardar foto"}

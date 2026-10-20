@@ -150,9 +150,9 @@ function RaffleRow({
     >
       <div
         className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-        style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.20)" }}
+        style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}
       >
-        <Ticket size={18} style={{ color: "#DEC4FF" }} />
+        <Ticket size={18} style={{ color: "var(--accent-lighter)" }} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 flex-wrap">
@@ -192,7 +192,7 @@ function RaffleRow({
             <Link
               href={`/dashboard/admin/rifas/${raffle.id}`}
               className="flex-1 text-center py-2 rounded-lg text-xs font-semibold transition-all hover:opacity-80"
-              style={{ background: "rgba(139,92,246,0.12)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.20)" }}
+              style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-lighter)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}
             >
               Ver cartón
             </Link>

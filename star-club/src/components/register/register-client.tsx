@@ -21,9 +21,9 @@ function SpaceInput({ label, error, ...props }: React.InputHTMLAttributes<HTMLIn
           background: "rgba(255,255,255,0.05)",
           border: `1.5px solid ${error ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.08)"}`,
           color: "rgba(255,255,255,0.88)",
-          caretColor: "#8B5CF6",
+          caretColor: "var(--accent)",
         }}
-        onFocus={(e) => { e.target.style.borderColor = "rgba(139,92,246,0.50)"; e.target.style.background = "rgba(139,92,246,0.06)"; }}
+        onFocus={(e) => { e.target.style.borderColor = "color-mix(in srgb, var(--accent) 50%, transparent)"; e.target.style.background = "color-mix(in srgb, var(--accent) 6%, transparent)"; }}
         onBlur={(e) => { e.target.style.borderColor = error ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.08)"; e.target.style.background = "rgba(255,255,255,0.05)"; }}
         {...props}
       />
@@ -43,7 +43,7 @@ function SpaceSelect({ label, children, ...props }: React.SelectHTMLAttributes<H
       <select
         className="w-full px-4 py-3 rounded-2xl text-sm outline-none appearance-none transition-all"
         style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.88)" }}
-        onFocus={(e) => { e.target.style.borderColor = "rgba(139,92,246,0.50)"; e.target.style.background = "rgba(139,92,246,0.06)"; }}
+        onFocus={(e) => { e.target.style.borderColor = "color-mix(in srgb, var(--accent) 50%, transparent)"; e.target.style.background = "color-mix(in srgb, var(--accent) 6%, transparent)"; }}
         onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.08)"; e.target.style.background = "rgba(255,255,255,0.05)"; }}
         {...props}
       >
@@ -175,9 +175,9 @@ export default function RegisterClient() {
   // ── MODAL — código + tipo ───────────────────────────────────────────────────
   if (isModalOpen) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-6" style={{ background: "#030308" }}>
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg-primary)" }}>
         {/* subtle nebula */}
-        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 65% 50% at 15% 25%, rgba(76,29,149,0.18) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 85% 70%, rgba(29,78,216,0.10) 0%, transparent 50%)" }} />
+        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 65% 50% at 15% 25%, rgba(76,29,149,0.18) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 85% 70%, color-mix(in srgb, var(--accent-2) 10%, transparent) 0%, transparent 50%)" }} />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -191,7 +191,7 @@ export default function RegisterClient() {
 
           <div
             className="rounded-3xl p-6"
-            style={{ background: "rgba(14,12,40,0.82)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(24px)", boxShadow: "0 24px 60px rgba(0,0,0,0.50)" }}
+            style={{ background: "color-mix(in srgb, var(--bg-card) 82%, transparent)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(24px)", boxShadow: "0 24px 60px rgba(0,0,0,0.50)" }}
           >
             <p className="text-[10px] font-semibold tracking-[0.28em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.50)" }}>
               Acceso
@@ -208,11 +208,11 @@ export default function RegisterClient() {
                   className="py-3 rounded-2xl text-[12px] font-bold tracking-wide transition-all"
                   style={{
                     background: modalRole === r
-                      ? "linear-gradient(135deg, #7C3AED, #4338CA)"
+                      ? "linear-gradient(135deg, var(--accent-dim), var(--accent-deep))"
                       : "rgba(255,255,255,0.04)",
                     color: modalRole === r ? "white" : "rgba(255,255,255,0.40)",
-                    border: `1.5px solid ${modalRole === r ? "rgba(139,92,246,0.50)" : "rgba(255,255,255,0.08)"}`,
-                    boxShadow: modalRole === r ? "0 4px 16px rgba(124,58,237,0.25)" : "none",
+                    border: `1.5px solid ${modalRole === r ? "color-mix(in srgb, var(--accent) 50%, transparent)" : "rgba(255,255,255,0.08)"}`,
+                    boxShadow: modalRole === r ? "0 4px 16px color-mix(in srgb, var(--accent-dim) 25%, transparent)" : "none",
                   }}
                 >
                   {r === "PLAYER" ? "🏅 Deportista" : "🏋️ Entrenador"}
@@ -234,7 +234,7 @@ export default function RegisterClient() {
             <button
               onClick={handleModalContinue}
               className="w-full mt-5 py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
-              style={{ background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4338CA 100%)", color: "white", boxShadow: "0 8px 24px rgba(124,58,237,0.35)" }}
+              style={{ background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%)", color: "var(--on-accent)", boxShadow: "0 8px 24px color-mix(in srgb, var(--accent-dim) 35%, transparent)" }}
             >
               Continuar →
             </button>
@@ -242,7 +242,7 @@ export default function RegisterClient() {
 
           <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.50)" }}>
             ¿Ya tienes cuenta?{" "}
-            <a href={redirectSlug ? `/${redirectSlug}` : "/"} className="font-semibold" style={{ color: "rgba(167,139,250,0.80)" }}>
+            <a href={redirectSlug ? `/${redirectSlug}` : "/"} className="font-semibold" style={{ color: "color-mix(in srgb, var(--accent-light) 80%, transparent)" }}>
               Inicia sesión
             </a>
           </p>
@@ -253,8 +253,8 @@ export default function RegisterClient() {
 
   // ── FORM — datos del registro ───────────────────────────────────────────────
   return (
-    <div className="min-h-screen py-10 px-6" style={{ background: "#030308" }}>
-      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 65% 50% at 15% 25%, rgba(76,29,149,0.15) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 85% 70%, rgba(29,78,216,0.09) 0%, transparent 50%)" }} />
+    <div className="min-h-screen py-10 px-6" style={{ background: "var(--bg-primary)" }}>
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", background: "radial-gradient(ellipse 65% 50% at 15% 25%, rgba(76,29,149,0.15) 0%, transparent 55%), radial-gradient(ellipse 50% 40% at 85% 70%, color-mix(in srgb, var(--accent-2) 9%, transparent) 0%, transparent 50%)" }} />
 
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -286,7 +286,7 @@ export default function RegisterClient() {
           {clubLogo && (
             <div
               className="w-12 h-12 rounded-full overflow-hidden flex-shrink-0"
-              style={{ border: "1px solid rgba(139,92,246,0.40)", boxShadow: "0 0 20px rgba(139,92,246,0.25)" }}
+              style={{ border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)", boxShadow: "0 0 20px color-mix(in srgb, var(--accent) 25%, transparent)" }}
             >
               <img src={clubLogo} alt={clubName} className="w-full h-full object-cover" />
             </div>
@@ -378,7 +378,7 @@ export default function RegisterClient() {
                 required
                 className="w-full px-3 py-2.5 rounded-lg text-sm outline-none transition-all"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", color: "rgba(255,255,255,0.85)", colorScheme: "dark" }}
-                onFocus={(e) => { e.target.style.borderColor = "rgba(139,92,246,0.45)"; }}
+                onFocus={(e) => { e.target.style.borderColor = "color-mix(in srgb, var(--accent) 45%, transparent)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "rgba(255,255,255,0.09)"; }}
               />
               {isMinor && (
@@ -401,7 +401,7 @@ export default function RegisterClient() {
               {sedeOptions.length > 0 ? (
                 <SpaceSelect label="Sede / Zona" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })}>
                   <option value="">Seleccionar sede</option>
-                  {sedeOptions.map((s) => <option key={s} value={s} style={{ background: "#0E0E2C" }}>{s}</option>)}
+                  {sedeOptions.map((s) => <option key={s} value={s} style={{ background: "var(--bg-card)" }}>{s}</option>)}
                 </SpaceSelect>
               ) : (
                 <SpaceInput label="Sede / Zona" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} placeholder="Ej: NORTE, SUR, CENTRO" />
@@ -421,7 +421,7 @@ export default function RegisterClient() {
               <SpaceSelect label="Relación con el deportista" value={form.parentRelation} onChange={(e) => setForm({ ...form, parentRelation: e.target.value })}>
                 <option value="">Seleccionar relación</option>
                 {["Padre", "Madre", "Abuelo/a", "Tío/a", "Hermano/a", "Acudiente"].map((r) => (
-                  <option key={r} value={r} style={{ background: "#0E0E2C" }}>{r}</option>
+                  <option key={r} value={r} style={{ background: "var(--bg-card)" }}>{r}</option>
                 ))}
               </SpaceSelect>
 
@@ -458,9 +458,9 @@ export default function RegisterClient() {
                 onClick={() => setAdditionalDocs([...additionalDocs, ""])}
                 className="w-full py-2.5 rounded-2xl text-xs font-bold tracking-wide transition-all"
                 style={{
-                  background: "rgba(139,92,246,0.08)",
-                  border: "1.5px dashed rgba(139,92,246,0.30)",
-                  color: "rgba(167,139,250,0.70)",
+                  background: "color-mix(in srgb, var(--accent) 8%, transparent)",
+                  border: "1.5px dashed color-mix(in srgb, var(--accent) 30%, transparent)",
+                  color: "color-mix(in srgb, var(--accent-light) 70%, transparent)",
                 }}
               >
                 + Agregar otro hijo
@@ -475,7 +475,7 @@ export default function RegisterClient() {
               {sedeOptions.length > 0 && (
                 <SpaceSelect label="Sede / Zona" value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })}>
                   <option value="">Seleccionar sede</option>
-                  {sedeOptions.map((s) => <option key={s} value={s} style={{ background: "#0E0E2C" }}>{s}</option>)}
+                  {sedeOptions.map((s) => <option key={s} value={s} style={{ background: "var(--bg-card)" }}>{s}</option>)}
                 </SpaceSelect>
               )}
               <SectionLabel>Tus datos — acudiente {isMinor ? "(obligatorio)" : "(opcional)"}</SectionLabel>
@@ -496,7 +496,7 @@ export default function RegisterClient() {
               <SpaceSelect label="Tu relación con el deportista" value={form.parentRelation} onChange={(e) => setForm({ ...form, parentRelation: e.target.value })} required={isMinor}>
                 <option value="">Seleccionar relación</option>
                 {["Padre", "Madre", "Abuelo/a", "Tío/a", "Hermano/a", "Acudiente"].map((r) => (
-                  <option key={r} value={r} style={{ background: "#0E0E2C" }}>{r}</option>
+                  <option key={r} value={r} style={{ background: "var(--bg-card)" }}>{r}</option>
                 ))}
               </SpaceSelect>
               <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
@@ -511,9 +511,9 @@ export default function RegisterClient() {
               disabled={loading}
               className="w-full py-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.97] disabled:opacity-60"
               style={{
-                background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4338CA 100%)",
-                color: "white",
-                boxShadow: "0 8px 24px rgba(124,58,237,0.30)",
+                background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%)",
+                color: "var(--on-accent)",
+                boxShadow: "0 8px 24px color-mix(in srgb, var(--accent-dim) 30%, transparent)",
               }}
             >
               {loading

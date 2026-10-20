@@ -29,9 +29,9 @@ const STEPS = [
     desc: "Genera un enlace de registro y compártelo con el deportista o su padre.",
     href: "/dashboard/admin/players/invites",
     cta: "Crear invitación →",
-    color: "#A78BFA",
-    bg: "rgba(167,139,250,0.12)",
-    border: "rgba(167,139,250,0.25)",
+    color: "var(--accent-light)",
+    bg: "color-mix(in srgb, var(--accent-light) 12%, transparent)",
+    border: "color-mix(in srgb, var(--accent-light) 25%, transparent)",
   },
   {
     key: "sessions",
@@ -59,7 +59,7 @@ export default function OnboardingWizard({ hasCategories, hasPlayers, hasSession
   return (
     <div
       className="rounded-2xl p-5 relative"
-      style={{ background: "rgba(14,14,44,0.80)", border: "1px solid rgba(139,92,246,0.20)" }}
+      style={{ background: "color-mix(in srgb, var(--bg-card) 80%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}
     >
       <button
         onClick={() => setDismissed(true)}
@@ -69,7 +69,7 @@ export default function OnboardingWizard({ hasCategories, hasPlayers, hasSession
       </button>
 
       <div className="mb-4">
-        <p className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: "rgba(167,139,250,0.60)" }}>
+        <p className="text-[10px] font-bold tracking-widest uppercase mb-1" style={{ color: "color-mix(in srgb, var(--accent-light) 60%, transparent)" }}>
           Primeros pasos
         </p>
         <h2 className="font-black text-lg text-white">Configura tu club</h2>
@@ -83,7 +83,7 @@ export default function OnboardingWizard({ hasCategories, hasPlayers, hasSession
             className="h-full rounded-full transition-all duration-700"
             style={{
               width: `${(completedCount / STEPS.length) * 100}%`,
-              background: "linear-gradient(90deg, #7C3AED, #34D399)",
+              background: "linear-gradient(90deg, var(--accent-dim), #34D399)",
             }}
           />
         </div>

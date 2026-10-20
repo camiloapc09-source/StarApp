@@ -133,7 +133,7 @@ export default async function AdminSessionsPage() {
                   <Link
                     href={`/dashboard/admin/attendance/${s.id}`}
                     className="mt-3 flex items-center justify-center w-full py-2 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
-                    style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA", border: "1px solid rgba(139,92,246,0.25)" }}
+                    style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)" }}
                   >
                     Tomar asistencia
                   </Link>

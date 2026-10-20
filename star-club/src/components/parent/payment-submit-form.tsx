@@ -171,7 +171,7 @@ export default function PaymentSubmitForm({ paymentId }: { paymentId: string }) 
           onClick={submit}
           disabled={submitting}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50 flex-1 justify-center"
-          style={{ background: "var(--accent)", color: "#000" }}
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
         >
           {submitting ? <Loader2 size={13} className="animate-spin" /> : <Upload size={13} />}
           {submitting ? "Enviando..." : "Enviar pago"}

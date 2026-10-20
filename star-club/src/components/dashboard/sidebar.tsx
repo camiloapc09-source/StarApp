@@ -123,7 +123,7 @@ export function Sidebar({
 
       {/* Top — StarApp wordmark */}
       <div className="px-5 py-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-        <div style={{ filter: "drop-shadow(0 0 12px rgba(139,92,246,0.35))" }}>
+        <div style={{ filter: "drop-shadow(0 0 12px color-mix(in srgb, var(--accent) 35%, transparent))" }}>
           <NovaWordmark dark={true} showTag={false} height={32} />
         </div>
       </div>
@@ -176,8 +176,8 @@ export function Sidebar({
                 whileTap={{ scale: 0.97 }}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150 relative"
                 style={{
-                  background: isActive ? "rgba(139,92,246,0.12)" : "transparent",
-                  color: isActive ? "#DEC4FF" : "rgba(255,255,255,0.42)",
+                  background: isActive ? "color-mix(in srgb, var(--accent) 12%, transparent)" : "transparent",
+                  color: isActive ? "var(--accent-lighter)" : "rgba(255,255,255,0.42)",
                 }}
                 onMouseEnter={(e) => {
                   if (!isActive) e.currentTarget.style.color = "rgba(255,255,255,0.80)";
@@ -191,7 +191,7 @@ export function Sidebar({
                 {isActive && (
                   <div
                     className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
-                    style={{ background: "#8B5CF6", boxShadow: "0 0 8px rgba(139,92,246,0.8)" }}
+                    style={{ background: "var(--accent)", boxShadow: "0 0 8px color-mix(in srgb, var(--accent) 80%, transparent)" }}
                   />
                 )}
                 <link.icon size={16} strokeWidth={isActive ? 2 : 1.5} />
@@ -221,8 +221,8 @@ export function Sidebar({
             whileTap={{ scale: 0.97 }}
             className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-150"
             style={{
-              background: pathname.includes("/notifications") ? "rgba(139,92,246,0.12)" : "transparent",
-              color: pathname.includes("/notifications") ? "#DEC4FF" : "rgba(255,255,255,0.42)",
+              background: pathname.includes("/notifications") ? "color-mix(in srgb, var(--accent) 12%, transparent)" : "transparent",
+              color: pathname.includes("/notifications") ? "var(--accent-lighter)" : "rgba(255,255,255,0.42)",
             }}
             onMouseEnter={(e) => {
               if (!pathname.includes("/notifications")) {
@@ -254,9 +254,9 @@ export function Sidebar({
               whileTap={{ scale: 0.97 }}
               className="mt-2 flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all duration-150"
               style={{
-                background: pathname.startsWith("/superadmin") ? "rgba(139,92,246,0.15)" : "rgba(139,92,246,0.06)",
-                color: "#C4B5FD",
-                border: "1px solid rgba(139,92,246,0.25)",
+                background: pathname.startsWith("/superadmin") ? "color-mix(in srgb, var(--accent) 15%, transparent)" : "color-mix(in srgb, var(--accent) 6%, transparent)",
+                color: "var(--accent-lighter)",
+                border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
               }}
             >
               <Shield size={16} strokeWidth={2} />
@@ -285,10 +285,10 @@ export function Sidebar({
           <div
             className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center text-xs font-bold"
             style={{
-              border: "1px solid rgba(139,92,246,0.40)",
-              boxShadow: "0 0 10px rgba(139,92,246,0.20)",
-              background: "rgba(139,92,246,0.10)",
-              color: "#DEC4FF",
+              border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)",
+              boxShadow: "0 0 10px color-mix(in srgb, var(--accent) 20%, transparent)",
+              background: "color-mix(in srgb, var(--accent) 10%, transparent)",
+              color: "var(--accent-lighter)",
             }}
           >
             {clubLogo

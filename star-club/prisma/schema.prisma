@@ -15,6 +15,10 @@ model Club {
   email     String?
   logo      String?
   sport     String   @default("BASKETBALL")
+  // ── Marca del club: la app entera se pinta con estos colores (lib/club-theme.ts) ──
+  brandPrimary    String?  // color principal (botones, acentos), ej "#8E7CD0"
+  brandSecondary  String?  // color secundario (destacados, rachas), ej "#F04818"
+  brandBackground String?  // fondo base oscuro, ej "#0A0A10"
   plan      String   @default("STARTER") // STARTER | PRO | ENTERPRISE
   country   String   @default("CO")
   city      String?

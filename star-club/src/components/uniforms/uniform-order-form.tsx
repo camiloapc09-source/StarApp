@@ -214,7 +214,7 @@ export default function UniformOrderForm({
           onClick={submit}
           disabled={loading || !playerId || !nameOnJersey.trim() || (isGame && !numberOnJersey)}
           className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
-          style={{ background: "var(--accent)", color: "#000" }}
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
         >
           {loading ? <Loader2 size={13} className="animate-spin" /> : <ShoppingCart size={13} />}
           {loading ? "Enviando..." : "Confirmar pedido"}

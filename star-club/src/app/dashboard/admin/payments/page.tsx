@@ -215,7 +215,7 @@ export default async function AdminPaymentsPage({
           {/* Recaudado */}
           <div
             className="rounded-xl p-4 flex flex-col gap-2"
-            style={{ background: "rgba(14,14,44,0.70)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
+            style={{ background: "color-mix(in srgb, var(--bg-card) 70%, transparent)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
           >
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-bold tracking-[0.18em] uppercase capitalize" style={{ color: "rgba(255,255,255,0.32)" }}>
@@ -246,7 +246,7 @@ export default async function AdminPaymentsPage({
           {/* Por verificar */}
           <div
             className="rounded-xl p-4 flex flex-col gap-2"
-            style={{ background: "rgba(14,14,44,0.70)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
+            style={{ background: "color-mix(in srgb, var(--bg-card) 70%, transparent)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
           >
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.32)" }}>Por verificar</p>
@@ -261,7 +261,7 @@ export default async function AdminPaymentsPage({
           {/* Pendiente */}
           <div
             className="rounded-xl p-4 flex flex-col gap-2"
-            style={{ background: "rgba(14,14,44,0.70)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
+            style={{ background: "color-mix(in srgb, var(--bg-card) 70%, transparent)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
           >
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.32)" }}>Pendiente</p>
@@ -276,7 +276,7 @@ export default async function AdminPaymentsPage({
           {/* Vencido */}
           <div
             className="rounded-xl p-4 flex flex-col gap-2"
-            style={{ background: "rgba(14,14,44,0.70)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
+            style={{ background: "color-mix(in srgb, var(--bg-card) 70%, transparent)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(12px)" }}
           >
             <div className="flex items-center justify-between">
               <p className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.32)" }}>Vencido</p>
@@ -513,7 +513,7 @@ export default async function AdminPaymentsPage({
             ) : (
               <>
                 <p className="text-sm" style={{ color: "var(--text-muted)" }}>No hay pagos registrados.</p>
-                <Link href="/dashboard/admin/payments/new" className="mt-4 inline-block text-xs px-4 py-2 rounded-xl font-semibold" style={{ background: "var(--accent)", color: "#000" }}>
+                <Link href="/dashboard/admin/payments/new" className="mt-4 inline-block text-xs px-4 py-2 rounded-xl font-semibold" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
                   + Agregar primer pago
                 </Link>
               </>

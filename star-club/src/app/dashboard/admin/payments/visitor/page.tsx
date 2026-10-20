@@ -42,7 +42,7 @@ export default function VisitorPaymentPage() {
       const canvas = await html2canvas(receiptRef.current, {
         scale: 3,
         useCORS: true,
-        backgroundColor: "#0a0a1a",
+        backgroundColor: "var(--bg-primary)",
         logging: false,
       });
       const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png", 1));
@@ -163,7 +163,7 @@ export default function VisitorPaymentPage() {
                 onClick={generate}
                 disabled={!name.trim() || amountNum <= 0}
                 className="w-full py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-40"
-                style={{ background: "var(--accent)", color: "#000" }}
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 Generar comprobante
               </button>
@@ -175,7 +175,7 @@ export default function VisitorPaymentPage() {
             <div
               ref={receiptRef}
               style={{
-                background: "linear-gradient(160deg, #0d0d2b 0%, #0a0a1a 60%, #0d1a2b 100%)",
+                background: "linear-gradient(160deg, var(--bg-card) 0%, var(--bg-primary) 60%, #0d1a2b 100%)",
                 borderRadius: "20px",
                 padding: "28px 24px",
                 fontFamily: "system-ui, -apple-system, sans-serif",

@@ -6,21 +6,21 @@ export function CoachPlayerBanner() {
     <div
       className="mx-4 mt-4 rounded-2xl px-4 py-3 flex items-center justify-between gap-3 flex-wrap"
       style={{
-        background: "rgba(139,92,246,0.10)",
-        border: "1px solid rgba(139,92,246,0.25)",
+        background: "color-mix(in srgb, var(--accent) 10%, transparent)",
+        border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
       }}
     >
-      <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: "#DEC4FF" }}>
-        <Zap size={14} style={{ color: "#A78BFA" }} />
+      <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: "var(--accent-lighter)" }}>
+        <Zap size={14} style={{ color: "var(--accent-light)" }} />
         Modo Jugador activo
       </div>
       <Link
         href="/dashboard/coach"
         className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl transition-all hover:opacity-80"
         style={{
-          background: "rgba(139,92,246,0.18)",
-          color: "#DEC4FF",
-          border: "1px solid rgba(139,92,246,0.35)",
+          background: "color-mix(in srgb, var(--accent) 18%, transparent)",
+          color: "var(--accent-lighter)",
+          border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)",
         }}
       >
         <ArrowLeft size={12} />

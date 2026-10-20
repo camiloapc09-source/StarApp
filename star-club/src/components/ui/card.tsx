@@ -19,10 +19,10 @@ const Card = forwardRef<HTMLDivElement, CardProps>(
           className
         )}
         style={{
-          background: "rgba(12,10,36,0.75)",
+          background: "color-mix(in srgb, var(--bg-card) 75%, transparent)",
           border: "1px solid rgba(255,255,255,0.07)",
           backdropFilter: "blur(16px)",
-          ...(glow && { boxShadow: "0 0 24px rgba(139,92,246,0.18), 0 0 60px rgba(139,92,246,0.07)" }),
+          ...(glow && { boxShadow: "0 0 24px color-mix(in srgb, var(--accent) 18%, transparent), 0 0 60px color-mix(in srgb, var(--accent) 7%, transparent)" }),
           ...style,
         }}
         onMouseEnter={

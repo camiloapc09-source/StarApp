@@ -20,7 +20,7 @@ export default function ShareReceiptButton({ receiptNo }: Props) {
       const canvas = await html2canvas(el, {
         scale: 2,
         useCORS: true,
-        backgroundColor: "#0a0a1a",
+        backgroundColor: "var(--bg-primary)",
         logging: false,
       });
 

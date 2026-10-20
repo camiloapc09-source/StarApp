@@ -52,7 +52,7 @@ export default async function AdminDashboard() {
   ]);
 
   const quickActions = [
-    { label: "Nuevo jugador",  href: "/dashboard/admin/players/new",   Icon: UserPlus,   color: "#A78BFA", bg: "rgba(139,92,246,0.18)" },
+    { label: "Nuevo jugador",  href: "/dashboard/admin/players/new",   Icon: UserPlus,   color: "var(--accent-light)", bg: "color-mix(in srgb, var(--accent) 18%, transparent)" },
     { label: "Entrenadores",   href: "/dashboard/admin/coaches",        Icon: UserCheck,  color: "#60A5FA", bg: "rgba(96,165,250,0.18)" },
     { label: "Nueva sesión",   href: "/dashboard/admin/attendance/new", Icon: Calendar,   color: "#34D399", bg: "rgba(52,211,153,0.15)" },
     { label: "Registrar pago", href: "/dashboard/admin/payments/new",   Icon: CreditCard, color: "#60A5FA", bg: "rgba(59,130,246,0.16)" },
@@ -70,15 +70,15 @@ export default async function AdminDashboard() {
         <div
           className="rounded-2xl p-5 relative overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, rgba(109,40,217,0.28) 0%, rgba(49,46,129,0.20) 50%, rgba(12,10,36,0.80) 100%)",
-            border: "1px solid rgba(139,92,246,0.20)",
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--accent-secondary) 28%, transparent) 0%, rgba(49,46,129,0.20) 50%, color-mix(in srgb, var(--bg-card) 80%, transparent) 100%)",
+            border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
           }}
         >
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 60% 80% at 90% 50%, rgba(139,92,246,0.12) 0%, transparent 70%)" }}
+            style={{ background: "radial-gradient(ellipse 60% 80% at 90% 50%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%)" }}
           />
-          <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-1 relative" style={{ color: "rgba(167,139,250,0.70)" }}>
+          <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-1 relative" style={{ color: "color-mix(in srgb, var(--accent-light) 70%, transparent)" }}>
             {clubGreeting()}
           </p>
           <h2 className="text-2xl font-black tracking-tight text-white relative">{firstName} 👋</h2>
@@ -99,8 +99,8 @@ export default async function AdminDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard label={t.common.activePlayers} value={totalPlayers}
-            icon={<Users size={18} style={{ color: "#A78BFA" }} />}
-            gradient="linear-gradient(135deg, rgba(139,92,246,0.25), rgba(109,40,217,0.12))" />
+            icon={<Users size={18} style={{ color: "var(--accent-light)" }} />}
+            gradient="linear-gradient(135deg, color-mix(in srgb, var(--accent) 25%, transparent), color-mix(in srgb, var(--accent-secondary) 12%, transparent))" />
           <StatCard label={t.common.pendingPlayers} value={pendingPlayers}
             icon={<UserCheck size={18} style={{ color: "#FCD34D" }} />}
             gradient="linear-gradient(135deg, rgba(251,191,36,0.22), rgba(245,158,11,0.10))" />
@@ -137,7 +137,7 @@ export default async function AdminDashboard() {
             <Card className="p-0 overflow-hidden">
               <div className="flex items-center justify-between px-5 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <h2 className="font-bold text-[15px]">{t.common.recentPlayers}</h2>
-                <Link href="/dashboard/admin/players" className="flex items-center gap-1 text-xs font-semibold hover:text-[#A78BFA] transition-colors" style={{ color: "rgba(167,139,250,0.75)" }}>
+                <Link href="/dashboard/admin/players" className="flex items-center gap-1 text-xs font-semibold hover:text-[var(--accent-light)] transition-colors" style={{ color: "color-mix(in srgb, var(--accent-light) 75%, transparent)" }}>
                   {t.common.viewAll} <ArrowRight size={12} />
                 </Link>
               </div>
@@ -156,7 +156,7 @@ export default async function AdminDashboard() {
                           </p>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <div className="flex items-center gap-1 text-xs font-bold" style={{ color: "#A78BFA" }}>
+                          <div className="flex items-center gap-1 text-xs font-bold" style={{ color: "var(--accent-light)" }}>
                             <Zap size={11} />{player.xp} XP
                           </div>
                           <Badge variant={player.status === "ACTIVE" ? "success" : player.status === "PENDING" ? "warning" : "default"}>
@@ -182,7 +182,7 @@ export default async function AdminDashboard() {
                   categories.map((cat) => (
                     <div key={cat.id} className="flex items-center justify-between">
                       <span className="text-sm font-medium">{cat.name}</span>
-                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background: "rgba(139,92,246,0.12)", color: "#C4B5FD" }}>
+                      <span className="text-[11px] font-bold px-2.5 py-1 rounded-full" style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-lighter)" }}>
                         {cat._count.players}
                       </span>
                     </div>

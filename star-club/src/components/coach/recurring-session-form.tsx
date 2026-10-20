@@ -188,9 +188,9 @@ export default function RecurringSessionForm({ categories, coaches = [], userRol
               onClick={() => toggleDay(d.value)}
               className="w-11 h-11 rounded-xl text-xs font-bold transition-all"
               style={{
-                background: selectedDays.includes(d.value) ? "rgba(139,92,246,0.20)" : "var(--bg-elevated)",
-                border: `1px solid ${selectedDays.includes(d.value) ? "rgba(139,92,246,0.40)" : "var(--border-primary)"}`,
-                color: selectedDays.includes(d.value) ? "#C4B5FD" : "var(--text-muted)",
+                background: selectedDays.includes(d.value) ? "color-mix(in srgb, var(--accent) 20%, transparent)" : "var(--bg-elevated)",
+                border: `1px solid ${selectedDays.includes(d.value) ? "color-mix(in srgb, var(--accent) 40%, transparent)" : "var(--border-primary)"}`,
+                color: selectedDays.includes(d.value) ? "var(--accent-lighter)" : "var(--text-muted)",
               }}
             >
               {d.label}
@@ -228,14 +228,14 @@ export default function RecurringSessionForm({ categories, coaches = [], userRol
 
       {/* Preview */}
       {preview.length > 0 && (
-        <div className="rounded-xl px-4 py-3" style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)" }}>
-          <p className="text-xs font-bold mb-2" style={{ color: "#C4B5FD" }}>
+        <div className="rounded-xl px-4 py-3" style={{ background: "color-mix(in srgb, var(--accent) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)" }}>
+          <p className="text-xs font-bold mb-2" style={{ color: "var(--accent-lighter)" }}>
             Se crearán {preview.length} sesiones:
           </p>
           <div className="flex flex-wrap gap-1.5 max-h-28 overflow-auto">
             {preview.map((d, i) => (
               <span key={i} className="text-[11px] px-2 py-0.5 rounded-lg font-medium"
-                style={{ background: "rgba(139,92,246,0.12)", color: "#C4B5FD" }}>
+                style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-lighter)" }}>
                 {format(d, "EEE d MMM", { locale: es })}
               </span>
             ))}
@@ -253,7 +253,7 @@ export default function RecurringSessionForm({ categories, coaches = [], userRol
         type="submit"
         disabled={loading || preview.length === 0}
         className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-        style={{ background: "rgba(139,92,246,0.15)", color: "#C4B5FD", border: "1px solid rgba(139,92,246,0.30)" }}
+        style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent-lighter)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}
       >
         {loading ? <Loader2 size={14} className="animate-spin" /> : <RepeatIcon size={14} />}
         {loading ? `Creando sesiones…` : `Crear ${preview.length > 0 ? preview.length : ""} sesiones`}

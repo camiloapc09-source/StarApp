@@ -30,7 +30,7 @@ const PLAN_LABEL: Record<string, string> = {
 
 const PLAN_COLOR: Record<string, string> = {
   STARTER: "#93C5FD",
-  PRO: "#C4B5FD",
+  PRO: "var(--accent-lighter)",
   ENTERPRISE: "#FCD34D",
 };
 
@@ -130,7 +130,7 @@ export default function CreateClubPage() {
   if (done) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4"
-        style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(109,40,217,0.18) 0%, #050512 70%)" }}>
+        style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--accent-secondary) 18%, transparent) 0%, var(--bg-primary) 70%)" }}>
         <div className="w-full max-w-md text-center">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6"
             style={{ background: "rgba(52,211,153,0.12)", border: "1px solid rgba(52,211,153,0.25)" }}>
@@ -145,7 +145,7 @@ export default function CreateClubPage() {
             <p className="text-xs font-bold tracking-wider uppercase mb-2" style={{ color: "rgba(255,255,255,0.55)" }}>
               Tu URL de acceso
             </p>
-            <p className="text-sm font-mono font-bold" style={{ color: "#A78BFA" }}>/{done.slug}</p>
+            <p className="text-sm font-mono font-bold" style={{ color: "var(--accent-light)" }}>/{done.slug}</p>
             {done.plan && (
               <p className="text-xs mt-1.5" style={{ color: PLAN_COLOR[done.plan] ?? "rgba(255,255,255,0.40)" }}>
                 Plan {PLAN_LABEL[done.plan] ?? done.plan}
@@ -154,7 +154,7 @@ export default function CreateClubPage() {
           </div>
           <button onClick={() => router.push(`/${done.slug}`)}
             className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2"
-            style={{ background: "linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)" }}>
+            style={{ background: "linear-gradient(135deg, var(--accent-dim) 0%, var(--accent-deep) 100%)" }}>
             Ir a iniciar sesión <ArrowRight size={15} />
           </button>
         </div>
@@ -169,7 +169,7 @@ export default function CreateClubPage() {
           <div key={s} className="transition-all duration-300"
             style={{
               width: s === step ? 20 : 8, height: 8, borderRadius: 4,
-              background: s === step ? "#8B5CF6" : s < step ? "rgba(139,92,246,0.45)" : "rgba(255,255,255,0.12)",
+              background: s === step ? "var(--accent)" : s < step ? "color-mix(in srgb, var(--accent) 45%, transparent)" : "rgba(255,255,255,0.12)",
             }} />
         ))}
       </div>
@@ -178,16 +178,16 @@ export default function CreateClubPage() {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4"
-      style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, rgba(109,40,217,0.18) 0%, #050512 70%)" }}>
+      style={{ background: "radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--accent-secondary) 18%, transparent) 0%, var(--bg-primary) 70%)" }}>
 
-      <div className="mb-8" style={{ filter: "drop-shadow(0 0 16px rgba(139,92,246,0.35))" }}>
+      <div className="mb-8" style={{ filter: "drop-shadow(0 0 16px color-mix(in srgb, var(--accent) 35%, transparent))" }}>
         <NovaWordmark dark height={36} />
       </div>
 
       <div className="w-full max-w-md">
         <div className="rounded-3xl p-8"
           style={{
-            background: "rgba(10,10,28,0.90)",
+            background: "color-mix(in srgb, var(--bg-primary) 90%, transparent)",
             border: "1px solid rgba(255,255,255,0.08)",
             backdropFilter: "blur(24px)",
           }}>
@@ -241,7 +241,7 @@ export default function CreateClubPage() {
                     disabled={accessCode.trim().length < 6 || validating}
                     onClick={validateCode}
                     className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40"
-                    style={{ background: "linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)" }}
+                    style={{ background: "linear-gradient(135deg, var(--accent-dim) 0%, var(--accent-deep) 100%)" }}
                   >
                     {validating
                       ? <><Loader2 size={15} className="animate-spin" /> Validando…</>
@@ -251,7 +251,7 @@ export default function CreateClubPage() {
                   <button
                     onClick={() => setStep(2)}
                     className="w-full py-3.5 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
-                    style={{ background: "linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)" }}
+                    style={{ background: "linear-gradient(135deg, var(--accent-dim) 0%, var(--accent-deep) 100%)" }}
                   >
                     Continuar <ArrowRight size={15} />
                   </button>
@@ -301,7 +301,7 @@ export default function CreateClubPage() {
                 </button>
                 <button disabled={clubName.trim().length < 2} onClick={() => setStep(3)}
                   className="flex-[2] py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40"
-                  style={{ background: "linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)" }}>
+                  style={{ background: "linear-gradient(135deg, var(--accent-dim) 0%, var(--accent-deep) 100%)" }}>
                   Continuar <ArrowRight size={15} />
                 </button>
               </div>
@@ -357,7 +357,7 @@ export default function CreateClubPage() {
                   disabled={adminName.trim().length < 2 || !email.includes("@") || password.length < 8}
                   onClick={() => setStep(4)}
                   className="flex-[2] py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-40"
-                  style={{ background: "linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)" }}>
+                  style={{ background: "linear-gradient(135deg, var(--accent-dim) 0%, var(--accent-deep) 100%)" }}>
                   Continuar <ArrowRight size={15} />
                 </button>
               </div>
@@ -401,7 +401,7 @@ export default function CreateClubPage() {
                 </button>
                 <button disabled={loading} onClick={submit}
                   className="flex-[2] py-3 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-60"
-                  style={{ background: "linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)" }}>
+                  style={{ background: "linear-gradient(135deg, var(--accent-dim) 0%, var(--accent-deep) 100%)" }}>
                   {loading
                     ? <><Loader2 size={15} className="animate-spin" /> Creando…</>
                     : <><Check size={15} /> Crear club</>}
@@ -413,7 +413,7 @@ export default function CreateClubPage() {
 
         <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.50)" }}>
           ¿Ya tienes cuenta?{" "}
-          <Link href="/login" className="font-semibold hover:opacity-80" style={{ color: "#A78BFA" }}>
+          <Link href="/login" className="font-semibold hover:opacity-80" style={{ color: "var(--accent-light)" }}>
             Iniciar sesión
           </Link>
         </p>

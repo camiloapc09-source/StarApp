@@ -210,7 +210,7 @@ export default async function PlayerProfilePage({ params }: Props) {
                         ${player.monthlyAmount.toLocaleString("es-CO")}
                       </span>
                     )}
-                    <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: "rgba(139,92,246,0.15)", color: "#A78BFA", border: "1px solid rgba(139,92,246,0.3)" }}>
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
                       {`BECA ${player.scholarshipPct ?? 100}%`}
                     </span>
                   </div>

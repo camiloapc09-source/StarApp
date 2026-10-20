@@ -13,13 +13,13 @@ interface StatCardProps {
 }
 
 export function StatCard({ label, value, change, icon, gradient, className }: StatCardProps) {
-  const bg = gradient ?? "linear-gradient(135deg, rgba(139,92,246,0.20), rgba(109,40,217,0.10))";
+  const bg = gradient ?? "linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, transparent), color-mix(in srgb, var(--accent-secondary) 10%, transparent))";
 
   return (
     <div
       className={cn("rounded-2xl p-4 flex flex-col gap-3 transition-all duration-200", className)}
       style={{
-        background: "rgba(12,10,36,0.75)",
+        background: "color-mix(in srgb, var(--bg-card) 75%, transparent)",
         border: "1px solid rgba(255,255,255,0.07)",
         backdropFilter: "blur(16px)",
       }}

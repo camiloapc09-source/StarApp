@@ -24,7 +24,7 @@ const TYPE_CONFIG: Record<string, { label: string; color: string; bg: string; Ic
   DAILY:     { label: "Diaria",   color: "#60A5FA", bg: "rgba(96,165,250,0.12)",   Icon: Calendar },
   WEEKLY:    { label: "Semanal",  color: "#FCD34D", bg: "rgba(252,211,77,0.12)",   Icon: Flame    },
   CHALLENGE: { label: "Reto",     color: "#F87171", bg: "rgba(248,113,113,0.12)",  Icon: Trophy   },
-  SPECIAL:   { label: "Especial", color: "#A78BFA", bg: "rgba(167,139,250,0.12)",  Icon: Star     },
+  SPECIAL:   { label: "Especial", color: "var(--accent-light)", bg: "color-mix(in srgb, var(--accent-light) 12%, transparent)",  Icon: Star     },
 };
 
 export function MissionsList({ missions, className }: MissionsListProps) {
@@ -78,8 +78,8 @@ export function MissionsList({ missions, className }: MissionsListProps) {
                     </p>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
-                    <Zap size={11} style={{ color: "#A78BFA" }} />
-                    <span className="text-xs font-black" style={{ color: "#A78BFA" }}>+{mission.xpReward}</span>
+                    <Zap size={11} style={{ color: "var(--accent-light)" }} />
+                    <span className="text-xs font-black" style={{ color: "var(--accent-light)" }}>+{mission.xpReward}</span>
                   </div>
                 </div>
 

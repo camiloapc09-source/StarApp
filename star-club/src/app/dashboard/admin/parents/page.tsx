@@ -92,10 +92,10 @@ export default async function AdminParentsPage() {
         {/* Duplicates banner */}
         {duplicateCount > 0 && (
           <div className="rounded-2xl px-5 py-4 flex items-center gap-3"
-            style={{ background: "rgba(139,92,246,0.07)", border: "1px solid rgba(139,92,246,0.25)" }}>
-            <GitMerge size={16} style={{ color: "#A78BFA", flexShrink: 0 }} />
+            style={{ background: "color-mix(in srgb, var(--accent) 7%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)" }}>
+            <GitMerge size={16} style={{ color: "var(--accent-light)", flexShrink: 0 }} />
             <p className="text-sm" style={{ color: "rgba(255,255,255,0.65)" }}>
-              <span className="font-semibold" style={{ color: "#C4B5FD" }}>
+              <span className="font-semibold" style={{ color: "var(--accent-lighter)" }}>
                 {duplicateCount} acudiente{duplicateCount !== 1 ? "s" : ""} con cuentas duplicadas.
               </span>
               {" "}Usa el botón "Fusionar" para unirlas en una sola con todos los hijos vinculados.
@@ -106,7 +106,7 @@ export default async function AdminParentsPage() {
         {/* Access instructions */}
         <Card className="p-5 space-y-4">
           <div className="flex items-start gap-3">
-            <KeyRound size={16} className="mt-0.5 flex-shrink-0" style={{ color: "#C4B5FD" }} />
+            <KeyRound size={16} className="mt-0.5 flex-shrink-0" style={{ color: "var(--accent-lighter)" }} />
             <div className="space-y-1">
               <h3 className="text-sm font-semibold">Cómo entran los acudientes</h3>
               <p className="text-xs" style={{ color: "var(--text-muted)" }}>
@@ -266,14 +266,14 @@ export default async function AdminParentsPage() {
                 <div
                   key={group[0].user.name}
                   className="rounded-2xl overflow-hidden"
-                  style={{ border: "1.5px solid rgba(139,92,246,0.35)" }}
+                  style={{ border: "1.5px solid color-mix(in srgb, var(--accent) 35%, transparent)" }}
                 >
                   {/* Duplicate header */}
                   <div className="px-5 py-3 flex items-center justify-between gap-3"
-                    style={{ background: "rgba(139,92,246,0.10)", borderBottom: "1px solid rgba(139,92,246,0.20)" }}>
+                    style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", borderBottom: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
                     <div className="flex items-center gap-2">
-                      <GitMerge size={14} style={{ color: "#A78BFA" }} />
-                      <span className="text-xs font-bold" style={{ color: "#C4B5FD" }}>
+                      <GitMerge size={14} style={{ color: "var(--accent-light)" }} />
+                      <span className="text-xs font-bold" style={{ color: "var(--accent-lighter)" }}>
                         Cuenta duplicada — {group[0].user.name.trim()}
                       </span>
                     </div>
@@ -281,7 +281,7 @@ export default async function AdminParentsPage() {
                   </div>
 
                   {/* Individual cards inside */}
-                  <div className="divide-y" style={{ borderColor: "rgba(139,92,246,0.15)" }}>
+                  <div className="divide-y" style={{ borderColor: "color-mix(in srgb, var(--accent) 15%, transparent)" }}>
                     {cards.map((card) => card)}
                   </div>
                 </div>

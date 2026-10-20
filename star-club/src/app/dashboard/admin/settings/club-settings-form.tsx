@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useTransition } from "react";
+import BrandColorsCard from "./brand-colors-card";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import {
@@ -33,6 +34,9 @@ interface ClubSettingsFormProps {
     earlyPaymentDiscount: number;
     zonePrices: unknown;
     coachCanInvite: boolean;
+    brandPrimary: string | null;
+    brandSecondary: string | null;
+    brandBackground: string | null;
   };
   coaches: CoachEntry[];
 }
@@ -68,6 +72,9 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
   const [togglingCoach, setTogglingCoach] = useState<string | null>(null);
   const [logoPreview, setLogoPreview]         = useState<string | null>(club.logo);
   const [logoFile, setLogoFile]               = useState<File | null>(null);
+  const [brandPrimary, setBrandPrimary]       = useState(club.brandPrimary ?? "#8B5CF6");
+  const [brandSecondary, setBrandSecondary]   = useState(club.brandSecondary ?? "#F59E0B");
+  const [brandBackground, setBrandBackground] = useState(club.brandBackground ?? "#07071A");
   const [saved, setSaved]     = useState(false);
   const [error, setError]     = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -124,6 +131,9 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
           earlyPaymentDiscount: earlyDiscount,
           zonePrices,
           coachCanInvite,
+          brandPrimary,
+          brandSecondary,
+          brandBackground,
         }),
       });
 
@@ -157,8 +167,8 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
       <Card>
         <div className="flex items-center gap-2.5 mb-5">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center"
-            style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.20)" }}>
-            <Building2 size={15} style={{ color: "#A78BFA" }} />
+            style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+            <Building2 size={15} style={{ color: "var(--accent-light)" }} />
           </div>
           <h2 className="font-bold text-[15px]">Identidad del club</h2>
         </div>
@@ -172,13 +182,13 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
               onClick={() => fileRef.current?.click()}
               className="w-20 h-20 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden transition-all hover:opacity-80"
               style={{
-                background: logoPreview ? "transparent" : "rgba(139,92,246,0.08)",
-                border: "2px dashed rgba(139,92,246,0.30)",
+                background: logoPreview ? "transparent" : "color-mix(in srgb, var(--accent) 8%, transparent)",
+                border: "2px dashed color-mix(in srgb, var(--accent) 30%, transparent)",
               }}
             >
               {logoPreview
                 ? <img src={logoPreview} alt="Logo" className="w-full h-full object-cover rounded-2xl" />
-                : <ImageIcon size={24} style={{ color: "rgba(139,92,246,0.50)" }} />
+                : <ImageIcon size={24} style={{ color: "color-mix(in srgb, var(--accent) 50%, transparent)" }} />
               }
             </button>
             <div>
@@ -186,7 +196,7 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
                 type="button"
                 onClick={() => fileRef.current?.click()}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
-                style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)", color: "#C4B5FD" }}
+                style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)", color: "var(--accent-lighter)" }}
               >
                 <Upload size={13} /> Cambiar logo
               </button>
@@ -229,6 +239,18 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
           </div>
         </div>
       </Card>
+
+      <BrandColorsCard
+        logo={logoPreview}
+        primary={brandPrimary}
+        secondary={brandSecondary}
+        background={brandBackground}
+        onChange={(c) => {
+          if (c.primary) setBrandPrimary(c.primary);
+          if (c.secondary) setBrandSecondary(c.secondary);
+          if (c.background) setBrandBackground(c.background);
+        }}
+      />
 
       {/* Billing */}
       <Card>
@@ -398,7 +420,7 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
         style={{
           background: saved
             ? "rgba(52,211,153,0.15)"
-            : "linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)",
+            : "linear-gradient(135deg, var(--accent-dim) 0%, var(--accent-deep) 100%)",
           border: saved ? "1px solid rgba(52,211,153,0.30)" : "none",
           color: saved ? "#6EE7B7" : "#fff",
         }}

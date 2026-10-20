@@ -190,7 +190,7 @@ export default async function AdminCoachesPage({ searchParams }: Props) {
                         {(coach as any).playerProfile ? (
                           <>
                             <span className="flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg"
-                              style={{ background: "rgba(139,92,246,0.12)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.22)" }}>
+                              style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-lighter)", border: "1px solid color-mix(in srgb, var(--accent) 22%, transparent)" }}>
                               <Zap size={10} /> Jugador activo · exento de pagos
                             </span>
                             <RemovePlayerProfileButton coachId={coach.id} coachName={coach.name} />

@@ -56,7 +56,7 @@ export function DashboardShell({
           <div
             className="md:hidden sticky top-0 z-20 flex items-center justify-between px-5 py-3 backdrop-blur-2xl"
             style={{
-              background: "rgba(5,5,20,0.92)",
+              background: "color-mix(in srgb, var(--bg-primary) 92%, transparent)",
               borderBottom: "1px solid rgba(255,255,255,0.06)",
             }}
           >
@@ -67,15 +67,15 @@ export function DashboardShell({
                   src={clubLogo}
                   alt={clubName}
                   className="w-7 h-7 rounded-full object-cover"
-                  style={{ border: "1px solid rgba(139,92,246,0.4)" }}
+                  style={{ border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)" }}
                 />
               ) : (
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-black"
                   style={{
-                    background: "linear-gradient(135deg, rgba(139,92,246,0.3), rgba(96,165,250,0.2))",
-                    border: "1px solid rgba(139,92,246,0.4)",
-                    color: "#C4B5FD",
+                    background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 30%, transparent), rgba(96,165,250,0.2))",
+                    border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)",
+                    color: "var(--accent-lighter)",
                   }}
                 >
                   {clubName.charAt(0).toUpperCase()}
@@ -97,7 +97,7 @@ export function DashboardShell({
                 <Link
                   href="/superadmin"
                   className="p-2 rounded-xl transition-colors"
-                  style={{ color: "#A78BFA" }}
+                  style={{ color: "var(--accent-light)" }}
                   title="Super Admin"
                 >
                   <Shield size={17} strokeWidth={1.8} />
@@ -114,7 +114,7 @@ export function DashboardShell({
                   {notificationCount > 0 && (
                     <span
                       className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black text-white"
-                      style={{ background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}
+                      style={{ background: "linear-gradient(135deg, #EC4899, var(--accent))" }}
                     >
                       {notificationCount > 9 ? "9+" : notificationCount}
                     </span>

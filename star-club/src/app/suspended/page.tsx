@@ -26,10 +26,10 @@ export default async function SuspendedPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: "#050512" }}>
+    <div className="min-h-screen flex items-center justify-center p-6" style={{ background: "var(--bg-primary)" }}>
       <div
         className="w-full max-w-md rounded-3xl p-8 text-center"
-        style={{ background: "rgba(14,14,44,0.75)", border: "1px solid rgba(255,255,255,0.08)" }}
+        style={{ background: "color-mix(in srgb, var(--bg-card) 75%, transparent)", border: "1px solid rgba(255,255,255,0.08)" }}
       >
         <div
           className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
@@ -47,7 +47,7 @@ export default async function SuspendedPage() {
           la aplicación se encuentra temporalmente suspendido.
         </p>
         <p className="text-sm leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.55)" }}>
-          Para reactivarlo, ponte en contacto con <strong style={{ color: "#A78BFA" }}>StarApp</strong> y
+          Para reactivarlo, ponte en contacto con <strong style={{ color: "var(--accent-light)" }}>StarApp</strong> y
           regulariza el pago de la suscripción.
         </p>
 

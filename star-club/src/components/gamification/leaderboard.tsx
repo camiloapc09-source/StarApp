@@ -72,10 +72,10 @@ export function Leaderboard({ players, currentPlayerId, trueRank }: Props) {
             className="flex items-center gap-3 px-4 py-3 rounded-2xl transition-all"
             style={{
               background: isMe
-                ? "rgba(139,92,246,0.12)"
+                ? "color-mix(in srgb, var(--accent) 12%, transparent)"
                 : rank <= 3 ? colors.bg : "rgba(255,255,255,0.02)",
               border: isMe
-                ? "1px solid rgba(139,92,246,0.30)"
+                ? "1px solid color-mix(in srgb, var(--accent) 30%, transparent)"
                 : rank <= 3 ? `1px solid ${colors.ring}22` : "1px solid rgba(255,255,255,0.04)",
             }}
           >
@@ -94,8 +94,8 @@ export function Leaderboard({ players, currentPlayerId, trueRank }: Props) {
             <div
               className="w-9 h-9 rounded-xl flex items-center justify-center text-xs font-black flex-shrink-0"
               style={{
-                background: isMe ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.06)",
-                border: isMe ? "1.5px solid rgba(139,92,246,0.50)" : rank <= 3 ? `1.5px solid ${colors.ring}` : "1px solid rgba(255,255,255,0.08)",
+                background: isMe ? "color-mix(in srgb, var(--accent) 25%, transparent)" : "rgba(255,255,255,0.06)",
+                border: isMe ? "1.5px solid color-mix(in srgb, var(--accent) 50%, transparent)" : rank <= 3 ? `1.5px solid ${colors.ring}` : "1px solid rgba(255,255,255,0.08)",
                 color: isMe ? "#C4B5FD" : "rgba(255,255,255,0.60)",
               }}
             >

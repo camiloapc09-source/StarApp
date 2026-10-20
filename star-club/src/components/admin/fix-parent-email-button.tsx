@@ -74,7 +74,7 @@ export default function FixParentEmailButton({ userId, userName, currentEmail }:
         className="rounded-lg px-2.5 py-1.5 text-xs outline-none"
         style={{
           background: "var(--bg-elevated)",
-          border: "1px solid rgba(139,92,246,0.40)",
+          border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)",
           color: "var(--text-primary)",
           minWidth: 200,
         }}

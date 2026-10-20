@@ -28,6 +28,10 @@ const settingsSchema = z.object({
     .optional()
     .nullable(),
   coachCanInvite: z.boolean().optional(),
+  // Colores de marca: solo #RRGGBB (se inyectan en CSS, no se acepta texto libre).
+  brandPrimary: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional().nullable(),
+  brandSecondary: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional().nullable(),
+  brandBackground: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional().nullable(),
 });
 
 export async function GET() {

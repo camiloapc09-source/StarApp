@@ -16,7 +16,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const variants: Record<string, string> = {
       // Gradient CTA — energetic, modern
       primary:
-        "rounded-2xl text-white",
+        "rounded-2xl text-[var(--on-accent)]",
       // Glass — secondary action
       secondary:
         "rounded-2xl border text-white/70 hover:text-white hover:border-white/20",
@@ -28,7 +28,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         "rounded-2xl border border-red-500/25 bg-red-500/10 text-red-400 hover:bg-red-500/20",
       // Accent — violet glow
       accent:
-        "rounded-2xl text-white",
+        "rounded-2xl text-[var(--on-accent)]",
     };
 
     const sizes: Record<string, string> = {
@@ -39,8 +39,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles: Record<string, React.CSSProperties> = {
       primary: {
-        background: "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4338CA 100%)",
-        boxShadow: "0 6px 20px rgba(124,58,237,0.30)",
+        background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%)",
+        boxShadow: "0 6px 20px color-mix(in srgb, var(--accent-dim) 30%, transparent)",
         ...style,
       },
       secondary: {
@@ -51,8 +51,8 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       ghost: { ...style },
       danger: { ...style },
       accent: {
-        background: "linear-gradient(135deg, #8B5CF6, #6D28D9)",
-        boxShadow: "0 4px 16px rgba(139,92,246,0.30)",
+        background: "linear-gradient(135deg, var(--accent), var(--accent-secondary))",
+        boxShadow: "0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent)",
         ...style,
       },
     };

@@ -115,17 +115,17 @@ export default function RafflePickForm({
       <div
         className="rounded-3xl overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, rgba(139,92,246,0.10) 0%, rgba(96,165,250,0.06) 100%)",
-          border: "1px solid rgba(139,92,246,0.20)",
-          boxShadow: "0 0 40px rgba(139,92,246,0.06)",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent) 0%, rgba(96,165,250,0.06) 100%)",
+          border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
+          boxShadow: "0 0 40px color-mix(in srgb, var(--accent) 6%, transparent)",
         }}
       >
         {/* Header */}
         <div
           className="px-5 py-4 flex items-center gap-3"
           style={{
-            background: "linear-gradient(135deg, rgba(139,92,246,0.18) 0%, rgba(96,165,250,0.10) 100%)",
-            borderBottom: "1px solid rgba(139,92,246,0.15)",
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent) 0%, rgba(96,165,250,0.10) 100%)",
+            borderBottom: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)",
           }}
         >
           {clubLogo ? (
@@ -133,12 +133,12 @@ export default function RafflePickForm({
               style={{ border: "1px solid rgba(255,255,255,0.15)" }} />
           ) : (
             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black flex-shrink-0"
-              style={{ background: "rgba(139,92,246,0.25)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.40)" }}>
+              style={{ background: "color-mix(in srgb, var(--accent) 25%, transparent)", color: "var(--accent-lighter)", border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)" }}>
               {clubName.charAt(0).toUpperCase()}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="font-black text-sm tracking-wide" style={{ color: "#DEC4FF" }}>{raffleName}</p>
+            <p className="font-black text-sm tracking-wide" style={{ color: "var(--accent-lighter)" }}>{raffleName}</p>
             <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.40)" }}>{clubName}</p>
           </div>
           <div className="text-right flex-shrink-0">
@@ -178,12 +178,12 @@ export default function RafflePickForm({
               if (isPaid && isMine) {
                 bg = "rgba(0,255,135,0.18)"; border = "rgba(0,255,135,0.45)"; color = "rgba(0,255,135,0.95)";
               } else if (isMine) {
-                bg = "rgba(139,92,246,0.20)"; border = "rgba(139,92,246,0.50)"; color = "#DEC4FF";
+                bg = "color-mix(in srgb, var(--accent) 20%, transparent)"; border = "color-mix(in srgb, var(--accent) 50%, transparent)"; color = "var(--accent-lighter)";
               } else if (isTaken) {
                 bg = "repeating-linear-gradient(45deg, rgba(255,184,0,0.07) 0px, rgba(255,184,0,0.07) 3px, rgba(255,184,0,0.02) 3px, rgba(255,184,0,0.02) 9px)";
                 border = "rgba(255,184,0,0.22)"; color = "rgba(255,184,0,0.40)"; cursor = "not-allowed";
               } else if (isSelected) {
-                bg = "rgba(139,92,246,0.30)"; border = "rgba(139,92,246,0.60)"; color = "#DEC4FF";
+                bg = "color-mix(in srgb, var(--accent) 30%, transparent)"; border = "color-mix(in srgb, var(--accent) 60%, transparent)"; color = "var(--accent-lighter)";
               }
 
               return (
@@ -211,7 +211,7 @@ export default function RafflePickForm({
               Libre
             </span>
             <span className="flex items-center gap-1.5 text-[10px]" style={{ color: "var(--text-muted)" }}>
-              <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "rgba(139,92,246,0.30)", border: "1px solid rgba(139,92,246,0.60)" }} />
+              <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "color-mix(in srgb, var(--accent) 30%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 60%, transparent)" }} />
               Seleccionado / Mío
             </span>
             <span className="flex items-center gap-1.5 text-[10px]" style={{ color: "var(--text-muted)" }}>
@@ -245,10 +245,10 @@ export default function RafflePickForm({
       {selected.length > 0 && (
         <div
           className="rounded-2xl border p-4 space-y-3"
-          style={{ background: "rgba(139,92,246,0.08)", borderColor: "rgba(139,92,246,0.25)" }}
+          style={{ background: "color-mix(in srgb, var(--accent) 8%, transparent)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)" }}
         >
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold" style={{ color: "#DEC4FF" }}>
+            <p className="text-sm font-semibold" style={{ color: "var(--accent-lighter)" }}>
               {selected.length} número{selected.length > 1 ? "s" : ""} seleccionado{selected.length > 1 ? "s" : ""}
             </p>
             <p className="text-sm font-bold" style={{ color: "var(--success)" }}>
@@ -261,7 +261,7 @@ export default function RafflePickForm({
               <span
                 key={n}
                 className="inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-lg cursor-pointer"
-                style={{ background: "rgba(139,92,246,0.20)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.35)" }}
+                style={{ background: "color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--accent-lighter)", border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)" }}
                 onClick={() => toggleNumber(n)}
               >
                 {String(n).padStart(2, "0")} <X size={9} />
@@ -292,7 +292,7 @@ export default function RafflePickForm({
             onClick={handleClaim}
             disabled={claiming}
             className="w-full py-3 rounded-xl text-sm font-bold transition-all hover:opacity-80 disabled:opacity-50"
-            style={{ background: "rgba(139,92,246,0.25)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.40)" }}
+            style={{ background: "color-mix(in srgb, var(--accent) 25%, transparent)", color: "var(--accent-lighter)", border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)" }}
           >
             {claiming ? "Reservando..." : `Reservar ${selected.length} número${selected.length > 1 ? "s" : ""}`}
           </button>
@@ -303,7 +303,7 @@ export default function RafflePickForm({
       {myTickets.length > 0 && (
         <div
           className="rounded-2xl border p-4 space-y-3"
-          style={{ background: "rgba(8,6,28,0.60)", borderColor: "rgba(255,255,255,0.08)" }}
+          style={{ background: "color-mix(in srgb, var(--bg-primary) 60%, transparent)", borderColor: "rgba(255,255,255,0.08)" }}
         >
           <h3 className="text-sm font-semibold flex items-center gap-2" style={{ color: "var(--text-secondary)" }}>
             <Ticket size={14} />
@@ -317,9 +317,9 @@ export default function RafflePickForm({
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black flex-shrink-0"
                   style={{
-                    background: t.status === "PAID" ? "rgba(0,255,135,0.15)" : "rgba(139,92,246,0.15)",
-                    color: t.status === "PAID" ? "var(--success)" : "#DEC4FF",
-                    border: `1px solid ${t.status === "PAID" ? "rgba(0,255,135,0.30)" : "rgba(139,92,246,0.30)"}`,
+                    background: t.status === "PAID" ? "rgba(0,255,135,0.15)" : "color-mix(in srgb, var(--accent) 15%, transparent)",
+                    color: t.status === "PAID" ? "var(--success)" : "var(--accent-lighter)",
+                    border: `1px solid ${t.status === "PAID" ? "rgba(0,255,135,0.30)" : "color-mix(in srgb, var(--accent) 30%, transparent)"}`,
                   }}
                 >
                   {String(t.number).padStart(2, "0")}

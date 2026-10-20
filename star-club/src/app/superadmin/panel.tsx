@@ -20,7 +20,7 @@ type Plan = typeof PLANS[number];
 
 const PLAN_COLOR: Record<Plan, { bg: string; text: string; border: string }> = {
   STARTER:    { bg: "rgba(96,165,250,0.12)",  text: "#93C5FD", border: "rgba(96,165,250,0.25)"  },
-  PRO:        { bg: "rgba(139,92,246,0.12)",  text: "#C4B5FD", border: "rgba(139,92,246,0.25)"  },
+  PRO:        { bg: "color-mix(in srgb, var(--accent) 12%, transparent)",  text: "var(--accent-lighter)", border: "color-mix(in srgb, var(--accent) 25%, transparent)"  },
   ENTERPRISE: { bg: "rgba(251,191,36,0.12)",  text: "#FCD34D", border: "rgba(251,191,36,0.25)"  },
 };
 
@@ -76,17 +76,17 @@ export default function SuperAdminPanel({ initialCodes, codeStats, initialClubs 
   const [tab, setTab] = useState<"clubs" | "codes">("clubs");
 
   return (
-    <div className="min-h-screen" style={{ background: "#050512" }}>
+    <div className="min-h-screen" style={{ background: "var(--bg-primary)" }}>
 
       {/* Header */}
       <div className="px-6 py-5 flex items-center justify-between"
-        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(10,10,28,0.95)" }}>
+        style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "color-mix(in srgb, var(--bg-primary) 95%, transparent)" }}>
         <div className="flex items-center gap-4">
           <NovaWordmark dark height={28} />
           <div className="w-px h-5" style={{ background: "rgba(255,255,255,0.12)" }} />
           <div className="flex items-center gap-2">
-            <Shield size={14} style={{ color: "#A78BFA" }} />
-            <span className="text-sm font-bold tracking-wide" style={{ color: "#A78BFA" }}>
+            <Shield size={14} style={{ color: "var(--accent-light)" }} />
+            <span className="text-sm font-bold tracking-wide" style={{ color: "var(--accent-light)" }}>
               Super Admin
             </span>
           </div>
@@ -104,13 +104,13 @@ export default function SuperAdminPanel({ initialCodes, codeStats, initialClubs 
       <div className="px-6 py-4 grid grid-cols-2 md:grid-cols-4 gap-3 border-b"
         style={{ borderColor: "rgba(255,255,255,0.05)" }}>
         {[
-          { label: "Clubes activos",   value: initialClubs.filter((c) => c.active).length, icon: Building2, color: "#A78BFA" },
+          { label: "Clubes activos",   value: initialClubs.filter((c) => c.active).length, icon: Building2, color: "var(--accent-light)" },
           { label: "Jugadores totales", value: initialClubs.reduce((s, c) => s + c.counts.players, 0), icon: Users, color: "#34D399" },
           { label: "Códigos sin usar", value: codeStats.unused,            icon: Key,       color: "#60A5FA" },
           { label: "Pagos registrados",value: initialClubs.reduce((s, c) => s + c.counts.payments, 0), icon: CreditCard, color: "#FCD34D" },
         ].map((s) => (
           <div key={s.label} className="rounded-2xl p-4"
-            style={{ background: "rgba(14,14,44,0.75)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            style={{ background: "color-mix(in srgb, var(--bg-card) 75%, transparent)", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div className="flex items-center gap-2 mb-1.5">
               <s.icon size={12} style={{ color: s.color }} />
               <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: "rgba(255,255,255,0.55)" }}>
@@ -131,9 +131,9 @@ export default function SuperAdminPanel({ initialCodes, codeStats, initialClubs 
           <button key={t.key} onClick={() => setTab(t.key)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all"
             style={{
-              background: tab === t.key ? "rgba(139,92,246,0.15)" : "transparent",
-              color:      tab === t.key ? "#C4B5FD" : "rgba(255,255,255,0.40)",
-              border:     tab === t.key ? "1px solid rgba(139,92,246,0.25)" : "1px solid transparent",
+              background: tab === t.key ? "color-mix(in srgb, var(--accent) 15%, transparent)" : "transparent",
+              color:      tab === t.key ? "var(--accent-lighter)" : "rgba(255,255,255,0.40)",
+              border:     tab === t.key ? "1px solid color-mix(in srgb, var(--accent) 25%, transparent)" : "1px solid transparent",
             }}>
             <t.icon size={13} /> {t.label}
           </button>
@@ -199,7 +199,7 @@ function ClubsTab({ clubs }: { clubs: ClubData[] }) {
       <div className="space-y-3">
         {filtered.length === 0 ? (
           <div className="rounded-2xl px-5 py-10 text-center text-sm"
-            style={{ background: "rgba(14,14,44,0.75)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>
+            style={{ background: "color-mix(in srgb, var(--bg-card) 75%, transparent)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>
             No hay clubes registrados todavía
           </div>
         ) : filtered.map((club) => {
@@ -208,7 +208,7 @@ function ClubsTab({ clubs }: { clubs: ClubData[] }) {
           return (
             <div key={club.id} className="rounded-2xl overflow-hidden"
               style={{
-                background: "rgba(14,14,44,0.75)",
+                background: "color-mix(in srgb, var(--bg-card) 75%, transparent)",
                 border: `1px solid ${club.active ? "rgba(255,255,255,0.07)" : "rgba(255,71,87,0.35)"}`,
               }}>
               {/* Top: name + plan + estado + gestionar */}
@@ -244,7 +244,7 @@ function ClubsTab({ clubs }: { clubs: ClubData[] }) {
                 </div>
                 <button onClick={() => setManaging(club)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80 flex-shrink-0"
-                  style={{ background: "rgba(139,92,246,0.15)", color: "#C4B5FD", border: "1px solid rgba(139,92,246,0.25)" }}>
+                  style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent-lighter)", border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)" }}>
                   <Settings2 size={13} /> Gestionar
                 </button>
               </div>
@@ -272,7 +272,7 @@ function ClubsTab({ clubs }: { clubs: ClubData[] }) {
               {/* Counts row */}
               <div className="px-5 py-3 grid grid-cols-4 gap-2"
                 style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                <StatCell value={club.counts.users}    icon={Users}      color="#A78BFA" label="usuarios" />
+                <StatCell value={club.counts.users}    icon={Users}      color="var(--accent-light)" label="usuarios" />
                 <StatCell value={club.counts.players}  icon={Trophy}     color="#34D399" label="jugadores" />
                 <StatCell value={club.counts.sessions} icon={Activity}   color="#60A5FA" label="sesiones" />
                 <StatCell value={club.counts.payments} icon={CreditCard} color="#FCD34D" label="pagos" />
@@ -366,7 +366,7 @@ function SubscriptionModal({ club, onClose }: { club: ClubData; onClose: () => v
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)", backdropFilter: "blur(4px)" }}>
       <div className="w-full max-w-sm rounded-2xl p-6 space-y-5"
-        style={{ background: "#0c0c22", border: "1px solid rgba(255,255,255,0.10)" }}>
+        style={{ background: "var(--bg-card)", border: "1px solid rgba(255,255,255,0.10)" }}>
         <div className="flex items-start justify-between">
           <div>
             <h2 className="font-bold text-base">Suscripción</h2>
@@ -431,7 +431,7 @@ function SubscriptionModal({ club, onClose }: { club: ClubData; onClose: () => v
           </button>
           <button onClick={saveDetails} disabled={saving}
             className="flex-[2] py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-            style={{ background: "linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)", color: "#fff" }}>
+            style={{ background: "linear-gradient(135deg, var(--accent-dim) 0%, var(--accent-deep) 100%)", color: "var(--on-accent)" }}>
             {saving ? <><Loader2 size={14} className="animate-spin" /> Guardando…</> : <><Check size={14} /> Guardar</>}
           </button>
         </div>
@@ -517,9 +517,9 @@ function CodesTab({ initialCodes, codeStats }: { initialCodes: Code[]; codeStats
     <div className="space-y-6">
       {/* Generate form */}
       <div className="rounded-2xl p-5"
-        style={{ background: "rgba(14,14,44,0.75)", border: "1px solid rgba(255,255,255,0.07)" }}>
+        style={{ background: "color-mix(in srgb, var(--bg-card) 75%, transparent)", border: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="flex items-center gap-2 mb-4">
-          <Plus size={15} style={{ color: "#A78BFA" }} />
+          <Plus size={15} style={{ color: "var(--accent-light)" }} />
           <h2 className="font-bold text-[15px]">Generar códigos de acceso</h2>
         </div>
 
@@ -582,7 +582,7 @@ function CodesTab({ initialCodes, codeStats }: { initialCodes: Code[]; codeStats
 
         <button onClick={generate} disabled={generating}
           className="w-full py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all disabled:opacity-60"
-          style={{ background: "linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%)" }}>
+          style={{ background: "linear-gradient(135deg, var(--accent-dim) 0%, var(--accent-deep) 100%)" }}>
           {generating
             ? <><Loader2 size={15} className="animate-spin" /> Generando…</>
             : <><Key size={15} /> Generar {quantity > 1 ? `${quantity} códigos` : "código"}</>}
@@ -591,16 +591,16 @@ function CodesTab({ initialCodes, codeStats }: { initialCodes: Code[]; codeStats
 
       {/* Code list */}
       <div className="rounded-2xl overflow-hidden"
-        style={{ background: "rgba(14,14,44,0.75)", border: "1px solid rgba(255,255,255,0.07)" }}>
+        style={{ background: "color-mix(in srgb, var(--bg-card) 75%, transparent)", border: "1px solid rgba(255,255,255,0.07)" }}>
 
         <div className="flex items-center gap-1 p-4 pb-0">
           {(["all", "unused", "used"] as const).map((f) => (
             <button key={f} onClick={() => setFilter(f)}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
               style={{
-                background: filter === f ? "rgba(139,92,246,0.15)" : "transparent",
-                color: filter === f ? "#C4B5FD" : "rgba(255,255,255,0.40)",
-                border: filter === f ? "1px solid rgba(139,92,246,0.25)" : "1px solid transparent",
+                background: filter === f ? "color-mix(in srgb, var(--accent) 15%, transparent)" : "transparent",
+                color: filter === f ? "var(--accent-lighter)" : "rgba(255,255,255,0.40)",
+                border: filter === f ? "1px solid color-mix(in srgb, var(--accent) 25%, transparent)" : "1px solid transparent",
               }}>
               {f === "all" ? "Todos" : f === "unused" ? "Sin usar" : "Usados"}
             </button>

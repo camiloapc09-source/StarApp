@@ -53,7 +53,7 @@ export default function RaffleCreateForm() {
       <button
         onClick={() => setOpen(true)}
         className="flex items-center gap-2 w-full py-3 rounded-2xl text-sm font-semibold border transition-all hover:opacity-80"
-        style={{ background: "rgba(139,92,246,0.10)", color: "#DEC4FF", borderColor: "rgba(139,92,246,0.30)" }}
+        style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent-lighter)", borderColor: "color-mix(in srgb, var(--accent) 30%, transparent)" }}
       >
         <Ticket size={15} />
         + Nueva rifa
@@ -64,11 +64,11 @@ export default function RaffleCreateForm() {
   return (
     <div
       className="rounded-2xl border p-5 space-y-4"
-      style={{ background: "rgba(139,92,246,0.06)", borderColor: "rgba(139,92,246,0.20)" }}
+      style={{ background: "color-mix(in srgb, var(--accent) 6%, transparent)", borderColor: "color-mix(in srgb, var(--accent) 20%, transparent)" }}
     >
       <div className="flex items-center gap-2 mb-1">
-        <Ticket size={15} style={{ color: "#DEC4FF" }} />
-        <h3 className="text-sm font-bold" style={{ color: "#DEC4FF" }}>Nueva rifa</h3>
+        <Ticket size={15} style={{ color: "var(--accent-lighter)" }} />
+        <h3 className="text-sm font-bold" style={{ color: "var(--accent-lighter)" }}>Nueva rifa</h3>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-3">
@@ -185,7 +185,7 @@ export default function RaffleCreateForm() {
             type="submit"
             disabled={loading}
             className="flex-1 py-2.5 rounded-xl text-sm font-bold transition-all hover:opacity-80 disabled:opacity-50"
-            style={{ background: "rgba(139,92,246,0.25)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.40)" }}
+            style={{ background: "color-mix(in srgb, var(--accent) 25%, transparent)", color: "var(--accent-lighter)", border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)" }}
           >
             {loading ? "Creando..." : "Crear rifa"}
           </button>

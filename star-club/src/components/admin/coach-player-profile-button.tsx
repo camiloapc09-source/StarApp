@@ -35,9 +35,9 @@ export function CreatePlayerProfileButton({ coachId, coachName }: { coachId: str
       disabled={loading}
       className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all hover:opacity-80 disabled:opacity-50"
       style={{
-        background: "rgba(139,92,246,0.12)",
-        color: "#DEC4FF",
-        border: "1px solid rgba(139,92,246,0.25)",
+        background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+        color: "var(--accent-lighter)",
+        border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
       }}
       title="Crear perfil de jugador"
     >

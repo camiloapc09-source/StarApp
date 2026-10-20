@@ -81,7 +81,7 @@ export default async function CoachSessionsPage() {
                     <Link
                       href={`/dashboard/coach/attendance/${s.id}`}
                       className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
-                      style={{ background: "var(--accent)", color: "#000" }}
+                      style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                     >
                       Pasar lista
                     </Link>

@@ -222,7 +222,7 @@ export default function EditSessionButton({ session, categories, coaches = [], u
                 onClick={handleSave}
                 disabled={loading}
                 className="px-5 py-2 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 flex items-center gap-2"
-                style={{ background: "var(--accent)", color: "#000" }}
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}
               >
                 <Check size={14} />
                 {loading ? "Guardando..." : "Guardar cambios"}

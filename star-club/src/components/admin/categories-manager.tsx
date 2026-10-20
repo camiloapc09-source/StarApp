@@ -119,7 +119,7 @@ export default function CategoriesManager({ initialCategories }: Props) {
               <button onClick={() => setEditId(null)} disabled={loading} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm border" style={{ borderColor: "var(--border-primary)", color: "var(--text-secondary)" }}>
                 <X size={14} /> Cancelar
               </button>
-              <button onClick={saveEdit} disabled={loading || !editData.name.trim()} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-40" style={{ background: "var(--accent)", color: "#000" }}>
+              <button onClick={saveEdit} disabled={loading || !editData.name.trim()} className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-40" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
                 <Check size={14} /> Guardar
               </button>
             </div>

@@ -271,7 +271,7 @@ export default function GamificationActions({ players, missions: initialMissions
             type="submit"
             disabled={xpLoading || !xpPlayerId}
             className="w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-40 flex items-center justify-center gap-2"
-            style={{ background: "var(--accent)", color: "#000" }}
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             <Zap size={14} /> {xpLoading ? "Otorgando..." : `Otorgar ${xpAmount} XP`}
           </button>
@@ -310,7 +310,7 @@ export default function GamificationActions({ players, missions: initialMissions
                   <p className="font-semibold text-sm">{genMission.title}</p>
                   <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>{genMission.description}</p>
                   <div className="flex gap-2 mt-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "var(--accent)", color: "#000" }}>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
                       +{genMission.xpReward} XP
                     </span>
                     <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "var(--bg-secondary)", color: "var(--text-muted)" }}>

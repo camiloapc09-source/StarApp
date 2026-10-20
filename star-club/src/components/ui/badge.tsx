@@ -15,7 +15,7 @@ export function Badge({ children, variant = "default", className }: BadgeProps) 
     warning:  { background: "rgba(255,184,0,0.08)",    color: "#f0a800",                border: "1px solid rgba(255,184,0,0.15)" },
     error:    { background: "rgba(255,71,87,0.08)",    color: "#ff4757",                border: "1px solid rgba(255,71,87,0.15)" },
     info:     { background: "rgba(59,130,246,0.08)",   color: "#60a5fa",                border: "1px solid rgba(59,130,246,0.15)" },
-    accent:   { background: "rgba(139,92,246,0.10)",   color: "#DEC4FF",               border: "1px solid rgba(139,92,246,0.20)" },
+    accent:   { background: "color-mix(in srgb, var(--accent) 10%, transparent)",   color: "var(--accent-lighter)",               border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" },
   };
 
   return (

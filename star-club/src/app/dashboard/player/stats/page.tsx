@@ -150,7 +150,7 @@ export default async function PlayerStatsPage() {
             <h2 className="font-bold text-[14px]">Ranking del club</h2>
             {myRank > 0 && (
               <span className="ml-auto text-xs font-bold px-2.5 py-1 rounded-full"
-                style={{ background: "rgba(139,92,246,0.12)", color: "#A78BFA" }}>
+                style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", color: "var(--accent-light)" }}>
                 #{myRank}
               </span>
             )}

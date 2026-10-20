@@ -46,7 +46,7 @@ export default async function PlayerPaymentsPage() {
         {hasBeca && (
           <div
             className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium"
-            style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.25)", color: "#A78BFA" }}
+            style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)", color: "var(--accent-light)" }}
           >
             <Info size={16} />
             Tienes una beca del {player.scholarshipPct ?? 100}% — tus pagos están cubiertos por el club.

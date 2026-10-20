@@ -25,9 +25,9 @@ export default function UpgradeBanner({ feature, description, currentPlan = "STA
       <div
         className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold"
         style={{
-          background: "rgba(139,92,246,0.12)",
-          border: "1px solid rgba(139,92,246,0.25)",
-          color: "#C4B5FD",
+          background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+          border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
+          color: "var(--accent-lighter)",
         }}
       >
         <Zap size={14} />

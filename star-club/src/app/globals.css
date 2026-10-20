@@ -4,29 +4,41 @@
 /* Premium dark-mode design inspired by Nike / Adidas      */
 
 :root {
-  /* Core palette — space/interstellar dark */
-  --bg-primary: #07071A;
-  --bg-secondary: #0B0B22;
-  --bg-card: #0E0E2C;
-  --bg-elevated: #131336;
-  --bg-hover: #1A1A42;
+  /* ─── MARCA DEL CLUB ───────────────────────────────────────
+     Cada club sobrescribe estas 3 variables (ver lib/club-theme.ts) y TODA
+     la app se pinta con sus colores. Los valores de aquí son los de StarApp,
+     que se ven en la portada, el super admin y los clubes sin marca. */
+  --brand: #8B5CF6;          /* color principal: botones, acentos, activos */
+  --brand-2: #F59E0B;        /* color secundario: destacados, rachas, insignias */
+  --brand-bg: #07071A;       /* fondo base */
+  --on-accent: #FFFFFF;      /* texto sobre el color principal */
+
+  /* Core palette — derivada del fondo del club */
+  --bg-primary: var(--brand-bg);
+  --bg-secondary: color-mix(in srgb, var(--brand-bg) 96%, white);
+  --bg-card: color-mix(in srgb, var(--brand-bg) 93%, white);
+  --bg-elevated: color-mix(in srgb, var(--brand-bg) 89%, white);
+  --bg-hover: color-mix(in srgb, var(--brand-bg) 84%, white);
 
   /* Borders — subtle white glass */
   --border-primary: rgba(255, 255, 255, 0.08);
   --border-subtle: rgba(255, 255, 255, 0.04);
 
-  /* Text */
-  --text-primary: #F0EEFF;
-  /* Contraste subido: el texto secundario al 28% era casi invisible en
-     celular y al sol (no cumplía WCAG). 0.70 / 0.50 sí se leen. */
+  /* Text — contraste subido: el texto secundario al 28% era casi invisible
+     en celular y al sol (no cumplía WCAG). 0.70 / 0.50 sí se leen. */
+  --text-primary: #F5F3FF;
   --text-secondary: rgba(255, 255, 255, 0.70);
   --text-muted: rgba(255, 255, 255, 0.50);
 
-  /* Brand accent — NOVA violet */
-  --accent: #8B5CF6;
-  --accent-dim: #7C3AED;
-  --accent-secondary: #6D28D9;
-  --accent-glow: rgba(139, 92, 246, 0.18);
+  /* Acento — todos los tonos salen del color principal del club */
+  --accent: var(--brand);
+  --accent-dim: color-mix(in srgb, var(--brand) 85%, black);
+  --accent-secondary: color-mix(in srgb, var(--brand) 70%, black);
+  --accent-deep: color-mix(in srgb, var(--brand) 55%, #0b0b2a);
+  --accent-light: color-mix(in srgb, var(--brand) 65%, white);
+  --accent-lighter: color-mix(in srgb, var(--brand) 35%, white);
+  --accent-glow: color-mix(in srgb, var(--brand) 18%, transparent);
+  --accent-2: var(--brand-2);
 
   /* Status colors */
   --success: #00ff87;
@@ -35,8 +47,8 @@
   --info: #3b82f6;
 
   /* Gamification */
-  --xp-bar: #8B5CF6;
-  --level-glow: rgba(139, 92, 246, 0.30);
+  --xp-bar: var(--accent);
+  --level-glow: color-mix(in srgb, var(--brand) 30%, transparent);
   --streak-fire: #ff6b35;
 
   /* Spacing — more rounded, organic */
@@ -48,7 +60,7 @@
   /* Shadows */
   --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.35);
   --shadow-elevated: 0 12px 40px rgba(0, 0, 0, 0.55);
-  --shadow-glow: 0 0 28px rgba(139, 92, 246, 0.20);
+  --shadow-glow: 0 0 28px color-mix(in srgb, var(--brand) 20%, transparent);
 }
 
 @theme inline {
@@ -59,6 +71,7 @@
   --color-border: var(--border-primary);
   --color-accent: var(--accent);
   --color-accent-dim: var(--accent-dim);
+  --color-accent-2: var(--accent-2);
   --color-muted: var(--text-muted);
   --color-secondary: var(--text-secondary);
   --color-success: var(--success);
@@ -126,8 +139,8 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
   border: 1px solid rgba(255,255,255,0.06);
 }
 .quick-action-card:hover {
-  background: rgba(139,92,246,0.10);
-  border-color: rgba(139,92,246,0.25);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
 }
 .player-row:hover {
   background: rgba(255,255,255,0.03);
@@ -135,7 +148,7 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
 
 /* Glass card effect */
 .glass-card {
-  background: rgba(14, 14, 44, 0.75);
+  background: color-mix(in srgb, var(--bg-card) 75%, transparent);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: var(--radius-lg);
@@ -143,7 +156,7 @@ button:focus-visible, a:focus-visible, [role="button"]:focus-visible {
 
 /* Glow effect for accent elements */
 .glow-accent {
-  box-shadow: 0 0 24px rgba(139, 92, 246, 0.20), 0 0 60px rgba(139, 92, 246, 0.08);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--accent) 20%, transparent), 0 0 60px color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 /* XP progress bar animation */

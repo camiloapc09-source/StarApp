@@ -96,9 +96,9 @@ export default async function ParentPaymentsPage({
                   href={`/dashboard/parent/payments?playerId=${child.player.id}`}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold flex-shrink-0 transition-all"
                   style={{
-                    background: isActive ? "rgba(139,92,246,0.18)" : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${isActive ? "rgba(139,92,246,0.40)" : "rgba(255,255,255,0.07)"}`,
-                    color: isActive ? "#C4B5FD" : "rgba(255,255,255,0.50)",
+                    background: isActive ? "color-mix(in srgb, var(--accent) 18%, transparent)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${isActive ? "color-mix(in srgb, var(--accent) 40%, transparent)" : "rgba(255,255,255,0.07)"}`,
+                    color: isActive ? "var(--accent-lighter)" : "rgba(255,255,255,0.50)",
                   }}
                 >
                   <Users size={13} />
@@ -241,7 +241,7 @@ export default async function ParentPaymentsPage({
                     <Link
                       href={`/dashboard/parent/payments/${payment.id}/receipt`}
                       className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all hover:opacity-80"
-                      style={{ background: "rgba(139,92,246,0.10)", color: "#A78BFA", border: "1px solid rgba(139,92,246,0.20)" }}
+                      style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent-light)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}
                     >
                       <FileText size={11} /> Recibo
                     </Link>

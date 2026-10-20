@@ -179,7 +179,7 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
                       )}
                       <Link href={`/dashboard/admin/players/${p.id}`} className="relative z-10">
                         <span className="text-xs font-semibold px-3 py-1.5 rounded-xl whitespace-nowrap transition-all hover:opacity-80"
-                          style={{ background: "var(--accent)", color: "#000" }}>
+                          style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
                           Activar →
                         </span>
                       </Link>
@@ -272,7 +272,7 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
                     <span
                       className="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer"
                       style={isActive
-                        ? { background: "rgba(139,92,246,0.25)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.40)" }
+                        ? { background: "color-mix(in srgb, var(--accent) 25%, transparent)", color: "var(--accent-lighter)", border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)" }
                         : { color: "rgba(255,255,255,0.40)", border: "1px solid transparent" }}
                     >
                       {label}

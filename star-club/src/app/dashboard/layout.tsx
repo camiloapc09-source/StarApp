@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { mightBeSuperAdminEmail } from "@/lib/superadmin";
 import { DashboardShell } from "@/components/dashboard/shell";
+import { ClubThemeStyle } from "@/components/club-theme-style";
+import type { ClubBrand } from "@/lib/club-theme";
 
 export default async function DashboardLayout({
   children,
@@ -21,17 +23,18 @@ export default async function DashboardLayout({
   let clubPlan = "STARTER";
   let coachCanInvite = false;
   let clubActive = true;
+  let clubBrand: ClubBrand | null = null;
   try {
     const isCoach = session.user.role === "COACH";
     const [count, club, coachUser] = await Promise.all([
       db.notification.count({ where: { userId: session.user.id, isRead: false } }),
-      db.club.findUnique({ where: { id: session.user.clubId }, select: { name: true, logo: true, plan: true, coachCanInvite: true, active: true } }),
+      db.club.findUnique({ where: { id: session.user.clubId }, select: { name: true, logo: true, plan: true, coachCanInvite: true, active: true, brandPrimary: true, brandSecondary: true, brandBackground: true } }),
       isCoach
         ? db.user.findUnique({ where: { id: session.user.id }, select: { canInvite: true } })
         : null,
     ]);
     unreadCount = count;
-    if (club) { clubName = club.name; clubLogo = club.logo; clubPlan = club.plan; clubActive = club.active; }
+    if (club) { clubName = club.name; clubLogo = club.logo; clubPlan = club.plan; clubActive = club.active; clubBrand = club; }
     if (club?.coachCanInvite && coachUser?.canInvite) coachCanInvite = true;
   } catch {
     // DB unavailable — continue without notification count
@@ -47,6 +50,8 @@ export default async function DashboardLayout({
   }
 
   return (
+    <>
+    <ClubThemeStyle club={clubBrand} />
     <DashboardShell
       role={session.user.role}
       userName={session.user.name || "User"}
@@ -59,5 +64,6 @@ export default async function DashboardLayout({
     >
       {children}
     </DashboardShell>
+    </>
   );
 }

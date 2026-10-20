@@ -62,22 +62,22 @@ export default async function ParentProfilePage() {
         {/* Vincular otro hijo */}
         <div
           className="flex items-start gap-3 px-4 py-4 rounded-2xl"
-          style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)" }}
+          style={{ background: "color-mix(in srgb, var(--accent) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 15%, transparent)" }}
         >
           <div
             className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5"
-            style={{ background: "rgba(139,92,246,0.15)" }}
+            style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)" }}
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#A78BFA" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent-light)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
               <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
             </svg>
           </div>
           <div>
-            <p className="text-sm font-semibold" style={{ color: "#C4B5FD" }}>
+            <p className="text-sm font-semibold" style={{ color: "var(--accent-lighter)" }}>
               ¿Tienes otro hijo en el club?
             </p>
-            <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "rgba(196,181,253,0.55)" }}>
+            <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "color-mix(in srgb, var(--accent-lighter) 55%, transparent)" }}>
               Contacta al administrador del club para que vincule a tu otro hijo a tu cuenta. Una vez vinculado, aparecerá automáticamente en tu panel.
             </p>
           </div>

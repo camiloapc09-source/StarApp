@@ -89,7 +89,7 @@ export default function ParentSetupPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: "#06060F" }}>
+      <div className="min-h-screen flex items-center justify-center p-6" style={{ background: "var(--bg-primary)" }}>
         <div className="text-center space-y-4">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto"
             style={{ background: "rgba(52,211,153,0.15)", border: "1px solid rgba(52,211,153,0.30)" }}>
@@ -105,12 +105,12 @@ export default function ParentSetupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-5 py-10" style={{ background: "#06060F" }}>
+    <div className="min-h-screen flex items-center justify-center px-5 py-10" style={{ background: "var(--bg-primary)" }}>
       {/* Background gradients */}
       <div className="absolute inset-0 pointer-events-none" style={{
         background: `
-          radial-gradient(ellipse 70% 50% at 20% 0%, rgba(88,28,235,0.18) 0%, transparent 55%),
-          radial-gradient(ellipse 50% 40% at 85% 80%, rgba(29,78,216,0.12) 0%, transparent 55%)
+          radial-gradient(ellipse 70% 50% at 20% 0%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 55%),
+          radial-gradient(ellipse 50% 40% at 85% 80%, color-mix(in srgb, var(--accent-2) 12%, transparent) 0%, transparent 55%)
         `,
       }} />
 
@@ -119,11 +119,11 @@ export default function ParentSetupPage() {
         <div className="flex justify-center mb-6">
           <div className="w-16 h-16 rounded-[20px] flex items-center justify-center"
             style={{
-              background: "rgba(139,92,246,0.15)",
-              border: "1px solid rgba(139,92,246,0.30)",
-              boxShadow: "0 8px 32px rgba(139,92,246,0.25)",
+              background: "color-mix(in srgb, var(--accent) 15%, transparent)",
+              border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
+              boxShadow: "0 8px 32px color-mix(in srgb, var(--accent) 25%, transparent)",
             }}>
-            <ShieldCheck size={28} style={{ color: "#A78BFA" }} />
+            <ShieldCheck size={28} style={{ color: "var(--accent-light)" }} />
           </div>
         </div>
 
@@ -139,7 +139,7 @@ export default function ParentSetupPage() {
           {/* ── Credenciales ── */}
           <div className="rounded-3xl p-6 space-y-4"
             style={{
-              background: "rgba(14,12,40,0.85)",
+              background: "color-mix(in srgb, var(--bg-card) 85%, transparent)",
               border: "1px solid rgba(255,255,255,0.08)",
               backdropFilter: "blur(24px)",
             }}>
@@ -163,7 +163,7 @@ export default function ParentSetupPage() {
                   required
                   autoComplete="email"
                   className="flex-1 bg-transparent outline-none text-sm"
-                  style={{ color: "rgba(255,255,255,0.88)", caretColor: "#8B5CF6" }}
+                  style={{ color: "rgba(255,255,255,0.88)", caretColor: "var(--accent)" }}
                 />
               </div>
             </div>
@@ -183,7 +183,7 @@ export default function ParentSetupPage() {
                   placeholder="Tu cédula o documento de identidad"
                   autoComplete="off"
                   className="flex-1 bg-transparent outline-none text-sm"
-                  style={{ color: "rgba(255,255,255,0.88)", caretColor: "#8B5CF6" }}
+                  style={{ color: "rgba(255,255,255,0.88)", caretColor: "var(--accent)" }}
                 />
               </div>
             </div>
@@ -204,7 +204,7 @@ export default function ParentSetupPage() {
                   required
                   autoComplete="new-password"
                   className="flex-1 bg-transparent outline-none text-sm"
-                  style={{ color: "rgba(255,255,255,0.88)", caretColor: "#8B5CF6" }}
+                  style={{ color: "rgba(255,255,255,0.88)", caretColor: "var(--accent)" }}
                 />
                 <button type="button" onClick={() => setShowPw(!showPw)} style={{ color: "rgba(255,255,255,0.50)" }}>
                   {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
@@ -228,7 +228,7 @@ export default function ParentSetupPage() {
                   required
                   autoComplete="new-password"
                   className="flex-1 bg-transparent outline-none text-sm"
-                  style={{ color: "rgba(255,255,255,0.88)", caretColor: "#8B5CF6" }}
+                  style={{ color: "rgba(255,255,255,0.88)", caretColor: "var(--accent)" }}
                 />
               </div>
             </div>
@@ -237,7 +237,7 @@ export default function ParentSetupPage() {
           {/* ── Hijos ── */}
           <div className="rounded-3xl p-6 space-y-4"
             style={{
-              background: "rgba(14,12,40,0.85)",
+              background: "color-mix(in srgb, var(--bg-card) 85%, transparent)",
               border: "1px solid rgba(255,255,255,0.08)",
               backdropFilter: "blur(24px)",
             }}>
@@ -247,7 +247,7 @@ export default function ParentSetupPage() {
               </p>
               {selected.size > 0 && (
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                  style={{ background: "rgba(139,92,246,0.20)", color: "#A78BFA" }}>
+                  style={{ background: "color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--accent-light)" }}>
                   {selected.size} seleccionado{selected.size !== 1 ? "s" : ""}
                 </span>
               )}
@@ -263,7 +263,7 @@ export default function ParentSetupPage() {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Buscar por nombre o categoría…"
                 className="flex-1 bg-transparent outline-none text-xs"
-                style={{ color: "rgba(255,255,255,0.70)", caretColor: "#8B5CF6" }}
+                style={{ color: "rgba(255,255,255,0.70)", caretColor: "var(--accent)" }}
               />
             </div>
 
@@ -289,21 +289,21 @@ export default function ParentSetupPage() {
                       onClick={() => togglePlayer(p.id)}
                       className="w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all"
                       style={{
-                        background: isSelected ? "rgba(139,92,246,0.15)" : "rgba(255,255,255,0.03)",
-                        border: `1px solid ${isSelected ? "rgba(139,92,246,0.35)" : "rgba(255,255,255,0.06)"}`,
+                        background: isSelected ? "color-mix(in srgb, var(--accent) 15%, transparent)" : "rgba(255,255,255,0.03)",
+                        border: `1px solid ${isSelected ? "color-mix(in srgb, var(--accent) 35%, transparent)" : "rgba(255,255,255,0.06)"}`,
                       }}
                     >
                       {/* Checkbox */}
                       <div className="w-4 h-4 rounded-md flex-shrink-0 flex items-center justify-center"
                         style={{
-                          background: isSelected ? "#7C3AED" : "rgba(255,255,255,0.08)",
+                          background: isSelected ? "var(--accent-dim)" : "rgba(255,255,255,0.08)",
                           border: isSelected ? "none" : "1.5px solid rgba(255,255,255,0.20)",
                         }}>
                         {isSelected && <Check size={10} color="white" strokeWidth={3} />}
                       </div>
                       {/* Avatar */}
                       <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-[10px] font-black"
-                        style={{ background: "rgba(139,92,246,0.20)", color: "#A78BFA" }}>
+                        style={{ background: "color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--accent-light)" }}>
                         {p.name.charAt(0).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -316,7 +316,7 @@ export default function ParentSetupPage() {
                           </p>
                         )}
                       </div>
-                      <Users size={12} style={{ color: isSelected ? "#A78BFA" : "rgba(255,255,255,0.20)", flexShrink: 0 }} />
+                      <Users size={12} style={{ color: isSelected ? "var(--accent-light)" : "rgba(255,255,255,0.20)", flexShrink: 0 }} />
                     </button>
                   );
                 })}
@@ -341,10 +341,10 @@ export default function ParentSetupPage() {
             className="w-full py-4 rounded-2xl text-sm font-black tracking-wide flex items-center justify-center gap-2 disabled:opacity-60"
             style={{
               background: loading
-                ? "rgba(139,92,246,0.4)"
-                : "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4338CA 100%)",
-              color: "white",
-              boxShadow: loading ? "none" : "0 8px 24px rgba(124,58,237,0.35)",
+                ? "color-mix(in srgb, var(--accent) 40%, transparent)"
+                : "linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%)",
+              color: "var(--on-accent)",
+              boxShadow: loading ? "none" : "0 8px 24px color-mix(in srgb, var(--accent-dim) 35%, transparent)",
             }}
           >
             {loading

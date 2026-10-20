@@ -48,16 +48,16 @@ export function ClubLoginForm({ club }: { club: Club }) {
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-5 py-10 relative overflow-hidden"
-      style={{ background: "#06060F" }}
+      style={{ background: "var(--bg-primary)" }}
     >
       {/* Background gradients */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            radial-gradient(ellipse 80% 60% at 20% 0%, rgba(88,28,235,0.18) 0%, transparent 55%),
-            radial-gradient(ellipse 60% 50% at 85% 80%, rgba(29,78,216,0.12) 0%, transparent 55%),
-            radial-gradient(ellipse 40% 40% at 50% 50%, rgba(139,92,246,0.04) 0%, transparent 60%)
+            radial-gradient(ellipse 80% 60% at 20% 0%, color-mix(in srgb, var(--accent) 18%, transparent) 0%, transparent 55%),
+            radial-gradient(ellipse 60% 50% at 85% 80%, color-mix(in srgb, var(--accent-2) 12%, transparent) 0%, transparent 55%),
+            radial-gradient(ellipse 40% 40% at 50% 50%, color-mix(in srgb, var(--accent) 4%, transparent) 0%, transparent 60%)
           `,
         }}
       />
@@ -95,7 +95,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
                 alt={club.name}
                 className="w-20 h-20 rounded-[28px] object-cover"
                 style={{
-                  boxShadow: "0 8px 40px rgba(139,92,246,0.35), 0 2px 8px rgba(0,0,0,0.6)",
+                  boxShadow: "0 8px 40px color-mix(in srgb, var(--accent) 35%, transparent), 0 2px 8px rgba(0,0,0,0.6)",
                   border: "1px solid rgba(255,255,255,0.10)",
                 }}
               />
@@ -103,9 +103,9 @@ export function ClubLoginForm({ club }: { club: Club }) {
               <div
                 className="w-20 h-20 rounded-[28px] flex items-center justify-center text-4xl"
                 style={{
-                  background: "rgba(139,92,246,0.12)",
-                  border: "1px solid rgba(139,92,246,0.25)",
-                  boxShadow: "0 8px 40px rgba(139,92,246,0.30)",
+                  background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+                  border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
+                  boxShadow: "0 8px 40px color-mix(in srgb, var(--accent) 30%, transparent)",
                 }}
               >
                 {emoji}
@@ -123,7 +123,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
         <div
           className="rounded-3xl p-6"
           style={{
-            background: "rgba(14,12,40,0.80)",
+            background: "color-mix(in srgb, var(--bg-card) 80%, transparent)",
             border: "1px solid rgba(255,255,255,0.08)",
             backdropFilter: "blur(24px)",
             boxShadow: "0 24px 60px rgba(0,0,0,0.50)",
@@ -141,7 +141,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
                 background: "rgba(255,255,255,0.05)",
                 border: "1.5px solid rgba(255,255,255,0.08)",
               }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(139,92,246,0.50)"; e.currentTarget.style.background = "rgba(139,92,246,0.06)"; }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "color-mix(in srgb, var(--accent) 50%, transparent)"; e.currentTarget.style.background = "color-mix(in srgb, var(--accent) 6%, transparent)"; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
             >
               <input
@@ -152,7 +152,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
                 required
                 autoComplete="username"
                 className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: "rgba(255,255,255,0.88)", caretColor: "#8B5CF6" }}
+                style={{ color: "rgba(255,255,255,0.88)", caretColor: "var(--accent)" }}
               />
             </div>
 
@@ -163,7 +163,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
                 background: "rgba(255,255,255,0.05)",
                 border: "1.5px solid rgba(255,255,255,0.08)",
               }}
-              onFocus={(e) => { e.currentTarget.style.borderColor = "rgba(139,92,246,0.50)"; e.currentTarget.style.background = "rgba(139,92,246,0.06)"; }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = "color-mix(in srgb, var(--accent) 50%, transparent)"; e.currentTarget.style.background = "color-mix(in srgb, var(--accent) 6%, transparent)"; }}
               onBlur={(e) => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)"; e.currentTarget.style.background = "rgba(255,255,255,0.05)"; }}
             >
               <input
@@ -174,7 +174,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
                 required
                 autoComplete="current-password"
                 className="flex-1 bg-transparent outline-none text-sm"
-                style={{ color: "rgba(255,255,255,0.88)", caretColor: "#8B5CF6" }}
+                style={{ color: "rgba(255,255,255,0.88)", caretColor: "var(--accent)" }}
               />
               <button
                 type="button"
@@ -208,10 +208,10 @@ export function ClubLoginForm({ club }: { club: Club }) {
               className="w-full py-4 rounded-2xl text-sm font-black tracking-wide transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-60"
               style={{
                 background: loading
-                  ? "rgba(139,92,246,0.4)"
-                  : "linear-gradient(135deg, #7C3AED 0%, #5B21B6 50%, #4338CA 100%)",
-                color: "white",
-                boxShadow: loading ? "none" : "0 8px 24px rgba(124,58,237,0.35)",
+                  ? "color-mix(in srgb, var(--accent) 40%, transparent)"
+                  : "linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%)",
+                color: "var(--on-accent)",
+                boxShadow: loading ? "none" : "0 8px 24px color-mix(in srgb, var(--accent-dim) 35%, transparent)",
               }}
             >
               {loading ? (
@@ -225,10 +225,10 @@ export function ClubLoginForm({ club }: { club: Club }) {
 
         {/* Access hint */}
         <p className="text-center text-xs mt-5 px-4 leading-relaxed" style={{ color: "rgba(255,255,255,0.40)" }}>
-          <span className="font-semibold" style={{ color: "rgba(196,181,253,0.85)" }}>Deportistas:</span>{" "}
+          <span className="font-semibold" style={{ color: "color-mix(in srgb, var(--accent-lighter) 85%, transparent)" }}>Deportistas:</span>{" "}
           entren con su documento como usuario y contraseña.
           <br />
-          <span className="font-semibold" style={{ color: "rgba(196,181,253,0.85)" }}>Acudientes:</span>{" "}
+          <span className="font-semibold" style={{ color: "color-mix(in srgb, var(--accent-lighter) 85%, transparent)" }}>Acudientes:</span>{" "}
           entren con su celular registrado y, como contraseña, el documento de su hijo(a).
         </p>
 
@@ -238,9 +238,9 @@ export function ClubLoginForm({ club }: { club: Club }) {
           <Link
             href={`/register?club=${club.slug}`}
             className="font-semibold transition-colors"
-            style={{ color: "rgba(167,139,250,0.80)" }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#A78BFA")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(167,139,250,0.80)")}
+            style={{ color: "color-mix(in srgb, var(--accent-light) 80%, transparent)" }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = "var(--accent-light)")}
+            onMouseLeave={(e) => (e.currentTarget.style.color = "color-mix(in srgb, var(--accent-light) 80%, transparent)")}
           >
             Regístrate
           </Link>

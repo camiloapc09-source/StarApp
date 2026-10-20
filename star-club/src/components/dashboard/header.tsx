@@ -9,7 +9,7 @@ export function Header({ title, subtitle }: HeaderProps) {
     <header
       className="sticky top-0 z-30 backdrop-blur-xl"
       style={{
-        background: "rgba(7,7,26,0.88)",
+        background: "color-mix(in srgb, var(--bg-primary) 88%, transparent)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}
     >

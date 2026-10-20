@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import { ClubLoginForm } from "./club-login-form";
+import { ClubThemeStyle } from "@/components/club-theme-style";
 
 export default async function ClubLoginPage({
   params,
@@ -11,10 +12,15 @@ export default async function ClubLoginPage({
 
   const club = await db.club.findUnique({
     where: { slug: clubSlug },
-    select: { id: true, name: true, logo: true, sport: true, slug: true },
+    select: { id: true, name: true, logo: true, sport: true, slug: true, brandPrimary: true, brandSecondary: true, brandBackground: true },
   });
 
   if (!club) notFound();
 
-  return <ClubLoginForm club={club} />;
+  return (
+    <>
+      <ClubThemeStyle club={club} />
+      <ClubLoginForm club={club} />
+    </>
+  );
 }

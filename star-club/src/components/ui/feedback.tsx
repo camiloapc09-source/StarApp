@@ -122,7 +122,7 @@ export function FeedbackHost() {
                 exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
                 className="pointer-events-auto flex items-start gap-3 rounded-2xl px-4 py-3 text-sm shadow-2xl backdrop-blur-xl"
                 style={{
-                  background: "rgba(19,19,54,0.96)",
+                  background: "color-mix(in srgb, var(--bg-elevated) 96%, transparent)",
                   border: "1px solid var(--border-primary)",
                   borderLeft: `3px solid ${color}`,
                   boxShadow: "var(--shadow-elevated)",

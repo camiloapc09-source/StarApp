@@ -132,7 +132,7 @@ export default function MissionsManager({ initial }: { initial: Mission[] }) {
           <button
             onClick={() => { setEditing(null); setForm({ ...empty }); setShowForm(true); }}
             className="flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold"
-            style={{ background: "var(--accent)", color: "#000" }}
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             <Plus size={13} /> Nueva misión
           </button>
@@ -181,7 +181,7 @@ export default function MissionsManager({ initial }: { initial: Mission[] }) {
           <div className="flex gap-2 pt-1">
             <button onClick={editing ? handleUpdate : handleCreate} disabled={creating}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50"
-              style={{ background: "var(--accent)", color: "#000" }}>
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
               {creating ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
               {creating ? "Guardando..." : editing ? "Actualizar" : "Crear misión"}
             </button>

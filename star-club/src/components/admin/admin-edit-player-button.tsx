@@ -234,7 +234,7 @@ export default function AdminEditPlayerButton({ player, categories, zones = [], 
                           onClick={() => applyScholarship(opt)}
                           className="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all"
                           style={active
-                            ? { background: "rgba(139,92,246,0.18)", color: "#A78BFA", borderColor: "rgba(139,92,246,0.4)" }
+                            ? { background: "color-mix(in srgb, var(--accent) 18%, transparent)", color: "var(--accent-light)", borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)" }
                             : { background: "var(--bg-elevated)", color: "var(--text-muted)", borderColor: "var(--border-primary)" }}
                         >
                           {label}
@@ -256,9 +256,9 @@ export default function AdminEditPlayerButton({ player, categories, zones = [], 
                           if (num >= 1 && num <= 100) applyScholarship(num);
                         }}
                         className="w-16 rounded-xl px-2 py-1.5 text-xs outline-none border text-center font-bold"
-                        style={{ background: "var(--bg-elevated)", borderColor: "rgba(139,92,246,0.4)", color: "#A78BFA" }}
+                        style={{ background: "var(--bg-elevated)", borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)", color: "var(--accent-light)" }}
                       />
-                      <span className="text-xs font-semibold" style={{ color: "#A78BFA" }}>%</span>
+                      <span className="text-xs font-semibold" style={{ color: "var(--accent-light)" }}>%</span>
                     </div>
                   )}
                   {data.scholarshipPct && !data.zone && (

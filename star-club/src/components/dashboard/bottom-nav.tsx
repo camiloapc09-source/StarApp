@@ -32,26 +32,26 @@ const ADMIN_MORE: MoreItem[] = [
   { href: "/dashboard/admin/sessions",     icon: Calendar,   label: "Sesiones",       color: "#34D399", bg: "rgba(52,211,153,0.12)" },
   { href: "/dashboard/admin/categories",   icon: Tag,        label: "Categorías",     color: "#F472B6", bg: "rgba(244,114,182,0.12)" },
   { href: "/dashboard/admin/uniforms",     icon: Shirt,      label: "Uniformes",      color: "#FB923C", bg: "rgba(251,146,60,0.12)" },
-  { href: "/dashboard/admin/rifas",        icon: Ticket,     label: "Rifas",          color: "#DEC4FF", bg: "rgba(139,92,246,0.12)" },
+  { href: "/dashboard/admin/rifas",        icon: Ticket,     label: "Rifas",          color: "#DEC4FF", bg: "color-mix(in srgb, var(--accent) 12%, transparent)" },
   { href: "/dashboard/admin/gamification", icon: Trophy,     label: "Gamificación",   color: "#FCD34D", bg: "rgba(251,191,36,0.12)" },
-  { href: "/dashboard/admin/evidence",     icon: FileImage,  label: "Evidencias",     color: "#A78BFA", bg: "rgba(139,92,246,0.12)" },
+  { href: "/dashboard/admin/evidence",     icon: FileImage,  label: "Evidencias",     color: "#A78BFA", bg: "color-mix(in srgb, var(--accent) 12%, transparent)" },
   { href: "/dashboard/admin/reports",      icon: BarChart3,  label: "Reportes",       color: "#FB923C", bg: "rgba(251,146,60,0.12)" },
   { href: "/dashboard/admin/settings",     icon: Settings,   label: "Configuración",  color: "#94A3B8", bg: "rgba(148,163,184,0.12)" },
 ];
 
 const COACH_MORE: MoreItem[] = [
-  { href: "/dashboard/coach/rifas",         icon: Ticket,    label: "Rifas",          color: "#DEC4FF", bg: "rgba(139,92,246,0.12)" },
+  { href: "/dashboard/coach/rifas",         icon: Ticket,    label: "Rifas",          color: "#DEC4FF", bg: "color-mix(in srgb, var(--accent) 12%, transparent)" },
   { href: "/dashboard/coach/notifications", icon: Bell,      label: "Notificaciones", color: "#F87171", bg: "rgba(239,68,68,0.12)" },
   { href: "/dashboard/coach/reports",       icon: BarChart3, label: "Reportes",       color: "#FB923C", bg: "rgba(251,146,60,0.12)" },
   { href: "/dashboard/coach/invites",       icon: UserPlus,  label: "Invitaciones",   color: "#60A5FA", bg: "rgba(96,165,250,0.15)" },
-  { href: "/dashboard/coach/profile",       icon: User,      label: "Perfil",         color: "#A78BFA", bg: "rgba(139,92,246,0.12)" },
+  { href: "/dashboard/coach/profile",       icon: User,      label: "Perfil",         color: "#A78BFA", bg: "color-mix(in srgb, var(--accent) 12%, transparent)" },
 ];
 
 const PLAYER_MORE: MoreItem[] = [
   { href: "/dashboard/player/uniforms",      icon: Shirt,     label: "Uniformes",      color: "#FB923C", bg: "rgba(251,146,60,0.12)" },
-  { href: "/dashboard/player/rifas",         icon: Ticket,    label: "Rifas",          color: "#DEC4FF", bg: "rgba(139,92,246,0.12)" },
+  { href: "/dashboard/player/rifas",         icon: Ticket,    label: "Rifas",          color: "#DEC4FF", bg: "color-mix(in srgb, var(--accent) 12%, transparent)" },
   { href: "/dashboard/player/notifications", icon: Bell,      label: "Notificaciones", color: "#F87171", bg: "rgba(239,68,68,0.12)"  },
-  { href: "/dashboard/player/profile",       icon: User,      label: "Perfil",         color: "#A78BFA", bg: "rgba(139,92,246,0.12)" },
+  { href: "/dashboard/player/profile",       icon: User,      label: "Perfil",         color: "#A78BFA", bg: "color-mix(in srgb, var(--accent) 12%, transparent)" },
 ];
 
 const ROLE_TABS: Record<string, (notif: number) => TabItem[]> = {
@@ -95,7 +95,7 @@ function TabButton({ tab, isActive }: { tab: TabItem; isActive: boolean }) {
           <motion.div
             layoutId="tab-pill"
             className="absolute -top-1.5 left-1/2 -translate-x-1/2 h-0.5 w-6 rounded-full"
-            style={{ background: "linear-gradient(90deg, #8B5CF6, #60A5FA)" }}
+            style={{ background: "linear-gradient(90deg, var(--accent), var(--accent-2))" }}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
           />
@@ -104,13 +104,13 @@ function TabButton({ tab, isActive }: { tab: TabItem; isActive: boolean }) {
       <motion.div
         whileTap={{ scale: 0.85 }}
         className="relative w-10 h-9 flex items-center justify-center rounded-2xl transition-all duration-200"
-        style={{ background: isActive ? "rgba(139,92,246,0.15)" : "transparent" }}
+        style={{ background: isActive ? "color-mix(in srgb, var(--accent) 15%, transparent)" : "transparent" }}
       >
         <Icon size={19} strokeWidth={isActive ? 2.4 : 1.7}
           style={{ color: isActive ? "#A78BFA" : "rgba(255,255,255,0.35)" }} />
         {(tab.badge ?? 0) > 0 && (
           <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black text-white"
-            style={{ background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}>
+            style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))" }}>
             {(tab.badge ?? 0) > 9 ? "9+" : tab.badge}
           </span>
         )}
@@ -246,13 +246,13 @@ export function BottomNav({ role, notificationCount = 0, coachCanInvite = false 
             <motion.div
               whileTap={{ scale: 0.85 }}
               className="relative w-10 h-9 flex items-center justify-center rounded-2xl transition-all duration-200"
-              style={{ background: moreIsActive ? "rgba(139,92,246,0.15)" : "transparent" }}
+              style={{ background: moreIsActive ? "color-mix(in srgb, var(--accent) 15%, transparent)" : "transparent" }}
             >
               <Grid3X3 size={19} strokeWidth={1.7}
                 style={{ color: moreIsActive ? "#A78BFA" : "rgba(255,255,255,0.35)" }} />
               {moreBadge > 0 && (
                 <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-black text-white"
-                  style={{ background: "linear-gradient(135deg, #EC4899, #8B5CF6)" }}>
+                  style={{ background: "linear-gradient(135deg, var(--accent-2), var(--accent))" }}>
                   {moreBadge > 9 ? "9+" : moreBadge}
                 </span>
               )}

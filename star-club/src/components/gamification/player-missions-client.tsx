@@ -112,7 +112,7 @@ export default function PlayerMissionsClient({ missions }: { missions: Mission[]
               onClick={() => completeMission(m.playerMissionId)}
               disabled={completing === m.playerMissionId}
               className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold w-full justify-center disabled:opacity-50 transition-all"
-              style={{ background: "var(--accent)", color: "#000" }}
+              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
             >
               {completing === m.playerMissionId
                 ? <><Loader2 size={14} className="animate-spin" /> Completando...</>

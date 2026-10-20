@@ -317,9 +317,9 @@ export default function BulkMarkReceivedPanel({
               onClick={toggleAll}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
               style={{
-                background: allSelected ? "rgba(139,92,246,0.15)" : "rgba(255,255,255,0.05)",
-                border: `1px solid ${allSelected ? "rgba(139,92,246,0.35)" : "rgba(255,255,255,0.10)"}`,
-                color: allSelected ? "#C4B5FD" : "rgba(255,255,255,0.50)",
+                background: allSelected ? "color-mix(in srgb, var(--accent) 15%, transparent)" : "rgba(255,255,255,0.05)",
+                border: `1px solid ${allSelected ? "color-mix(in srgb, var(--accent) 35%, transparent)" : "rgba(255,255,255,0.10)"}`,
+                color: allSelected ? "var(--accent-lighter)" : "rgba(255,255,255,0.50)",
               }}
             >
               {allSelected ? <CheckSquare size={13} /> : <Square size={13} />}

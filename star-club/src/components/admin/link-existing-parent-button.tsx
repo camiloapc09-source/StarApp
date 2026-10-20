@@ -69,9 +69,9 @@ export default function LinkExistingParentButton({ playerId, playerName }: Props
         onClick={() => { setOpen(true); setQuery(""); setSuccess(null); }}
         className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all"
         style={{
-          background: "rgba(139,92,246,0.10)",
-          border: "1px solid rgba(139,92,246,0.25)",
-          color: "#A78BFA",
+          background: "color-mix(in srgb, var(--accent) 10%, transparent)",
+          border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
+          color: "var(--accent-light)",
         }}
       >
         <Link2 size={13} />
@@ -158,9 +158,9 @@ export default function LinkExistingParentButton({ playerId, playerName }: Props
                       disabled={linking === p.id || isLinked}
                       className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all disabled:opacity-60"
                       style={{
-                        background: isLinked ? "rgba(52,211,153,0.15)" : "rgba(139,92,246,0.15)",
-                        border: `1px solid ${isLinked ? "rgba(52,211,153,0.30)" : "rgba(139,92,246,0.30)"}`,
-                        color: isLinked ? "#34D399" : "#A78BFA",
+                        background: isLinked ? "rgba(52,211,153,0.15)" : "color-mix(in srgb, var(--accent) 15%, transparent)",
+                        border: `1px solid ${isLinked ? "rgba(52,211,153,0.30)" : "color-mix(in srgb, var(--accent) 30%, transparent)"}`,
+                        color: isLinked ? "#34D399" : "var(--accent-light)",
                       }}
                     >
                       {isLinked ? <><CheckCircle2 size={12} /> Vinculado</> : linking === p.id ? "..." : <><Link2 size={12} /> Vincular</>}

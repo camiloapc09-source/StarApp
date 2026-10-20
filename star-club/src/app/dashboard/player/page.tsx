@@ -94,18 +94,18 @@ export default async function PlayerDashboard() {
         <div
           className="rounded-2xl p-5 relative overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, rgba(109,40,217,0.28) 0%, rgba(49,46,129,0.20) 50%, rgba(12,10,36,0.80) 100%)",
-            border: "1px solid rgba(139,92,246,0.20)",
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--accent-secondary) 28%, transparent) 0%, rgba(49,46,129,0.20) 50%, color-mix(in srgb, var(--bg-card) 80%, transparent) 100%)",
+            border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
           }}
         >
           <div className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 60% 80% at 90% 50%, rgba(139,92,246,0.12) 0%, transparent 70%)" }} />
-          <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-1 relative" style={{ color: "rgba(167,139,250,0.70)" }}>
+            style={{ background: "radial-gradient(ellipse 60% 80% at 90% 50%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%)" }} />
+          <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-1 relative" style={{ color: "color-mix(in srgb, var(--accent-light) 70%, transparent)" }}>
             {getGreeting()}
           </p>
           <h2 className="text-2xl font-black tracking-tight text-white relative">{firstName} ⚡</h2>
           <div className="flex items-center gap-3 mt-2 relative flex-wrap">
-            <span className="flex items-center gap-1 text-sm font-bold" style={{ color: "#A78BFA" }}>
+            <span className="flex items-center gap-1 text-sm font-bold" style={{ color: "var(--accent-light)" }}>
               <Zap size={13} />{player.xp.toLocaleString("es-CO")} XP
             </span>
             {myRank > 0 && (

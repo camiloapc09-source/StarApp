@@ -46,9 +46,9 @@ export function RequestPlayerProfileButton() {
         disabled={loading}
         className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80 disabled:opacity-50"
         style={{
-          background: "rgba(139,92,246,0.15)",
-          color: "#DEC4FF",
-          border: "1px solid rgba(139,92,246,0.30)",
+          background: "color-mix(in srgb, var(--accent) 15%, transparent)",
+          color: "var(--accent-lighter)",
+          border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)",
         }}
       >
         {loading ? <Loader2 size={15} className="animate-spin" /> : <UserPlus size={15} />}

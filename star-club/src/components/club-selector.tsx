@@ -31,16 +31,16 @@ export function ClubSelector({ clubs, sportEmoji }: Props) {
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-center px-5 py-12 relative overflow-hidden"
-      style={{ background: "#06060F" }}
+      style={{ background: "var(--bg-primary)" }}
     >
       {/* Background */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           background: `
-            radial-gradient(ellipse 70% 55% at 15% 10%, rgba(88,28,235,0.16) 0%, transparent 55%),
-            radial-gradient(ellipse 55% 45% at 85% 80%, rgba(29,78,216,0.11) 0%, transparent 55%),
-            radial-gradient(ellipse 35% 35% at 50% 50%, rgba(139,92,246,0.04) 0%, transparent 60%)
+            radial-gradient(ellipse 70% 55% at 15% 10%, color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 55%),
+            radial-gradient(ellipse 55% 45% at 85% 80%, color-mix(in srgb, var(--accent-2) 11%, transparent) 0%, transparent 55%),
+            radial-gradient(ellipse 35% 35% at 50% 50%, color-mix(in srgb, var(--accent) 4%, transparent) 0%, transparent 60%)
           `,
         }}
       />
@@ -98,8 +98,8 @@ export function ClubSelector({ clubs, sportEmoji }: Props) {
                     border: "1.5px solid rgba(255,255,255,0.07)",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(139,92,246,0.08)";
-                    e.currentTarget.style.borderColor = "rgba(139,92,246,0.30)";
+                    e.currentTarget.style.background = "color-mix(in srgb, var(--accent) 8%, transparent)";
+                    e.currentTarget.style.borderColor = "color-mix(in srgb, var(--accent) 30%, transparent)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "rgba(255,255,255,0.04)";
@@ -151,7 +151,7 @@ export function ClubSelector({ clubs, sportEmoji }: Props) {
           <Link
             href="/crear-club"
             className="text-xs font-semibold hover:opacity-80 transition-opacity"
-            style={{ color: "rgba(139,92,246,0.60)" }}
+            style={{ color: "color-mix(in srgb, var(--accent) 60%, transparent)" }}
           >
             ¿Tienes un club? Regístralo gratis →
           </Link>

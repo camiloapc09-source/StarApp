@@ -164,7 +164,7 @@ export default function PaymentReportButton({ paymentId, concept, amount, dueDat
         type="button"
         onClick={() => setOpen(true)}
         className="w-full flex items-center justify-between text-xs px-3 py-2 rounded-xl font-semibold transition-all hover:opacity-80 mt-2"
-        style={{ background: "var(--accent)", color: "#000" }}
+        style={{ background: "var(--accent)", color: "var(--on-accent)" }}
       >
         <span>Pagar mensualidad</span>
         <ChevronRight size={14} />
@@ -370,7 +370,7 @@ export default function PaymentReportButton({ paymentId, concept, amount, dueDat
                       type="submit"
                       disabled={loading || !method}
                       className="w-full py-3 rounded-xl font-bold text-sm transition-all disabled:opacity-40"
-                      style={{ background: "var(--accent)", color: "#000" }}
+                      style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                     >
                       {loading ? "Registrando..." : "Registrar pago ->"}
                     </button>

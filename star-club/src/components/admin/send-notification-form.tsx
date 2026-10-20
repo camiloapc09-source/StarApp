@@ -128,7 +128,7 @@ export default function SendNotificationForm() {
           type="submit"
           disabled={sending || !title || !message}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-40 transition-all"
-          style={{ background: "var(--accent)", color: "#000" }}
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
         >
           <Send size={14} />
           {sending ? "Enviando..." : "Enviar notificacion"}

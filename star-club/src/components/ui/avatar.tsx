@@ -32,9 +32,9 @@ export function Avatar({ name, src, size = "md", className }: AvatarProps) {
     <div
       className={cn("rounded-full flex items-center justify-center font-bold", sizeClasses[size], className)}
       style={{
-        background: "rgba(139,92,246,0.12)",
-        border: "1px solid rgba(139,92,246,0.25)",
-        color: "#DEC4FF",
+        background: "color-mix(in srgb, var(--accent) 12%, transparent)",
+        border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
+        color: "var(--accent-lighter)",
       }}
     >
       {getInitials(name)}

@@ -99,9 +99,9 @@ export default function InviteParentButton({ playerId, playerName }: Props) {
               onClick={copy}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all"
               style={{
-                background: copied ? "rgba(52,211,153,0.15)" : "rgba(139,92,246,0.15)",
-                border: `1px solid ${copied ? "rgba(52,211,153,0.30)" : "rgba(139,92,246,0.30)"}`,
-                color: copied ? "#34D399" : "#A78BFA",
+                background: copied ? "rgba(52,211,153,0.15)" : "color-mix(in srgb, var(--accent) 15%, transparent)",
+                border: `1px solid ${copied ? "rgba(52,211,153,0.30)" : "color-mix(in srgb, var(--accent) 30%, transparent)"}`,
+                color: copied ? "#34D399" : "var(--accent-light)",
               }}
             >
               {copied ? <><Check size={14} /> Copiado</> : <><Copy size={14} /> Copiar enlace</>}

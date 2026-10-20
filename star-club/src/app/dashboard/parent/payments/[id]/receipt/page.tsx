@@ -79,7 +79,7 @@ export default async function PaymentReceiptPage({ params }: { params: { id: str
         style={{ background: "var(--bg-card)", border: "1px solid var(--border-primary)" }}
       >
         {/* Header strip */}
-        <div className="px-6 py-5 text-center" style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.25) 0%, rgba(49,46,129,0.18) 100%)", borderBottom: "1px solid var(--border-primary)" }}>
+        <div className="px-6 py-5 text-center" style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 25%, transparent) 0%, rgba(49,46,129,0.18) 100%)", borderBottom: "1px solid var(--border-primary)" }}>
           <CheckCircle2 size={36} className="mx-auto mb-2" style={{ color: "#34D399" }} />
           <h1 className="text-xl font-black text-white">Pago confirmado</h1>
           <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.45)" }}>Comprobante #{receiptNo}</p>

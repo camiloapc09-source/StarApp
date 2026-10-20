@@ -35,12 +35,12 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             color: "rgba(255,255,255,0.85)",
             ...style,
           }}
-          onFocus={(e) => { e.target.style.borderColor = "rgba(139,92,246,0.45)"; e.target.style.boxShadow = "0 0 0 3px rgba(139,92,246,0.10)"; }}
+          onFocus={(e) => { e.target.style.borderColor = "color-mix(in srgb, var(--accent) 45%, transparent)"; e.target.style.boxShadow = "0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent)"; }}
           onBlur={(e) => { e.target.style.borderColor = error ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.09)"; e.target.style.boxShadow = "none"; }}
           {...props}
         >
           {options.map((opt) => (
-            <option key={opt.value} value={opt.value} style={{ background: "#0E0E2C", color: "rgba(255,255,255,0.85)" }}>
+            <option key={opt.value} value={opt.value} style={{ background: "var(--bg-card)", color: "rgba(255,255,255,0.85)" }}>
               {opt.label}
             </option>
           ))}

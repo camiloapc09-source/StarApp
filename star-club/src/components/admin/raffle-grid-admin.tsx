@@ -193,29 +193,29 @@ export default function RaffleGridAdmin({
       <div
         className="rounded-3xl overflow-hidden"
         style={{
-          background: "linear-gradient(135deg, rgba(139,92,246,0.12) 0%, rgba(96,165,250,0.08) 100%)",
-          border: "1px solid rgba(139,92,246,0.25)",
-          boxShadow: "0 0 40px rgba(139,92,246,0.08)",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 12%, transparent) 0%, rgba(96,165,250,0.08) 100%)",
+          border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
+          boxShadow: "0 0 40px color-mix(in srgb, var(--accent) 8%, transparent)",
         }}
       >
         {/* Card header */}
         <div
           className="px-5 py-4 flex items-center gap-3"
           style={{
-            background: "linear-gradient(135deg, rgba(139,92,246,0.20) 0%, rgba(96,165,250,0.12) 100%)",
-            borderBottom: "1px solid rgba(139,92,246,0.20)",
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, transparent) 0%, rgba(96,165,250,0.12) 100%)",
+            borderBottom: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
           }}
         >
           {clubLogo ? (
             <img src={clubLogo} alt={clubName} className="w-10 h-10 rounded-xl object-cover shrink-0" style={{ border: "1px solid rgba(255,255,255,0.15)" }} />
           ) : (
             <div className="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-black shrink-0"
-              style={{ background: "rgba(139,92,246,0.25)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.40)" }}>
+              style={{ background: "color-mix(in srgb, var(--accent) 25%, transparent)", color: "var(--accent-lighter)", border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)" }}>
               {clubName.charAt(0).toUpperCase()}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="font-black text-sm tracking-wide" style={{ color: "#DEC4FF" }}>{raffleName}</p>
+            <p className="font-black text-sm tracking-wide" style={{ color: "var(--accent-lighter)" }}>{raffleName}</p>
             <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.45)" }}>{clubName}</p>
           </div>
           <div className="text-right shrink-0">
@@ -267,28 +267,28 @@ export default function RaffleGridAdmin({
                   className="aspect-square flex items-center justify-center rounded-lg text-[11px] font-bold transition-all active:scale-95"
                   style={{
                     background: isBeingAssigned
-                      ? "rgba(139,92,246,0.30)"
+                      ? "color-mix(in srgb, var(--accent) 30%, transparent)"
                       : isPaid
                       ? "rgba(0,255,135,0.15)"
                       : isTaken
                       ? "rgba(255,184,0,0.12)"
                       : "rgba(255,255,255,0.04)",
                     border: isBeingAssigned
-                      ? "1px solid rgba(139,92,246,0.70)"
+                      ? "1px solid color-mix(in srgb, var(--accent) 70%, transparent)"
                       : isPaid
                       ? "1px solid rgba(0,255,135,0.35)"
                       : isTaken
                       ? "1px solid rgba(255,184,0,0.30)"
                       : "1px solid rgba(255,255,255,0.07)",
                     color: isBeingAssigned
-                      ? "#DEC4FF"
+                      ? "var(--accent-lighter)"
                       : isPaid
                       ? "rgba(0,255,135,0.90)"
                       : isTaken
                       ? "rgba(255,184,0,0.90)"
                       : "rgba(255,255,255,0.28)",
                     cursor: (ticket || raffleOpen) ? "pointer" : "default",
-                    boxShadow: isBeingAssigned ? "0 0 8px rgba(139,92,246,0.40)" : "none",
+                    boxShadow: isBeingAssigned ? "0 0 8px color-mix(in srgb, var(--accent) 40%, transparent)" : "none",
                   }}
                   title={
                     ticket
@@ -320,7 +320,7 @@ export default function RaffleGridAdmin({
             </span>
             {raffleOpen && (
               <span className="flex items-center gap-1.5 text-[10px]" style={{ color: "var(--text-muted)" }}>
-                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "rgba(139,92,246,0.30)", border: "1px solid rgba(139,92,246,0.70)" }} />
+                <span className="w-2.5 h-2.5 rounded-sm" style={{ background: "color-mix(in srgb, var(--accent) 30%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 70%, transparent)" }} />
                 Seleccionado
               </span>
             )}
@@ -338,18 +338,18 @@ export default function RaffleGridAdmin({
       {assignMode !== null && (
         <div
           className="rounded-2xl border p-5 space-y-4"
-          style={{ background: "rgba(8,6,28,0.95)", borderColor: "rgba(139,92,246,0.30)" }}
+          style={{ background: "color-mix(in srgb, var(--bg-primary) 95%, transparent)", borderColor: "color-mix(in srgb, var(--accent) 30%, transparent)" }}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span
                 className="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-black shrink-0"
-                style={{ background: "rgba(139,92,246,0.20)", color: "#DEC4FF", border: "1px solid rgba(139,92,246,0.40)" }}
+                style={{ background: "color-mix(in srgb, var(--accent) 20%, transparent)", color: "var(--accent-lighter)", border: "1px solid color-mix(in srgb, var(--accent) 40%, transparent)" }}
               >
                 {String(assignMode).padStart(2, "0")}
               </span>
               <div>
-                <p className="text-sm font-bold" style={{ color: "#DEC4FF" }}>
+                <p className="text-sm font-bold" style={{ color: "var(--accent-lighter)" }}>
                   Asignar número {String(assignMode).padStart(2, "0")}
                 </p>
                 <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.55)" }}>
@@ -378,7 +378,7 @@ export default function RaffleGridAdmin({
               className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm outline-none"
               style={{
                 background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(139,92,246,0.25)",
+                border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)",
                 color: "var(--text-primary)",
               }}
             />
@@ -402,8 +402,8 @@ export default function RaffleGridAdmin({
                     border: "1px solid rgba(255,255,255,0.07)",
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.background = "rgba(139,92,246,0.12)";
-                    e.currentTarget.style.borderColor = "rgba(139,92,246,0.25)";
+                    e.currentTarget.style.background = "color-mix(in srgb, var(--accent) 12%, transparent)";
+                    e.currentTarget.style.borderColor = "color-mix(in srgb, var(--accent) 25%, transparent)";
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.background = "rgba(255,255,255,0.04)";
@@ -443,11 +443,11 @@ export default function RaffleGridAdmin({
       {selected && (
         <div
           className="rounded-2xl border p-5 space-y-4"
-          style={{ background: "rgba(8,6,28,0.95)", borderColor: "rgba(139,92,246,0.25)" }}
+          style={{ background: "color-mix(in srgb, var(--bg-primary) 95%, transparent)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)" }}
         >
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="font-black text-lg" style={{ color: "#DEC4FF" }}>
+              <p className="font-black text-lg" style={{ color: "var(--accent-lighter)" }}>
                 Número {String(selected.number).padStart(2, "0")}
               </p>
               <p className="text-sm mt-0.5" style={{ color: "var(--text-secondary)" }}>

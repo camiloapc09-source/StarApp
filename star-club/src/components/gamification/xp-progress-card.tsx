@@ -17,12 +17,12 @@ const LEVEL_COLORS: Record<number, { from: string; to: string; glow: string }> =
   1:  { from: "#6B7280", to: "#4B5563", glow: "rgba(107,114,128,0.2)" },
   2:  { from: "#10B981", to: "#059669", glow: "rgba(16,185,129,0.2)" },
   3:  { from: "#3B82F6", to: "#2563EB", glow: "rgba(59,130,246,0.2)" },
-  4:  { from: "#8B5CF6", to: "#7C3AED", glow: "rgba(139,92,246,0.25)" },
+  4:  { from: "var(--accent)", to: "var(--accent-dim)", glow: "color-mix(in srgb, var(--accent) 25%, transparent)" },
   5:  { from: "#F59E0B", to: "#D97706", glow: "rgba(245,158,11,0.25)" },
   6:  { from: "#EF4444", to: "#DC2626", glow: "rgba(239,68,68,0.25)" },
   7:  { from: "#EC4899", to: "#DB2777", glow: "rgba(236,72,153,0.25)" },
   8:  { from: "#F97316", to: "#EA580C", glow: "rgba(249,115,22,0.25)" },
-  9:  { from: "#A78BFA", to: "#7C3AED", glow: "rgba(167,139,250,0.30)" },
+  9:  { from: "var(--accent-light)", to: "var(--accent-dim)", glow: "color-mix(in srgb, var(--accent-light) 30%, transparent)" },
   10: { from: "#FCD34D", to: "#F59E0B", glow: "rgba(252,211,77,0.35)" },
 };
 
@@ -39,7 +39,7 @@ export function XPProgressCard({ xp, level, streak, rank, totalPlayers, classNam
     <div
       className={cn("rounded-2xl p-5 relative overflow-hidden", className)}
       style={{
-        background: `linear-gradient(135deg, rgba(14,14,44,0.95) 0%, rgba(20,10,50,0.90) 100%)`,
+        background: `linear-gradient(135deg, color-mix(in srgb, var(--bg-card) 95%, transparent) 0%, color-mix(in srgb, var(--bg-elevated) 90%, transparent) 100%)`,
         border: `1px solid ${colors.glow.replace("0.2)", "0.35)").replace("0.25)", "0.35)").replace("0.30)", "0.40)").replace("0.35)", "0.45)")}`,
       }}
     >

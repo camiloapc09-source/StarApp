@@ -33,14 +33,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             background: "rgba(255,255,255,0.04)",
             border: `1px solid ${error ? "rgba(239,68,68,0.40)" : "rgba(255,255,255,0.09)"}`,
             color: "rgba(255,255,255,0.85)",
-            caretColor: "#8B5CF6",
+            caretColor: "var(--accent)",
             ...style,
           }}
           onFocus={(e) => {
-            e.target.style.borderColor = error ? "rgba(239,68,68,0.60)" : "rgba(139,92,246,0.45)";
+            e.target.style.borderColor = error ? "rgba(239,68,68,0.60)" : "color-mix(in srgb, var(--accent) 45%, transparent)";
             e.target.style.boxShadow = error
               ? "0 0 0 3px rgba(239,68,68,0.10)"
-              : "0 0 0 3px rgba(139,92,246,0.10)";
+              : "0 0 0 3px color-mix(in srgb, var(--accent) 10%, transparent)";
             props.onFocus?.(e);
           }}
           onBlur={(e) => {

@@ -66,17 +66,17 @@ export default async function CoachDashboard() {
         <div
           className="rounded-2xl p-4 flex items-center justify-between gap-4 flex-wrap"
           style={{
-            background: "linear-gradient(135deg, rgba(139,92,246,0.10) 0%, rgba(96,165,250,0.06) 100%)",
-            border: "1px solid rgba(139,92,246,0.20)",
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 10%, transparent) 0%, rgba(96,165,250,0.06) 100%)",
+            border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
           }}
         >
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(139,92,246,0.18)", border: "1px solid rgba(139,92,246,0.30)" }}>
-              <Zap size={16} style={{ color: "#A78BFA" }} />
+              style={{ background: "color-mix(in srgb, var(--accent) 18%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
+              <Zap size={16} style={{ color: "var(--accent-light)" }} />
             </div>
             <div>
-              <p className="text-sm font-semibold" style={{ color: "#DEC4FF" }}>
+              <p className="text-sm font-semibold" style={{ color: "var(--accent-lighter)" }}>
                 {linkedPlayerId ? "Modo Jugador disponible" : "¿Eres también jugador?"}
               </p>
               <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.40)" }}>
@@ -94,9 +94,9 @@ export default async function CoachDashboard() {
                 href="/dashboard/player"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all hover:opacity-80"
                 style={{
-                  background: "rgba(139,92,246,0.20)",
-                  color: "#DEC4FF",
-                  border: "1px solid rgba(139,92,246,0.35)",
+                  background: "color-mix(in srgb, var(--accent) 20%, transparent)",
+                  color: "var(--accent-lighter)",
+                  border: "1px solid color-mix(in srgb, var(--accent) 35%, transparent)",
                 }}
               >
                 <Zap size={14} />
@@ -115,7 +115,7 @@ export default async function CoachDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard label={dict.common.activePlayers} value={playersCount} icon={<Users size={20} />} gradient="linear-gradient(135deg, rgba(139,92,246,0.25), rgba(109,40,217,0.12))" />
+          <StatCard label={dict.common.activePlayers} value={playersCount} icon={<Users size={20} />} gradient="linear-gradient(135deg, color-mix(in srgb, var(--accent) 25%, transparent), color-mix(in srgb, var(--accent-secondary) 12%, transparent))" />
           <StatCard label={dict.coach?.mySessions ?? dict.common.sessions} value={sessionsCount} icon={<Calendar size={20} />} gradient="linear-gradient(135deg, rgba(96,165,250,0.22), rgba(59,130,246,0.10))" />
           <StatCard
             label={dict.coach?.upcomingSessions ?? "Upcoming"}

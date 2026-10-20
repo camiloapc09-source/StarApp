@@ -67,7 +67,7 @@ export default function AvatarUpload({ currentAvatar, pendingAvatar, avatarStatu
       <div className="relative flex-shrink-0">
         <div
           className="w-20 h-20 rounded-2xl overflow-hidden flex items-center justify-center text-2xl font-bold"
-          style={{ background: "var(--accent)", color: "#000" }}
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
         >
           {displaySrc ? (
             <Image src={displaySrc} alt={userName} width={80} height={80} className="object-cover w-full h-full" />
@@ -114,7 +114,7 @@ export default function AvatarUpload({ currentAvatar, pendingAvatar, avatarStatu
                   onClick={upload}
                   disabled={uploading}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"
-                  style={{ background: "var(--accent)", color: "#000" }}
+                  style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                 >
                   {uploading ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />}
                   {uploading ? "Subiendo..." : "Enviar para aprobación"}

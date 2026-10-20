@@ -22,7 +22,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 backdrop-blur-md"
-            style={{ background: "rgba(3,3,24,0.75)" }}
+            style={{ background: "color-mix(in srgb, var(--bg-primary) 75%, transparent)" }}
             onClick={onClose}
           />
           <motion.div
@@ -36,10 +36,10 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
               className
             )}
             style={{
-              background: "rgba(14,14,44,0.95)",
+              background: "color-mix(in srgb, var(--bg-card) 95%, transparent)",
               border: "1px solid rgba(255,255,255,0.09)",
               backdropFilter: "blur(20px)",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.60), 0 0 40px rgba(139,92,246,0.08)",
+              boxShadow: "0 24px 64px rgba(0,0,0,0.60), 0 0 40px color-mix(in srgb, var(--accent) 8%, transparent)",
             }}
           >
             {title && (

@@ -172,7 +172,7 @@ export default function CreateSessionForm({ categories, userRole, coaches = [], 
           type="submit"
           disabled={loading}
           className="px-5 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40 flex-shrink-0"
-          style={{ background: "var(--accent)", color: "#000" }}
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
         >
           {loading ? "Creando..." : "Crear sesión"}
         </button>

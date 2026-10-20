@@ -198,7 +198,7 @@ export default function NewPaymentForm({ players, adminName }: Props) {
             type="button"
             onClick={() => router.push("/dashboard/admin/payments")}
             className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all"
-            style={{ background: "var(--accent)", color: "#000" }}
+            style={{ background: "var(--accent)", color: "var(--on-accent)" }}
           >
             Volver a pagos
           </button>
@@ -337,7 +337,7 @@ export default function NewPaymentForm({ players, adminName }: Props) {
           type="submit"
           disabled={loading}
           className="flex-1 py-3 rounded-xl text-sm font-semibold transition-all disabled:opacity-40"
-          style={{ background: "var(--accent)", color: "#000" }}
+          style={{ background: "var(--accent)", color: "var(--on-accent)" }}
         >
           {loading ? "Registrando..." : cashImmediate ? "Registrar y generar recibo" : "Crear pendiente"}
         </button>

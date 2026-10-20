@@ -79,8 +79,8 @@ export default async function ParentDashboard({
         <Header title="Inicio" notificationCount={unreadNotifications} />
         <div className="p-4 md:p-8 text-center py-16">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: "rgba(139,92,246,0.12)", border: "1px solid rgba(139,92,246,0.2)" }}>
-            <Shield size={28} style={{ color: "#A78BFA" }} />
+            style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+            <Shield size={28} style={{ color: "var(--accent-light)" }} />
           </div>
           <p className="font-semibold mb-2">Sin jugador vinculado</p>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
@@ -126,13 +126,13 @@ export default async function ParentDashboard({
         <div
           className="rounded-2xl p-5 relative overflow-hidden"
           style={{
-            background: "linear-gradient(135deg, rgba(109,40,217,0.28) 0%, rgba(49,46,129,0.20) 50%, rgba(12,10,36,0.80) 100%)",
-            border: "1px solid rgba(139,92,246,0.20)",
+            background: "linear-gradient(135deg, color-mix(in srgb, var(--accent-secondary) 28%, transparent) 0%, rgba(49,46,129,0.20) 50%, color-mix(in srgb, var(--bg-card) 80%, transparent) 100%)",
+            border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
           }}
         >
           <div className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 60% 80% at 90% 50%, rgba(139,92,246,0.12) 0%, transparent 70%)" }} />
-          <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-1 relative" style={{ color: "rgba(167,139,250,0.70)" }}>
+            style={{ background: "radial-gradient(ellipse 60% 80% at 90% 50%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%)" }} />
+          <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-1 relative" style={{ color: "color-mix(in srgb, var(--accent-light) 70%, transparent)" }}>
             {getGreeting()}
           </p>
           <h2 className="text-2xl font-black tracking-tight text-white relative">{firstName} 👋</h2>
@@ -154,9 +154,9 @@ export default async function ParentDashboard({
                   href={`/dashboard/parent?playerId=${child.player.id}`}
                   className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold flex-shrink-0 transition-all"
                   style={{
-                    background: isActive ? "rgba(139,92,246,0.18)" : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${isActive ? "rgba(139,92,246,0.40)" : "rgba(255,255,255,0.07)"}`,
-                    color: isActive ? "#C4B5FD" : "rgba(255,255,255,0.50)",
+                    background: isActive ? "color-mix(in srgb, var(--accent) 18%, transparent)" : "rgba(255,255,255,0.04)",
+                    border: `1px solid ${isActive ? "color-mix(in srgb, var(--accent) 40%, transparent)" : "rgba(255,255,255,0.07)"}`,
+                    color: isActive ? "var(--accent-lighter)" : "rgba(255,255,255,0.50)",
                   }}
                 >
                   <Users size={13} />
@@ -191,7 +191,7 @@ export default async function ParentDashboard({
 
         {/* Player card */}
         <div className="rounded-2xl p-4 flex items-center gap-4"
-          style={{ background: "rgba(14,14,44,0.75)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(16px)" }}>
+          style={{ background: "color-mix(in srgb, var(--bg-card) 75%, transparent)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(16px)" }}>
           <Avatar name={player.user.name} size="lg" />
           <div className="flex-1 min-w-0">
             <p className="font-black text-[17px] truncate">{player.user.name}</p>
@@ -203,7 +203,7 @@ export default async function ParentDashboard({
               <Badge variant={player.status === "ACTIVE" ? "success" : "warning"}>
                 {player.status === "ACTIVE" ? "Activo" : "Pendiente"}
               </Badge>
-              <span className="flex items-center gap-1 text-xs font-bold" style={{ color: "#A78BFA" }}>
+              <span className="flex items-center gap-1 text-xs font-bold" style={{ color: "var(--accent-light)" }}>
                 <Zap size={10} />{player.xp} XP
               </span>
             </div>
