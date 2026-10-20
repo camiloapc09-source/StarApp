@@ -190,7 +190,7 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
               >
                 <Upload size={13} /> Cambiar logo
               </button>
-              <p className="text-[11px] mt-1.5" style={{ color: "rgba(255,255,255,0.28)" }}>
+              <p className="text-[11px] mt-1.5" style={{ color: "rgba(255,255,255,0.50)" }}>
                 JPG, PNG, WEBP o SVG · máx. 2 MB
               </p>
             </div>
@@ -245,7 +245,7 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
             <label className={labelCls} style={labelStyle}>Día de corte (1-28)</label>
             <input className={inputCls} style={inputStyle} type="number" min={1} max={28}
               value={billingDay} onChange={(e) => setBillingDay(Number(e.target.value))} />
-            <p className="text-[11px] mt-1.5" style={{ color: "rgba(255,255,255,0.28)" }}>
+            <p className="text-[11px] mt-1.5" style={{ color: "rgba(255,255,255,0.50)" }}>
               El ciclo empieza este día cada mes
             </p>
           </div>
@@ -253,7 +253,7 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
             <label className={labelCls} style={labelStyle}><Percent size={9} className="inline mr-1" />Días pronto pago</label>
             <input className={inputCls} style={inputStyle} type="number" min={0} max={30}
               value={earlyDays} onChange={(e) => setEarlyDays(Number(e.target.value))} />
-            <p className="text-[11px] mt-1.5" style={{ color: "rgba(255,255,255,0.28)" }}>
+            <p className="text-[11px] mt-1.5" style={{ color: "rgba(255,255,255,0.50)" }}>
               Días desde el corte para descuento
             </p>
           </div>
@@ -261,7 +261,7 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
             <label className={labelCls} style={labelStyle}><DollarSign size={9} className="inline mr-1" />Descuento pronto pago ($)</label>
             <input className={inputCls} style={inputStyle} type="number" min={0}
               value={earlyDiscount} onChange={(e) => setEarlyDiscount(Number(e.target.value))} />
-            <p className="text-[11px] mt-1.5" style={{ color: "rgba(255,255,255,0.28)" }}>
+            <p className="text-[11px] mt-1.5" style={{ color: "rgba(255,255,255,0.50)" }}>
               Descuento fijo en pesos
             </p>
           </div>
@@ -289,7 +289,7 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
               <label className={labelCls} style={labelStyle}>Zona {zone}</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold"
-                  style={{ color: "rgba(255,255,255,0.35)" }}>$</span>
+                  style={{ color: "rgba(255,255,255,0.55)" }}>$</span>
                 <input
                   className={inputCls}
                   style={{ ...inputStyle, paddingLeft: "1.75rem" }}
@@ -377,7 +377,7 @@ export default function ClubSettingsForm({ club, coaches }: ClubSettingsFormProp
           </div>
         )}
         {coachCanInvite && coaches.length === 0 && (
-          <p className="mt-3 text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>
+          <p className="mt-3 text-xs" style={{ color: "rgba(255,255,255,0.50)" }}>
             No hay entrenadores registrados en este club.
           </p>
         )}

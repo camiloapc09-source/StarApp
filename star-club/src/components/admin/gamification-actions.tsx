@@ -372,7 +372,7 @@ export default function GamificationActions({ players, missions: initialMissions
           />
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="block text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>XP a otorgar</label>
+              <label className="block text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(255,255,255,0.55)" }}>XP a otorgar</label>
               <input
                 type="number" min={1} max={500} value={customXp}
                 onChange={(e) => setCustomXp(Number(e.target.value))}
@@ -381,7 +381,7 @@ export default function GamificationActions({ players, missions: initialMissions
               />
             </div>
             <div className="flex-1">
-              <label className="block text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>Tipo</label>
+              <label className="block text-[10px] uppercase tracking-wider mb-1" style={{ color: "rgba(255,255,255,0.55)" }}>Tipo</label>
               <select value={customType} onChange={(e) => setCustomType(e.target.value)} className={`w-full ${selectCls}`} style={selectStyle}>
                 <option value="CHALLENGE">Reto</option>
                 <option value="DAILY">Diaria</option>

@@ -28,7 +28,7 @@ export default function PlayerSearch({ defaultValue }: { defaultValue?: string }
       <Search
         size={15}
         className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
-        style={{ color: "rgba(255,255,255,0.35)" }}
+        style={{ color: "rgba(255,255,255,0.55)" }}
       />
       <input
         type="search"

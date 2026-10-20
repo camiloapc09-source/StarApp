@@ -11,7 +11,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", children, style, ...props }, ref) => {
     const base =
-      "inline-flex items-center justify-center gap-2 font-bold tracking-wide transition-all duration-200 cursor-pointer focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97]";
+      "inline-flex items-center justify-center gap-2 font-bold tracking-wide transition-all duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-primary)] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97]";
 
     const variants: Record<string, string> = {
       // Gradient CTA — energetic, modern

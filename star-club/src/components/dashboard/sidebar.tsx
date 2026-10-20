@@ -144,7 +144,7 @@ export function Sidebar({
             <p
               key={`${link.href}-section`}
               className="px-3 pt-4 pb-1.5 text-[9px] font-bold tracking-[0.2em] uppercase"
-              style={{ color: "rgba(255,255,255,0.22)" }}
+              style={{ color: "rgba(255,255,255,0.50)" }}
             >
               {link.section}
             </p>
@@ -157,7 +157,7 @@ export function Sidebar({
                 <div title={`Disponible en Plan PRO`}>
                   <div
                     className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium"
-                    style={{ color: "rgba(255,255,255,0.20)", cursor: "not-allowed" }}
+                    style={{ color: "rgba(255,255,255,0.50)", cursor: "not-allowed" }}
                   >
                     <link.icon size={16} strokeWidth={1.5} />
                     <span className="tracking-wide flex-1">{(dict as any).common[link.key] ?? link.key}</span>
@@ -199,7 +199,7 @@ export function Sidebar({
                   {(dict as any).common[link.key] ?? link.key}
                   {link.hint && (
                     <span className="block text-[10px] font-normal leading-tight mt-0.5"
-                      style={{ color: "rgba(255,255,255,0.28)" }}>
+                      style={{ color: "rgba(255,255,255,0.50)" }}>
                       {link.hint}
                     </span>
                   )}
@@ -272,7 +272,7 @@ export function Sidebar({
             <p className="text-[10px] font-bold tracking-wider uppercase mb-0.5" style={{ color: "rgba(255,184,0,0.60)" }}>
               Plan Starter
             </p>
-            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>
+            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
               Actualiza a PRO para desbloquear gamificación, evidencias y más.
             </p>
           </div>
@@ -300,7 +300,7 @@ export function Sidebar({
             <p className="text-[13px] font-semibold truncate leading-none mb-1" style={{ color: "rgba(255,255,255,0.82)" }}>
               {userName}
             </p>
-            <p className="text-[9px] tracking-[0.18em] uppercase truncate" style={{ color: "rgba(255,255,255,0.28)" }}>
+            <p className="text-[9px] tracking-[0.18em] uppercase truncate" style={{ color: "rgba(255,255,255,0.50)" }}>
               {clubName} · {role}
             </p>
           </div>
@@ -308,7 +308,7 @@ export function Sidebar({
             <button
               type="submit"
               className="p-1.5 rounded-lg transition-colors"
-              style={{ color: "rgba(255,255,255,0.22)" }}
+              style={{ color: "rgba(255,255,255,0.50)" }}
               onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,100,100,0.75)")}
               onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.22)")}
               title="Cerrar sesión"

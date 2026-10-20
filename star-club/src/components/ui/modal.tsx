@@ -53,7 +53,7 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
                 <button
                   onClick={onClose}
                   className="p-1.5 rounded-lg transition-colors"
-                  style={{ color: "rgba(255,255,255,0.28)" }}
+                  style={{ color: "rgba(255,255,255,0.50)" }}
                   onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.70)"; e.currentTarget.style.background = "rgba(255,255,255,0.06)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.28)"; e.currentTarget.style.background = "transparent"; }}
                 >

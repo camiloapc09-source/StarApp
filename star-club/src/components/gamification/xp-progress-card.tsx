@@ -51,7 +51,7 @@ export function XPProgressCard({ xp, level, streak, rank, totalPlayers, classNam
         {/* Top row: level + streak */}
         <div className="flex items-start justify-between mb-4">
           <div>
-            <p className="text-[10px] font-bold tracking-[0.22em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <p className="text-[10px] font-bold tracking-[0.22em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.55)" }}>
               Nivel
             </p>
             <div className="flex items-baseline gap-2">
@@ -80,8 +80,8 @@ export function XPProgressCard({ xp, level, streak, rank, totalPlayers, classNam
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                <Flame size={14} style={{ color: "rgba(255,255,255,0.2)" }} />
-                <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.25)" }}>Sin racha</span>
+                <Flame size={14} style={{ color: "rgba(255,255,255,0.50)" }} />
+                <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>Sin racha</span>
               </div>
             )}
 
@@ -91,7 +91,7 @@ export function XPProgressCard({ xp, level, streak, rank, totalPlayers, classNam
                 <p className="text-[10px] font-bold" style={{ color: colors.from }}>
                   #{rank} de {totalPlayers}
                 </p>
-                <p className="text-[9px]" style={{ color: "rgba(255,255,255,0.25)" }}>en el club</p>
+                <p className="text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>en el club</p>
               </div>
             )}
           </div>
@@ -104,7 +104,7 @@ export function XPProgressCard({ xp, level, streak, rank, totalPlayers, classNam
             <span className="text-sm font-bold">{xp.toLocaleString("es-CO")} XP</span>
           </div>
           {currentLevel < 10 && (
-            <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>
               faltan {xpToNext.toLocaleString("es-CO")} XP para nivel {currentLevel + 1}
             </span>
           )}
@@ -125,7 +125,7 @@ export function XPProgressCard({ xp, level, streak, rank, totalPlayers, classNam
         </div>
 
         <div className="flex justify-between mt-1.5">
-          <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.28)" }}>
+          <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.50)" }}>
             {(xp - currentXp).toLocaleString("es-CO")} / {(nextXp - currentXp).toLocaleString("es-CO")} XP
           </span>
           <span className="text-[9px] font-bold" style={{ color: colors.from }}>

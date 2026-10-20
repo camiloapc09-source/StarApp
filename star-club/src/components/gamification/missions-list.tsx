@@ -36,7 +36,7 @@ export function MissionsList({ missions, className }: MissionsListProps) {
       <div className="text-center py-10">
         <Target size={32} className="mx-auto mb-3" style={{ color: "rgba(255,255,255,0.15)" }} />
         <p className="text-sm font-semibold mb-1">Sin misiones asignadas</p>
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.50)" }}>
           Tu entrenador te asignará misiones pronto
         </p>
       </div>
@@ -86,7 +86,7 @@ export function MissionsList({ missions, className }: MissionsListProps) {
                 {/* Progress */}
                 {pct !== null && (
                   <div className="mt-2.5">
-                    <div className="flex justify-between text-[10px] mb-1" style={{ color: "rgba(255,255,255,0.30)" }}>
+                    <div className="flex justify-between text-[10px] mb-1" style={{ color: "rgba(255,255,255,0.50)" }}>
                       <span>{mission.progress} / {mission.target}</span>
                       <span style={{ color: cfg.color }}>{pct}%</span>
                     </div>
@@ -117,7 +117,7 @@ export function MissionsList({ missions, className }: MissionsListProps) {
 
       {completedMissions.length > 0 && (
         <div className="pt-2">
-          <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>
+          <p className="text-[10px] font-bold tracking-[0.18em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.50)" }}>
             Completadas ({completedMissions.length})
           </p>
           {completedMissions.map((mission) => (
@@ -125,7 +125,7 @@ export function MissionsList({ missions, className }: MissionsListProps) {
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl mb-1"
               style={{ background: "rgba(52,211,153,0.04)", border: "1px solid rgba(52,211,153,0.10)" }}>
               <CheckCircle2 size={14} style={{ color: "#34D399" }} />
-              <span className="text-sm flex-1 line-through" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <span className="text-sm flex-1 line-through" style={{ color: "rgba(255,255,255,0.55)" }}>
                 {mission.title}
               </span>
               <div className="flex items-center gap-1 text-xs font-bold" style={{ color: "#34D399" }}>

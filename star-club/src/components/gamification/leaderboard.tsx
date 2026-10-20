@@ -38,7 +38,7 @@ export function Leaderboard({ players, currentPlayerId, trueRank }: Props) {
     <div className="space-y-1.5">
       {/* Current player rank summary */}
       <div className="flex items-center justify-between mb-4 px-1">
-        <p className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.30)" }}>
+        <p className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: "rgba(255,255,255,0.50)" }}>
           {sorted.length <= 20 ? sorted.length : "20+"} jugadores
         </p>
         {myRank > 0 && (
@@ -64,7 +64,7 @@ export function Leaderboard({ players, currentPlayerId, trueRank }: Props) {
           {showSeparator && (
             <div className="flex items-center gap-2 py-1 px-2">
               <div className="flex-1 border-t border-dashed" style={{ borderColor: "rgba(255,255,255,0.08)" }} />
-              <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.20)" }}>···</span>
+              <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.50)" }}>···</span>
               <div className="flex-1 border-t border-dashed" style={{ borderColor: "rgba(255,255,255,0.08)" }} />
             </div>
           )}
@@ -84,7 +84,7 @@ export function Leaderboard({ players, currentPlayerId, trueRank }: Props) {
               {medal ? (
                 <span className="text-lg">{medal}</span>
               ) : (
-                <span className="text-sm font-bold" style={{ color: "rgba(255,255,255,0.25)" }}>
+                <span className="text-sm font-bold" style={{ color: "rgba(255,255,255,0.50)" }}>
                   {rank}
                 </span>
               )}
@@ -108,7 +108,7 @@ export function Leaderboard({ players, currentPlayerId, trueRank }: Props) {
                 {player.user.name}
                 {isMe && <span className="ml-1.5 text-[10px] font-bold" style={{ color: "#A78BFA" }}>tú</span>}
               </p>
-              <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>
+              <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
                 Nivel {level} · {title}
               </p>
             </div>

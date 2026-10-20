@@ -218,7 +218,7 @@ export default function RecordPaymentModal({
                 >
                   {discountActive
                     ? <Check size={15} style={{ color: "#34D399", flexShrink: 0 }} />
-                    : <Sparkles size={15} style={{ color: "rgba(255,255,255,0.35)", flexShrink: 0 }} />}
+                    : <Sparkles size={15} style={{ color: "rgba(255,255,255,0.55)", flexShrink: 0 }} />}
                   <div className="min-w-0">
                     <p className="text-xs font-semibold"
                       style={{ color: discountActive ? "#34D399" : "rgba(255,255,255,0.55)" }}>
@@ -248,10 +248,10 @@ export default function RecordPaymentModal({
               </div>
 
               <div className="flex items-center justify-between mt-2">
-                <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <span className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
                   {discountActive ? "A pagar hoy" : "Total adeudado"}: <strong>${dueNow.toLocaleString("es-CO")}</strong>
                   {discountActive && (
-                    <span className="ml-1.5 line-through" style={{ color: "rgba(255,255,255,0.22)" }}>
+                    <span className="ml-1.5 line-through" style={{ color: "rgba(255,255,255,0.50)" }}>
                       ${fullAmount.toLocaleString("es-CO")}
                     </span>
                   )}

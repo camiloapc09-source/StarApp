@@ -89,7 +89,7 @@ export default function ReceiptShareButton({
         }}
       >
         {/* Club name */}
-        <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "20px", textAlign: "center" }}>
+        <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "20px", textAlign: "center" }}>
           {clubName}
         </p>
 
@@ -129,7 +129,7 @@ export default function ReceiptShareButton({
           { label: "Ref.",     value: `#${receiptNo}` },
         ].map(({ label, value }) => (
           <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-            <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "12px" }}>{label}</span>
+            <span style={{ color: "rgba(255,255,255,0.55)", fontSize: "12px" }}>{label}</span>
             <span style={{ color: "rgba(255,255,255,0.85)", fontSize: "12px", fontWeight: 600 }}>{value}</span>
           </div>
         ))}

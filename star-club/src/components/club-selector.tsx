@@ -76,7 +76,7 @@ export function ClubSelector({ clubs, sportEmoji }: Props) {
         {/* Label */}
         <p
           className="text-[10px] font-bold tracking-[0.38em] uppercase mb-4 text-center"
-          style={{ color: "rgba(255,255,255,0.22)" }}
+          style={{ color: "rgba(255,255,255,0.50)" }}
         >
           Selecciona tu club
         </p>
@@ -132,7 +132,7 @@ export function ClubSelector({ clubs, sportEmoji }: Props) {
                   <ArrowRight
                     size={16}
                     className="flex-shrink-0 transition-transform duration-200 group-hover:translate-x-0.5"
-                    style={{ color: "rgba(255,255,255,0.20)" }}
+                    style={{ color: "rgba(255,255,255,0.50)" }}
                   />
                 </div>
               </Link>

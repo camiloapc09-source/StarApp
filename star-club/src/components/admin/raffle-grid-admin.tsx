@@ -238,7 +238,7 @@ export default function RaffleGridAdmin({
         {/* Number grid */}
         <div className="p-4">
           {raffleOpen && (
-            <p className="text-[10px] mb-3 text-center" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <p className="text-[10px] mb-3 text-center" style={{ color: "rgba(255,255,255,0.55)" }}>
               Toca un número libre para asignarlo a un acudiente
             </p>
           )}
@@ -351,7 +351,7 @@ export default function RaffleGridAdmin({
                 <p className="text-sm font-bold" style={{ color: "#DEC4FF" }}>
                   Asignar número {String(assignMode).padStart(2, "0")}
                 </p>
-                <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.55)" }}>
                   Busca por nombre del acudiente o del deportista
                 </p>
               </div>
@@ -367,7 +367,7 @@ export default function RaffleGridAdmin({
 
           {/* Search input */}
           <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.30)" }} />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.50)" }} />
             <input
               type="text"
               autoFocus

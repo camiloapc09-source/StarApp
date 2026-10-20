@@ -73,7 +73,7 @@ export default function OnboardingWizard({ hasCategories, hasPlayers, hasSession
           Primeros pasos
         </p>
         <h2 className="font-black text-lg text-white">Configura tu club</h2>
-        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.55)" }}>
           {completedCount} de {STEPS.length} completados
         </p>
 
@@ -118,7 +118,7 @@ export default function OnboardingWizard({ hasCategories, hasPlayers, hasSession
                   {step.title}
                 </p>
                 {!isDone && (
-                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>
                     {step.desc}
                   </p>
                 )}

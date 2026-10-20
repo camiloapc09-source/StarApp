@@ -135,7 +135,7 @@ export default function MergeParentsButton({ options }: Props) {
                         <div key={c.name} className="flex items-center gap-1.5 text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
                           <ChevronRight size={10} />
                           {c.name}
-                          {c.documentNumber && <span style={{ color: "rgba(255,255,255,0.30)" }}>· {c.documentNumber}</span>}
+                          {c.documentNumber && <span style={{ color: "rgba(255,255,255,0.50)" }}>· {c.documentNumber}</span>}
                         </div>
                       ))}
                     </div>

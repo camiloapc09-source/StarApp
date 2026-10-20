@@ -112,7 +112,7 @@ export default function SuperAdminPanel({ initialCodes, codeStats, initialClubs 
             style={{ background: "rgba(14,14,44,0.75)", border: "1px solid rgba(255,255,255,0.07)" }}>
             <div className="flex items-center gap-2 mb-1.5">
               <s.icon size={12} style={{ color: s.color }} />
-              <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <span className="text-[10px] font-bold tracking-wider uppercase" style={{ color: "rgba(255,255,255,0.55)" }}>
                 {s.label}
               </span>
             </div>
@@ -198,7 +198,7 @@ function ClubsTab({ clubs }: { clubs: ClubData[] }) {
       <div className="space-y-3">
         {filtered.length === 0 ? (
           <div className="rounded-2xl px-5 py-10 text-center text-sm"
-            style={{ background: "rgba(14,14,44,0.75)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.30)" }}>
+            style={{ background: "rgba(14,14,44,0.75)", border: "1px solid rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.50)" }}>
             No hay clubes registrados todavía
           </div>
         ) : filtered.map((club) => {
@@ -237,7 +237,7 @@ function ClubsTab({ clubs }: { clubs: ClubData[] }) {
                       </span>
                     )}
                   </div>
-                  <p className="text-xs font-mono truncate mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  <p className="text-xs font-mono truncate mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>
                     /{club.slug}{club.city ? ` · ${club.city}` : ""}
                   </p>
                 </div>
@@ -259,12 +259,12 @@ function ClubsTab({ clubs }: { clubs: ClubData[] }) {
                     ? <span style={{ color: overdue ? "#ff4757" : undefined, fontWeight: overdue ? 700 : undefined }}>
                         {format(new Date(club.nextPaymentDue), "d MMM yyyy", { locale: es })}{overdue ? " · vencido" : ""}
                       </span>
-                    : <span style={{ color: "rgba(255,255,255,0.30)" }}>Sin fecha</span>}
+                    : <span style={{ color: "rgba(255,255,255,0.50)" }}>Sin fecha</span>}
                 </SubField>
                 <SubField label="Mensualidad" icon={DollarSign} color="rgba(255,255,255,0.55)">
                   {club.subscriptionAmount != null
                     ? `$${club.subscriptionAmount.toLocaleString("es-CO")}`
-                    : <span style={{ color: "rgba(255,255,255,0.30)" }}>—</span>}
+                    : <span style={{ color: "rgba(255,255,255,0.50)" }}>—</span>}
                 </SubField>
               </div>
 
@@ -281,7 +281,7 @@ function ClubsTab({ clubs }: { clubs: ClubData[] }) {
         })}
       </div>
 
-      <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.20)" }}>
+      <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.50)" }}>
         {filtered.length} de {clubs.length} clubes
       </p>
 
@@ -295,7 +295,7 @@ function ClubsTab({ clubs }: { clubs: ClubData[] }) {
 function SubField({ label, icon: Icon, color, children }: { label: string; icon: React.ElementType; color: string; children: React.ReactNode }) {
   return (
     <div className="min-w-0">
-      <p className="text-[10px] font-bold tracking-wider uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.30)" }}>{label}</p>
+      <p className="text-[10px] font-bold tracking-wider uppercase mb-0.5" style={{ color: "rgba(255,255,255,0.50)" }}>{label}</p>
       <p className="text-xs flex items-center gap-1.5" style={{ color }}>
         <Icon size={11} className="flex-shrink-0" />
         <span className="truncate">{children}</span>
@@ -397,7 +397,7 @@ function SubscriptionModal({ club, onClose }: { club: ClubData; onClose: () => v
 
         {/* Fecha próximo pago */}
         <div>
-          <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+          <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>
             Fecha de próximo pago
           </label>
           <input type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)}
@@ -407,7 +407,7 @@ function SubscriptionModal({ club, onClose }: { club: ClubData; onClose: () => v
 
         {/* Monto mensualidad */}
         <div>
-          <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+          <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>
             Mensualidad de la app (COP)
           </label>
           <input type="number" min={0} step={1000} value={amount} onChange={(e) => setAmount(e.target.value)}
@@ -444,7 +444,7 @@ function StatCell({ value, icon: Icon, color, label }: { value: number; icon: Re
     <div className="flex items-center gap-1.5 md:justify-center">
       <Icon size={11} style={{ color }} />
       <span className="text-sm font-bold" style={{ color }}>{value}</span>
-      <span className="text-xs md:hidden" style={{ color: "rgba(255,255,255,0.35)" }}>{label}</span>
+      <span className="text-xs md:hidden" style={{ color: "rgba(255,255,255,0.55)" }}>{label}</span>
     </div>
   );
 }
@@ -524,7 +524,7 @@ function CodesTab({ initialCodes, codeStats }: { initialCodes: Code[]; codeStats
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>Plan</label>
+            <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>Plan</label>
             <div className="flex gap-2">
               {PLANS.map((p) => {
                 const c = PLAN_COLOR[p];
@@ -545,7 +545,7 @@ function CodesTab({ initialCodes, codeStats }: { initialCodes: Code[]; codeStats
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>Cantidad</label>
+            <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>Cantidad</label>
             <input type="number" min={1} max={50} value={quantity}
               onChange={(e) => setQuantity(Math.max(1, Math.min(50, Number(e.target.value))))}
               className="w-full px-3 py-2.5 rounded-xl text-sm font-medium outline-none"
@@ -553,8 +553,8 @@ function CodesTab({ initialCodes, codeStats }: { initialCodes: Code[]; codeStats
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
-              Notas <span className="font-normal normal-case tracking-normal" style={{ color: "rgba(255,255,255,0.25)" }}>(opcional)</span>
+            <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>
+              Notas <span className="font-normal normal-case tracking-normal" style={{ color: "rgba(255,255,255,0.50)" }}>(opcional)</span>
             </label>
             <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)}
               placeholder="Ej: Club Estrellas · pagó $150k · WhatsApp 311..."
@@ -563,8 +563,8 @@ function CodesTab({ initialCodes, codeStats }: { initialCodes: Code[]; codeStats
           </div>
 
           <div>
-            <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.35)" }}>
-              Vence <span className="font-normal normal-case tracking-normal" style={{ color: "rgba(255,255,255,0.25)" }}>(opcional)</span>
+            <label className="block text-[11px] font-bold tracking-wider uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>
+              Vence <span className="font-normal normal-case tracking-normal" style={{ color: "rgba(255,255,255,0.50)" }}>(opcional)</span>
             </label>
             <input type="date" value={expiresAt} onChange={(e) => setExpiresAt(e.target.value)}
               className="w-full px-3 py-2.5 rounded-xl text-sm font-medium outline-none"
@@ -604,14 +604,14 @@ function CodesTab({ initialCodes, codeStats }: { initialCodes: Code[]; codeStats
               {f === "all" ? "Todos" : f === "unused" ? "Sin usar" : "Usados"}
             </button>
           ))}
-          <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+          <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.50)" }}>
             {filtered.length} códigos
           </span>
         </div>
 
         <div className="divide-y mt-3" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
           {filtered.length === 0 ? (
-            <div className="px-5 py-10 text-center text-sm" style={{ color: "rgba(255,255,255,0.30)" }}>
+            <div className="px-5 py-10 text-center text-sm" style={{ color: "rgba(255,255,255,0.50)" }}>
               No hay códigos en esta vista
             </div>
           ) : filtered.map((c) => {
@@ -640,7 +640,7 @@ function CodesTab({ initialCodes, codeStats }: { initialCodes: Code[]; codeStats
 
                 {c.notes && (
                   <span className="text-xs truncate flex-1 min-w-0 hidden md:block"
-                    style={{ color: "rgba(255,255,255,0.35)" }}>
+                    style={{ color: "rgba(255,255,255,0.55)" }}>
                     {c.notes}
                   </span>
                 )}
@@ -652,7 +652,7 @@ function CodesTab({ initialCodes, codeStats }: { initialCodes: Code[]; codeStats
                       {c.usedAt ? format(new Date(c.usedAt), "d MMM yyyy", { locale: es }) : ""}
                     </span>
                   ) : c.expiresAt ? (
-                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.30)" }}>
+                    <span className="text-[11px]" style={{ color: "rgba(255,255,255,0.50)" }}>
                       Vence {format(new Date(c.expiresAt), "d MMM", { locale: es })}
                     </span>
                   ) : null}

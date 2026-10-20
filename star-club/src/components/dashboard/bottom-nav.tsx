@@ -148,10 +148,10 @@ function MoreSheet({
               <div className="w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.15)" }} />
             </div>
             <div className="flex items-center justify-between px-6 py-3">
-              <p className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: "rgba(255,255,255,0.30)" }}>
+              <p className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: "rgba(255,255,255,0.50)" }}>
                 Más opciones
               </p>
-              <button onClick={onClose} className="p-1.5 rounded-xl" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <button onClick={onClose} className="p-1.5 rounded-xl" style={{ color: "rgba(255,255,255,0.55)" }}>
                 <X size={16} />
               </button>
             </div>

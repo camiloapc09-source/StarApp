@@ -18,7 +18,7 @@ export default function UpgradeBanner({ feature, description, currentPlan = "STA
 
       <h2 className="text-xl font-black mb-2">{feature}</h2>
       <p className="text-sm max-w-sm mb-1" style={{ color: "var(--text-muted)" }}>{description}</p>
-      <p className="text-xs mb-6" style={{ color: "rgba(255,255,255,0.25)" }}>
+      <p className="text-xs mb-6" style={{ color: "rgba(255,255,255,0.50)" }}>
         Tu plan actual: <strong className="text-white/50">{currentPlan}</strong>
       </p>
 

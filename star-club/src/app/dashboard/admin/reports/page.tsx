@@ -211,12 +211,12 @@ export default async function AdminReportsPage() {
                   </p>
                   <div className="flex items-baseline gap-1.5 mb-1">
                     <span className="text-2xl font-black" style={{ color }}>{value}</span>
-                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>/ {total}</span>
+                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.50)" }}>/ {total}</span>
                   </div>
                   <div className="w-full rounded-full overflow-hidden mb-2" style={{ height: 3, background: "rgba(255,255,255,0.08)" }}>
                     <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: color }} />
                   </div>
-                  <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>{pct}% {desc}</p>
+                  <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.55)" }}>{pct}% {desc}</p>
                 </div>
               );
             })}

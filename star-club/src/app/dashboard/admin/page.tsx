@@ -114,7 +114,7 @@ export default async function AdminDashboard() {
 
         {/* Quick actions */}
         <div>
-          <p className="text-[10px] font-bold tracking-[0.22em] uppercase mb-3" style={{ color: "rgba(255,255,255,0.28)" }}>
+          <p className="text-[10px] font-bold tracking-[0.22em] uppercase mb-3" style={{ color: "rgba(255,255,255,0.50)" }}>
             Acciones rápidas
           </p>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
@@ -151,7 +151,7 @@ export default async function AdminDashboard() {
                         <Avatar name={player.user.name} size="sm" />
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-semibold truncate">{player.user.name}</p>
-                          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.55)" }}>
                             {player.category?.name || "Sin categoría"} · #{player.jerseyNumber || "-"}
                           </p>
                         </div>

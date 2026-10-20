@@ -223,7 +223,7 @@ export default async function ParentDashboard({
                 {attendanceRate}%
               </span>
             </div>
-            <span className="text-[9px] font-bold tracking-wide uppercase" style={{ color: "rgba(255,255,255,0.30)" }}>
+            <span className="text-[9px] font-bold tracking-wide uppercase" style={{ color: "rgba(255,255,255,0.50)" }}>
               Asistencia
             </span>
           </div>

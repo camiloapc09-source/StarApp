@@ -140,10 +140,10 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
                     <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl"
                       style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                       <div className="min-w-0">
-                        <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>
+                        <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.55)" }}>
                           Usuario
                           {result.resetToDocument && result.childName && (
-                            <span className="ml-1 normal-case font-normal" style={{ color: "rgba(255,255,255,0.25)" }}>
+                            <span className="ml-1 normal-case font-normal" style={{ color: "rgba(255,255,255,0.50)" }}>
                               · doc. de {result.childName}
                             </span>
                           )}
@@ -163,7 +163,7 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
                     <div className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl"
                       style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>Contraseña temporal</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.55)" }}>Contraseña temporal</p>
                         <p className="text-xl font-mono font-black mt-0.5 tracking-widest" style={{ color: "#FCD34D" }}>
                           {result.tempPassword}
                         </p>
@@ -176,7 +176,7 @@ export default function ResetPasswordButton({ userId, userName, role = "PLAYER",
                     </div>
                   </div>
 
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
                     {result.resetToDocument
                       ? `Usuario y contraseña son el mismo número. Al entrar podrá configurar su correo y clave personal.`
                       : "Compártela por WhatsApp y pídele que la cambie en su perfil."}

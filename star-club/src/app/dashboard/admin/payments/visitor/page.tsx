@@ -182,7 +182,7 @@ export default function VisitorPaymentPage() {
               }}
             >
               {/* Club label */}
-              <p style={{ color: "rgba(255,255,255,0.35)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "20px", textAlign: "center" }}>
+              <p style={{ color: "rgba(255,255,255,0.55)", fontSize: "11px", fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: "20px", textAlign: "center" }}>
                 Comprobante de pago
               </p>
 
@@ -227,7 +227,7 @@ export default function VisitorPaymentPage() {
               <div style={{ height: "1px", background: "rgba(255,255,255,0.08)", margin: "16px 0 12px" }} />
 
               {/* Footer */}
-              <p style={{ textAlign: "center", color: "rgba(255,255,255,0.2)", fontSize: "10px" }}>
+              <p style={{ textAlign: "center", color: "rgba(255,255,255,0.50)", fontSize: "10px" }}>
                 Visitante · No registrado en plataforma
               </p>
             </div>

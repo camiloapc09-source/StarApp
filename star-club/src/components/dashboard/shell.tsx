@@ -108,7 +108,7 @@ export function DashboardShell({
                 <Link
                   href={`/dashboard/${role}/notifications`}
                   className="relative p-2 rounded-xl transition-colors"
-                  style={{ color: "rgba(255,255,255,0.28)" }}
+                  style={{ color: "rgba(255,255,255,0.50)" }}
                 >
                   <Bell size={17} strokeWidth={1.8} />
                   {notificationCount > 0 && (
@@ -125,7 +125,7 @@ export function DashboardShell({
                 <button
                   type="submit"
                   className="p-2 rounded-xl transition-colors"
-                  style={{ color: "rgba(255,255,255,0.28)" }}
+                  style={{ color: "rgba(255,255,255,0.50)" }}
                   title="Cerrar sesión"
                 >
                   <LogOut size={17} strokeWidth={1.8} />

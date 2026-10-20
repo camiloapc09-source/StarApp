@@ -110,7 +110,7 @@ export default async function PlayerDashboard() {
             </span>
             {myRank > 0 && (
               <>
-                <span style={{ color: "rgba(255,255,255,0.25)" }}>·</span>
+                <span style={{ color: "rgba(255,255,255,0.50)" }}>·</span>
                 <Link href="/dashboard/player/stats"
                   className="text-sm font-bold flex items-center gap-1"
                   style={{ color: "#FCD34D" }}>
@@ -118,7 +118,7 @@ export default async function PlayerDashboard() {
                 </Link>
               </>
             )}
-            <span style={{ color: "rgba(255,255,255,0.25)" }}>·</span>
+            <span style={{ color: "rgba(255,255,255,0.50)" }}>·</span>
             <span className="text-sm" style={{ color: "rgba(255,255,255,0.45)" }}>
               {activeMissions > 0
                 ? `${activeMissions} misión${activeMissions !== 1 ? "es" : ""} activa${activeMissions !== 1 ? "s" : ""}`

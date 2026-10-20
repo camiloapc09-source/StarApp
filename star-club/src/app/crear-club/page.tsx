@@ -142,7 +142,7 @@ export default function CreateClubPage() {
           </p>
           <div className="rounded-2xl p-4 mb-6 text-left"
             style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-            <p className="text-xs font-bold tracking-wider uppercase mb-2" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <p className="text-xs font-bold tracking-wider uppercase mb-2" style={{ color: "rgba(255,255,255,0.55)" }}>
               Tu URL de acceso
             </p>
             <p className="text-sm font-mono font-bold" style={{ color: "#A78BFA" }}>/{done.slug}</p>
@@ -204,7 +204,7 @@ export default function CreateClubPage() {
               <div>
                 <label className={labelCls}>Tu código</label>
                 <div className="relative">
-                  <Key size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.30)" }} />
+                  <Key size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.50)" }} />
                   <input
                     className={`${inputCls} uppercase tracking-widest font-mono`}
                     style={{ ...inputStyle, letterSpacing: "0.12em" }}
@@ -271,7 +271,7 @@ export default function CreateClubPage() {
                 <div>
                   <label className={labelCls}>Nombre del club</label>
                   <div className="relative">
-                    <Building2 size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.30)" }} />
+                    <Building2 size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.50)" }} />
                     <input className={inputCls} style={inputStyle} value={clubName}
                       onChange={(e) => setClubName(e.target.value)} placeholder="Ej: Club Estrellas FC" autoFocus />
                   </div>
@@ -279,16 +279,16 @@ export default function CreateClubPage() {
                 <div>
                   <label className={labelCls}>Deporte principal</label>
                   <div className="relative">
-                    <Activity size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "rgba(255,255,255,0.30)" }} />
+                    <Activity size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "rgba(255,255,255,0.50)" }} />
                     <select className={`${inputCls} cursor-pointer`} style={inputStyle} value={sport} onChange={(e) => setSport(e.target.value)}>
                       {SPORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
                     </select>
                   </div>
                 </div>
                 <div>
-                  <label className={labelCls}>Ciudad <span className="font-normal normal-case tracking-normal" style={{ color: "rgba(255,255,255,0.25)" }}>(opcional)</span></label>
+                  <label className={labelCls}>Ciudad <span className="font-normal normal-case tracking-normal" style={{ color: "rgba(255,255,255,0.50)" }}>(opcional)</span></label>
                   <div className="relative">
-                    <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.30)" }} />
+                    <MapPin size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.50)" }} />
                     <input className={inputCls} style={inputStyle} value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ej: Bogotá" />
                   </div>
                 </div>
@@ -319,7 +319,7 @@ export default function CreateClubPage() {
                 <div>
                   <label className={labelCls}>Tu nombre</label>
                   <div className="relative">
-                    <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.30)" }} />
+                    <User size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.50)" }} />
                     <input className={inputCls} style={inputStyle} value={adminName}
                       onChange={(e) => setAdminName(e.target.value)} placeholder="Nombre completo" autoFocus />
                   </div>
@@ -327,7 +327,7 @@ export default function CreateClubPage() {
                 <div>
                   <label className={labelCls}>Email</label>
                   <div className="relative">
-                    <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.30)" }} />
+                    <Mail size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.50)" }} />
                     <input className={inputCls} style={inputStyle} type="email" value={email}
                       onChange={(e) => setEmail(e.target.value)} placeholder="tu@email.com" />
                   </div>
@@ -335,13 +335,13 @@ export default function CreateClubPage() {
                 <div>
                   <label className={labelCls}>Contraseña</label>
                   <div className="relative">
-                    <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.30)" }} />
+                    <Lock size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2" style={{ color: "rgba(255,255,255,0.50)" }} />
                     <input className={`${inputCls} pr-11`} style={inputStyle}
                       type={showPw ? "text" : "password"} value={password}
                       onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" />
                     <button type="button" onClick={() => setShowPw((v) => !v)}
                       className="absolute right-3.5 top-1/2 -translate-y-1/2 p-0.5 transition-colors"
-                      style={{ color: "rgba(255,255,255,0.30)" }}>
+                      style={{ color: "rgba(255,255,255,0.50)" }}>
                       {showPw ? <EyeOff size={15} /> : <Eye size={15} />}
                     </button>
                   </div>
@@ -382,7 +382,7 @@ export default function CreateClubPage() {
                 ].map((row) => (
                   <div key={row.label} className="flex items-center justify-between px-4 py-2.5 rounded-xl"
                     style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    <span className="text-xs font-bold tracking-wider uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>{row.label}</span>
+                    <span className="text-xs font-bold tracking-wider uppercase" style={{ color: "rgba(255,255,255,0.55)" }}>{row.label}</span>
                     <span className="text-sm font-semibold truncate ml-4 font-mono" style={{ color: "rgba(255,255,255,0.85)" }}>{row.value}</span>
                   </div>
                 ))}
@@ -411,7 +411,7 @@ export default function CreateClubPage() {
           )}
         </div>
 
-        <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.28)" }}>
+        <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.50)" }}>
           ¿Ya tienes cuenta?{" "}
           <Link href="/login" className="font-semibold hover:opacity-80" style={{ color: "#A78BFA" }}>
             Iniciar sesión

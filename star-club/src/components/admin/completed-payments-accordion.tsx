@@ -97,7 +97,7 @@ export default function CompletedPaymentsAccordion({ payments }: { payments: Pay
           <p className="text-sm font-bold" style={{ color: "var(--success)" }}>
             ${grandTotal.toLocaleString("es-CO")}
           </p>
-          <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.28)" }}>histórico</p>
+          <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>histórico</p>
         </div>
       </div>
 

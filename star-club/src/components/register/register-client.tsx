@@ -10,7 +10,7 @@ function SpaceInput({ label, error, ...props }: React.InputHTMLAttributes<HTMLIn
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-[10px] font-semibold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <label className="text-[10px] font-semibold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.55)" }}>
           {label}
         </label>
       )}
@@ -35,7 +35,7 @@ function SpaceSelect({ label, children, ...props }: React.SelectHTMLAttributes<H
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-[10px] font-semibold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <label className="text-[10px] font-semibold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.55)" }}>
           {label}
         </label>
       )}
@@ -57,7 +57,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 mt-2">
       <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.07)" }} />
-      <span className="text-[10px] font-bold tracking-[0.3em] uppercase" style={{ color: "rgba(255,255,255,0.28)" }}>
+      <span className="text-[10px] font-bold tracking-[0.3em] uppercase" style={{ color: "rgba(255,255,255,0.50)" }}>
         {children}
       </span>
       <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.07)" }} />
@@ -192,7 +192,7 @@ export default function RegisterClient() {
             className="rounded-3xl p-6"
             style={{ background: "rgba(14,12,40,0.82)", border: "1px solid rgba(255,255,255,0.08)", backdropFilter: "blur(24px)", boxShadow: "0 24px 60px rgba(0,0,0,0.50)" }}
           >
-            <p className="text-[10px] font-semibold tracking-[0.28em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.30)" }}>
+            <p className="text-[10px] font-semibold tracking-[0.28em] uppercase mb-2" style={{ color: "rgba(255,255,255,0.50)" }}>
               Acceso
             </p>
             <h1 className="text-2xl font-black tracking-tight text-white mb-6">Registrarse</h1>
@@ -239,7 +239,7 @@ export default function RegisterClient() {
             </button>
           </div>
 
-          <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.28)" }}>
+          <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.50)" }}>
             ¿Ya tienes cuenta?{" "}
             <a href={redirectSlug ? `/${redirectSlug}` : "/"} className="font-semibold" style={{ color: "rgba(167,139,250,0.80)" }}>
               Inicia sesión
@@ -265,7 +265,7 @@ export default function RegisterClient() {
         <a
           href={redirectSlug ? `/${redirectSlug}` : "/"}
           className="inline-flex items-center gap-1.5 text-[11px] tracking-[0.2em] uppercase mb-6 transition-colors"
-          style={{ color: "rgba(255,255,255,0.25)" }}
+          style={{ color: "rgba(255,255,255,0.50)" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.60)")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
         >
@@ -275,7 +275,7 @@ export default function RegisterClient() {
         {/* Club + Nova header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <p className="text-[10px] font-bold tracking-[0.35em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+            <p className="text-[10px] font-bold tracking-[0.35em] uppercase mb-1" style={{ color: "rgba(255,255,255,0.50)" }}>
               {modalRole === "COACH" ? "Registro de entrenador" : modalRole === "PARENT" ? "Registro de padre / tutor" : "Registro de deportista"}
             </p>
             <h1 className="text-3xl font-black tracking-tight text-white">
@@ -367,7 +367,7 @@ export default function RegisterClient() {
 
           {modalRole !== "PARENT" && (
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold tracking-[0.25em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <label className="text-[10px] font-bold tracking-[0.25em] uppercase" style={{ color: "rgba(255,255,255,0.55)" }}>
                 {modalRole === "PLAYER" ? "Fecha de nacimiento del deportista" : "Fecha de nacimiento"}
               </label>
               <input
@@ -426,7 +426,7 @@ export default function RegisterClient() {
 
               {/* Additional children */}
               <SectionLabel>Más hijos en el club</SectionLabel>
-              <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.30)" }}>
+              <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
                 ¿Tienes más hijos registrados en el club? Agrega sus números de documento y quedarán vinculados automáticamente.
               </p>
               {additionalDocs.map((doc, i) => (
@@ -498,7 +498,7 @@ export default function RegisterClient() {
                   <option key={r} value={r} style={{ background: "#0E0E2C" }}>{r}</option>
                 ))}
               </SpaceSelect>
-              <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.22)" }}>
+              <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.50)" }}>
                 La contraseña del deportista y del acudiente será el número de documento del deportista.
               </p>
             </>

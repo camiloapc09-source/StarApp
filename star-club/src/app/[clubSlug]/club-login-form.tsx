@@ -67,7 +67,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
         <button
           onClick={() => { window.location.href = "/"; }}
           className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors"
-          style={{ color: "rgba(255,255,255,0.28)" }}
+          style={{ color: "rgba(255,255,255,0.50)" }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.60)")}
           onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.28)")}
         >
@@ -114,7 +114,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
           </motion.div>
 
           <h1 className="text-2xl font-black tracking-tight text-white mb-1">{club.name}</h1>
-          <p className="text-xs font-medium tracking-[0.25em] uppercase" style={{ color: "rgba(255,255,255,0.28)" }}>
+          <p className="text-xs font-medium tracking-[0.25em] uppercase" style={{ color: "rgba(255,255,255,0.50)" }}>
             {club.sport}
           </p>
         </div>
@@ -129,7 +129,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
             boxShadow: "0 24px 60px rgba(0,0,0,0.50)",
           }}
         >
-          <p className="text-[11px] font-bold tracking-[0.28em] uppercase mb-5" style={{ color: "rgba(255,255,255,0.30)" }}>
+          <p className="text-[11px] font-bold tracking-[0.28em] uppercase mb-5" style={{ color: "rgba(255,255,255,0.50)" }}>
             Inicia sesión
           </p>
 
@@ -180,7 +180,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="flex-shrink-0 transition-colors"
-                style={{ color: "rgba(255,255,255,0.25)" }}
+                style={{ color: "rgba(255,255,255,0.50)" }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.60)")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255,255,255,0.25)")}
               >
@@ -233,7 +233,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
         </p>
 
         {/* Register link */}
-        <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.28)" }}>
+        <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.50)" }}>
           ¿No tienes cuenta?{" "}
           <Link
             href={`/register?club=${club.slug}`}
@@ -246,9 +246,9 @@ export function ClubLoginForm({ club }: { club: Club }) {
           </Link>
         </p>
 
-        <p className="text-center text-xs mt-2" style={{ color: "rgba(255,255,255,0.20)" }}>
+        <p className="text-center text-xs mt-2" style={{ color: "rgba(255,255,255,0.50)" }}>
           ¿Olvidaste tu contraseña?{" "}
-          <span style={{ color: "rgba(255,255,255,0.35)" }}>
+          <span style={{ color: "rgba(255,255,255,0.55)" }}>
             Contacta al administrador de tu club para que la resetee.
           </span>
         </p>

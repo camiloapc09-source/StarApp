@@ -365,7 +365,7 @@ export default function BulkMarkReceivedPanel({
                       ? <CheckSquare size={18} style={{ color: "#34D399" }} />
                       : someInMonth
                       ? <MinusSquare size={18} style={{ color: "#34D399" }} />
-                      : <Square size={18} style={{ color: "rgba(255,255,255,0.25)" }} />}
+                      : <Square size={18} style={{ color: "rgba(255,255,255,0.50)" }} />}
                   </div>
 
                   <div className="flex-shrink-0" style={{ color: "rgba(255,255,255,0.45)" }}>
@@ -431,7 +431,7 @@ export default function BulkMarkReceivedPanel({
                                 ? <CheckSquare size={16} style={{ color: "#34D399" }} />
                                 : someInGroup
                                 ? <MinusSquare size={16} style={{ color: "#34D399" }} />
-                                : <Square size={16} style={{ color: "rgba(255,255,255,0.25)" }} />}
+                                : <Square size={16} style={{ color: "rgba(255,255,255,0.50)" }} />}
                             </div>
                             <Avatar name={g.player.user.name} src={g.player.user.avatar} size="sm" />
                             <div className="flex-1 min-w-0">
@@ -469,7 +469,7 @@ export default function BulkMarkReceivedPanel({
                                   <div className="flex-shrink-0 cursor-pointer" onClick={() => toggle(payment.id)}>
                                     {isSelected
                                       ? <CheckSquare size={16} style={{ color: "#34D399" }} />
-                                      : <Square size={16} style={{ color: "rgba(255,255,255,0.25)" }} />}
+                                      : <Square size={16} style={{ color: "rgba(255,255,255,0.50)" }} />}
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium truncate">{payment.concept}</p>

@@ -205,7 +205,7 @@ export default async function AdminParentsPage() {
 
                     {/* Children */}
                     {parent.children.length === 0 ? (
-                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>Sin hijos vinculados</p>
+                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.50)" }}>Sin hijos vinculados</p>
                     ) : (
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {parent.children.map((link) => {

@@ -16,7 +16,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={id}
             className="text-[10px] font-bold tracking-[0.25em] uppercase"
-            style={{ color: "rgba(255,255,255,0.35)" }}
+            style={{ color: "rgba(255,255,255,0.55)" }}
           >
             {label}
           </label>

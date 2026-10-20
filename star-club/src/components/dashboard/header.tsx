@@ -21,7 +21,7 @@ export function Header({ title, subtitle }: HeaderProps) {
           {title}
         </h1>
         {subtitle && (
-          <p className="text-xs mt-0.5 tracking-wide" style={{ color: "rgba(255,255,255,0.28)" }}>
+          <p className="text-xs mt-0.5 tracking-wide" style={{ color: "rgba(255,255,255,0.50)" }}>
             {subtitle}
           </p>
         )}

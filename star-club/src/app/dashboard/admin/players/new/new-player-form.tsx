@@ -273,7 +273,7 @@ function ParentCredentialsModal({
               <div key={row.field} className="flex items-center justify-between gap-2 px-3 py-2 rounded-xl"
                 style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.55)" }}>
                     {row.label}
                   </p>
                   <p className={`font-mono font-bold mt-0.5 ${row.field === "password" ? "text-xl tracking-widest" : "text-sm"}`}
@@ -290,7 +290,7 @@ function ParentCredentialsModal({
             ))}
           </div>
 
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.30)" }}>
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.50)" }}>
             Pídele que cambie la contraseña en su perfil después de entrar.
           </p>
         </div>

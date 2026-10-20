@@ -143,18 +143,18 @@ export default function ParentSetupPage() {
               border: "1px solid rgba(255,255,255,0.08)",
               backdropFilter: "blur(24px)",
             }}>
-            <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.30)" }}>
+            <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.50)" }}>
               Tu acceso
             </p>
 
             {/* Email */}
             <div>
-              <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: "rgba(255,255,255,0.55)" }}>
                 Correo electrónico
               </label>
               <div className="flex items-center gap-3 rounded-2xl px-4 py-3.5"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.10)" }}>
-                <Mail size={15} style={{ color: "rgba(255,255,255,0.30)" }} />
+                <Mail size={15} style={{ color: "rgba(255,255,255,0.50)" }} />
                 <input
                   type="email"
                   value={email}
@@ -170,12 +170,12 @@ export default function ParentSetupPage() {
 
             {/* Document number */}
             <div>
-              <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: "rgba(255,255,255,0.55)" }}>
                 Número de documento (para recuperar cuenta)
               </label>
               <div className="flex items-center gap-3 rounded-2xl px-4 py-3.5"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.10)" }}>
-                <ShieldCheck size={15} style={{ color: "rgba(255,255,255,0.30)" }} />
+                <ShieldCheck size={15} style={{ color: "rgba(255,255,255,0.50)" }} />
                 <input
                   type="text"
                   value={documentNumber}
@@ -190,12 +190,12 @@ export default function ParentSetupPage() {
 
             {/* Password */}
             <div>
-              <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: "rgba(255,255,255,0.55)" }}>
                 Nueva contraseña
               </label>
               <div className="flex items-center gap-3 rounded-2xl px-4 py-3.5"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.10)" }}>
-                <Lock size={15} style={{ color: "rgba(255,255,255,0.30)" }} />
+                <Lock size={15} style={{ color: "rgba(255,255,255,0.50)" }} />
                 <input
                   type={showPw ? "text" : "password"}
                   value={password}
@@ -206,7 +206,7 @@ export default function ParentSetupPage() {
                   className="flex-1 bg-transparent outline-none text-sm"
                   style={{ color: "rgba(255,255,255,0.88)", caretColor: "#8B5CF6" }}
                 />
-                <button type="button" onClick={() => setShowPw(!showPw)} style={{ color: "rgba(255,255,255,0.25)" }}>
+                <button type="button" onClick={() => setShowPw(!showPw)} style={{ color: "rgba(255,255,255,0.50)" }}>
                   {showPw ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
@@ -214,12 +214,12 @@ export default function ParentSetupPage() {
 
             {/* Confirm */}
             <div>
-              <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <label className="text-[10px] font-bold tracking-widest uppercase mb-1.5 block" style={{ color: "rgba(255,255,255,0.55)" }}>
                 Confirmar contraseña
               </label>
               <div className="flex items-center gap-3 rounded-2xl px-4 py-3.5"
                 style={{ background: "rgba(255,255,255,0.05)", border: "1.5px solid rgba(255,255,255,0.10)" }}>
-                <Lock size={15} style={{ color: "rgba(255,255,255,0.30)" }} />
+                <Lock size={15} style={{ color: "rgba(255,255,255,0.50)" }} />
                 <input
                   type={showPw ? "text" : "password"}
                   value={confirm}
@@ -242,7 +242,7 @@ export default function ParentSetupPage() {
               backdropFilter: "blur(24px)",
             }}>
             <div className="flex items-center justify-between">
-              <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.30)" }}>
+              <p className="text-[10px] font-bold tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.50)" }}>
                 Tus hijos en el club
               </p>
               {selected.size > 0 && (
@@ -256,7 +256,7 @@ export default function ParentSetupPage() {
             {/* Search */}
             <div className="flex items-center gap-2 rounded-xl px-3 py-2.5"
               style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <Search size={13} style={{ color: "rgba(255,255,255,0.25)" }} />
+              <Search size={13} style={{ color: "rgba(255,255,255,0.50)" }} />
               <input
                 type="text"
                 value={search}
@@ -273,7 +273,7 @@ export default function ParentSetupPage() {
                 <span className="w-5 h-5 rounded-full border-2 border-white/20 border-t-white/60 animate-spin" />
               </div>
             ) : filtered.length === 0 ? (
-              <p className="text-xs text-center py-4" style={{ color: "rgba(255,255,255,0.30)" }}>
+              <p className="text-xs text-center py-4" style={{ color: "rgba(255,255,255,0.50)" }}>
                 {search ? "No hay coincidencias" : "No hay jugadores activos"}
               </p>
             ) : (
@@ -311,7 +311,7 @@ export default function ParentSetupPage() {
                           {p.name}
                         </p>
                         {p.category && (
-                          <p className="text-[10px] truncate" style={{ color: "rgba(255,255,255,0.35)" }}>
+                          <p className="text-[10px] truncate" style={{ color: "rgba(255,255,255,0.55)" }}>
                             {p.category}
                           </p>
                         )}
@@ -323,7 +323,7 @@ export default function ParentSetupPage() {
               </div>
             )}
 
-            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.20)" }}>
+            <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.50)" }}>
               ¿No encuentras a tu hijo? Contacta al administrador del club.
             </p>
           </div>

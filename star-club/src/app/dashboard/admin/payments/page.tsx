@@ -234,12 +234,12 @@ export default async function AdminPaymentsPage({
               <p className="text-[11px] leading-none flex items-center gap-1"
                 style={{ color: monthDelta >= 0 ? "var(--success)" : "var(--error)" }}>
                 {monthDelta >= 0 ? "▲" : "▼"} {Math.abs(monthDelta)}%
-                <span style={{ color: "rgba(255,255,255,0.28)" }}>
+                <span style={{ color: "rgba(255,255,255,0.50)" }}>
                   vs ${collectedLastMonth.toLocaleString("es-CO")} en {lastMonth.label.split(" ")[0]}
                 </span>
               </p>
             )}
-            <p className="text-[10px] leading-none" style={{ color: "rgba(255,255,255,0.25)" }}>
+            <p className="text-[10px] leading-none" style={{ color: "rgba(255,255,255,0.50)" }}>
               Histórico: ${collectedAllTime.toLocaleString("es-CO")}
             </p>
           </div>
