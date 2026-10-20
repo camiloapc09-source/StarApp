@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog, toast } from "@/components/ui/feedback";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Banknote, X, Trash2 } from "lucide-react";
@@ -68,7 +69,7 @@ export function PaymentRejectButton({ paymentId }: { paymentId: string }) {
   const router = useRouter();
 
   async function reject() {
-    if (!confirm("¿Rechazar este comprobante y devolver el pago a Pendiente?")) return;
+    if (!await confirmDialog("¿Rechazar este comprobante y devolver el pago a Pendiente?")) return;
     setLoading(true);
     await fetch(`/api/payments/${paymentId}/reject`, { method: "POST" });
     router.refresh();
@@ -92,13 +93,13 @@ export function PaymentDeleteButton({ paymentId, playerName }: { paymentId: stri
   const router = useRouter();
 
   async function deletePayment() {
-    if (!confirm(`¿Eliminar este registro de pago de ${playerName}? Esta acción no se puede deshacer.`)) return;
+    if (!await confirmDialog(`¿Eliminar este registro de pago de ${playerName}? Esta acción no se puede deshacer.`)) return;
     setLoading(true);
     const res = await fetch(`/api/payments/${paymentId}`, { method: "DELETE" });
     if (res.ok) {
       router.refresh();
     } else {
-      alert("Error al eliminar el pago.");
+      toast.error("Error al eliminar el pago.");
       setLoading(false);
     }
   }

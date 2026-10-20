@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Pencil, CheckCircle2, XCircle, Zap, Target, Loader2, Check, X } from "lucide-react";
@@ -76,7 +77,7 @@ export default function MissionsManager({ initial }: { initial: Mission[] }) {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("¿Eliminar esta misión?")) return;
+    if (!await confirmDialog("¿Eliminar esta misión?")) return;
     setLoading(`del-${id}`);
     const res = await fetch(`/api/missions/${id}`, { method: "DELETE" });
     if (res.ok) {

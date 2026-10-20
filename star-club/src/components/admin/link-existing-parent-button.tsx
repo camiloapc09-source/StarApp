@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/feedback";
 import { useState, useEffect, useRef } from "react";
 import { Link2, X, Search, CheckCircle2, AlertTriangle, Unlink } from "lucide-react";
 
@@ -55,7 +56,7 @@ export default function LinkExistingParentButton({ playerId, playerName }: Props
         setSuccess(parentUserId);
         setTimeout(() => window.location.reload(), 1000);
       } else {
-        alert(data.error ?? "Error al vincular");
+        toast.error(data.error ?? "Error al vincular");
       }
     } finally {
       setLinking(null);

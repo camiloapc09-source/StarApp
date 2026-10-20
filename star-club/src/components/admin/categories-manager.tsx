@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState } from "react";
 import { Pencil, Trash2, Plus, Check, X, Users } from "lucide-react";
 
@@ -60,7 +61,7 @@ export default function CategoriesManager({ initialCategories }: Props) {
   }
 
   async function deleteCategory(id: string) {
-    if (!confirm("¿Eliminar esta categoría? Los jugadores asignados quedarán sin categoría.")) return;
+    if (!await confirmDialog("¿Eliminar esta categoría? Los jugadores asignados quedarán sin categoría.")) return;
     setLoading(true);
     setError(null);
     const res = await fetch(`/api/categories/${id}`, { method: "DELETE" });

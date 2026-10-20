@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { CheckCircle2, XCircle, Zap, Clock, ExternalLink } from "lucide-react";
@@ -48,7 +49,7 @@ export default function AdminEvidencePanel({ initialPending, initialRecent }: Pr
   }
 
   async function acceptAll() {
-    if (!confirm(`¿Aceptar las ${pending.length} evidencias pendientes?`)) return;
+    if (!await confirmDialog(`¿Aceptar las ${pending.length} evidencias pendientes?`)) return;
     setLoading("all");
     const res = await fetch("/api/evidence", {
       method: "PATCH",

@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -344,7 +345,7 @@ function SubscriptionModal({ club, onClose }: { club: ClubData; onClose: () => v
     const msg = next
       ? `¿Reactivar el acceso de ${club.name}? Sus usuarios podrán volver a usar la app.`
       : `¿Suspender el acceso de ${club.name}? Sus usuarios NO podrán usar la app hasta que lo reactives.`;
-    if (!window.confirm(msg)) return;
+    if (!await confirmDialog(msg)) return;
     setToggling(true); setError(null);
     try {
       await patch({ active: next });

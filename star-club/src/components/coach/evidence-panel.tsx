@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,7 @@ export function EvidencePanel({
   }
 
   async function handleAcceptAll() {
-    if (!confirm(`${t.acceptAll}?`)) return;
+    if (!await confirmDialog(`${t.acceptAll}?`)) return;
     setLoading(true);
     try {
       const res = await fetch("/api/evidence", {

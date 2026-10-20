@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil, Trash2, X, Check, Loader2, KeyRound } from "lucide-react";
@@ -146,7 +147,7 @@ export function CoachDeleteButton({ coachId, coachName }: { coachId: string; coa
   const router = useRouter();
 
   async function handleDelete() {
-    if (!confirm(`¿Eliminar a "${coachName}"? Esta acción no se puede deshacer.`)) return;
+    if (!await confirmDialog(`¿Eliminar a "${coachName}"? Esta acción no se puede deshacer.`)) return;
     setLoading(true);
     await fetch(`/api/admin/users/${coachId}`, { method: "DELETE" });
     setLoading(false);

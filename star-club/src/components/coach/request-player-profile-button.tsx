@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus, Loader2 } from "lucide-react";
@@ -11,7 +12,7 @@ export function RequestPlayerProfileButton() {
   const [error, setError] = useState("");
 
   async function handleRequest() {
-    if (!confirm("¿Deseas enviar una solicitud al administrador para activar tu perfil de jugador?")) return;
+    if (!await confirmDialog("¿Deseas enviar una solicitud al administrador para activar tu perfil de jugador?")) return;
     setLoading(true);
     setError("");
     try {

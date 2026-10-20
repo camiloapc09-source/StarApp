@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import PWARegister from "@/components/pwa-register";
 import AuthSessionProvider from "@/components/session-provider";
+import { FeedbackHost } from "@/components/ui/feedback";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -57,6 +58,7 @@ export default function RootLayout({
         <AuthSessionProvider>
           <PWARegister />
           {children}
+          <FeedbackHost />
         </AuthSessionProvider>
       </body>
     </html>

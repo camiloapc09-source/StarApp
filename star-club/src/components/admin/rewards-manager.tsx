@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState } from "react";
 import { Plus, Trash2, Pencil, Star, Loader2, Check, X } from "lucide-react";
 
@@ -73,7 +74,7 @@ export default function RewardsManager({ initial }: { initial: Reward[] }) {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("¿Eliminar esta recompensa?")) return;
+    if (!await confirmDialog("¿Eliminar esta recompensa?")) return;
     setLoading(id);
     const res = await fetch(`/api/rewards/${id}`, { method: "DELETE" });
     if (res.ok) {

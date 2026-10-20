@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog, toast } from "@/components/ui/feedback";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, PowerOff, Power } from "lucide-react";
@@ -26,7 +27,7 @@ export default function PlayerStatusToggle({
     const msg = isActive
       ? `¿Desactivar a ${playerName}? Dejará de generar pagos y quedará inactivo.`
       : `¿Reactivar a ${playerName}? Volverá a estar activo y recibirá pagos.`;
-    if (!confirm(msg)) return;
+    if (!await confirmDialog(msg)) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/players/${playerId}`, {
@@ -37,7 +38,7 @@ export default function PlayerStatusToggle({
       if (res.ok) router.refresh();
       else {
         const d = await res.json();
-        alert(d.error ?? "Error al actualizar");
+        toast.error(d.error ?? "Error al actualizar");
       }
     } finally {
       setLoading(false);

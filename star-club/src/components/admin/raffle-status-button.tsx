@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -21,7 +22,7 @@ export default function RaffleStatusButton({
   if (!action) return null;
 
   async function handleClick() {
-    if (!confirm(`¿${action.label}?`)) return;
+    if (!await confirmDialog(`¿${action.label}?`)) return;
     setLoading(true);
     try {
       await fetch(`/api/rifas/${raffleId}`, {

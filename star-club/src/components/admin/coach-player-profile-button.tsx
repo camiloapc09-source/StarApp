@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog, toast } from "@/components/ui/feedback";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UserPlus, UserMinus, Loader2 } from "lucide-react";
@@ -9,7 +10,7 @@ export function CreatePlayerProfileButton({ coachId, coachName }: { coachId: str
   const [loading, setLoading] = useState(false);
 
   async function handleCreate() {
-    if (!confirm(`¿Crear perfil de jugador para ${coachName}? Quedará exento de mensualidades.`)) return;
+    if (!await confirmDialog(`¿Crear perfil de jugador para ${coachName}? Quedará exento de mensualidades.`)) return;
     setLoading(true);
     try {
       const res = await fetch("/api/admin/coaches/player-profile", {
@@ -21,7 +22,7 @@ export function CreatePlayerProfileButton({ coachId, coachName }: { coachId: str
         router.refresh();
       } else {
         const d = await res.json();
-        alert(d.error ?? "Error al crear perfil");
+        toast.error(d.error ?? "Error al crear perfil");
       }
     } finally {
       setLoading(false);
@@ -51,7 +52,7 @@ export function RemovePlayerProfileButton({ coachId, coachName }: { coachId: str
   const [loading, setLoading] = useState(false);
 
   async function handleRemove() {
-    if (!confirm(`¿Eliminar el perfil de jugador de ${coachName}? Esta acción no se puede deshacer.`)) return;
+    if (!await confirmDialog(`¿Eliminar el perfil de jugador de ${coachName}? Esta acción no se puede deshacer.`)) return;
     setLoading(true);
     try {
       const res = await fetch("/api/admin/coaches/player-profile", {
@@ -63,7 +64,7 @@ export function RemovePlayerProfileButton({ coachId, coachName }: { coachId: str
         router.refresh();
       } else {
         const d = await res.json();
-        alert(d.error ?? "Error al eliminar perfil");
+        toast.error(d.error ?? "Error al eliminar perfil");
       }
     } finally {
       setLoading(false);

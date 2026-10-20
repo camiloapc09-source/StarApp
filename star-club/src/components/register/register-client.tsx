@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/feedback";
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -133,11 +134,11 @@ export default function RegisterClient() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (modalRole === "COACH" || modalRole === "PARENT") {
-      if (form.password.length < 6) { alert("La contraseña debe tener al menos 6 caracteres."); return; }
-      if (form.password !== form.confirmPassword) { alert("Las contraseñas no coinciden."); return; }
+      if (form.password.length < 6) { toast.error("La contraseña debe tener al menos 6 caracteres."); return; }
+      if (form.password !== form.confirmPassword) { toast.error("Las contraseñas no coinciden."); return; }
     }
     if (isMinor && (!form.parentName || !form.parentPhone || !form.parentRelation)) {
-      alert("El deportista es menor de edad. Los datos del acudiente son obligatorios.");
+      toast.error("El deportista es menor de edad. Los datos del acudiente son obligatorios.");
       return;
     }
     setLoading(true);
@@ -159,12 +160,12 @@ export default function RegisterClient() {
           const login = await signIn("credentials", { email: form.email, password: form.password, redirect: false });
           if (login?.ok) { router.push("/dashboard/parent"); return; }
         }
-        alert("¡Registro exitoso! Ya puedes iniciar sesión.");
+        toast.success("¡Registro exitoso! Ya puedes iniciar sesión.");
         router.push(redirectSlug ? `/${redirectSlug}` : "/");
       } else {
-        alert(data.error || "Error al registrar");
+        toast.error(data.error || "Error al registrar");
       }
-    } catch { alert("Error al registrar"); }
+    } catch { toast.error("Error al registrar"); }
     finally { setLoading(false); }
   }
 

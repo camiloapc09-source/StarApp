@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog, toast } from "@/components/ui/feedback";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
@@ -14,13 +15,13 @@ export default function RaffleDeleteButton({
   const [loading, setLoading] = useState(false);
 
   async function handleClick() {
-    if (!confirm(`¿Borrar la rifa "${title}"? Se eliminan también sus números y comprobantes. No se puede deshacer.`)) return;
+    if (!await confirmDialog(`¿Borrar la rifa "${title}"? Se eliminan también sus números y comprobantes. No se puede deshacer.`)) return;
     setLoading(true);
     try {
       const res = await fetch(`/api/rifas/${raffleId}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        alert(data?.error ?? "No se pudo borrar la rifa");
+        toast.error(data?.error ?? "No se pudo borrar la rifa");
         return;
       }
       router.refresh();

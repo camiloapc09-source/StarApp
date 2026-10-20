@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Clock, Upload, X, Ticket } from "lucide-react";
@@ -103,7 +104,7 @@ export default function RafflePickForm({
   }
 
   async function handleRelease(number: number) {
-    if (!confirm(`¿Liberar el número ${String(number).padStart(2, "0")}?`)) return;
+    if (!await confirmDialog(`¿Liberar el número ${String(number).padStart(2, "0")}?`)) return;
     const res = await fetch(`/api/rifas/${raffleId}/tickets/${number}/release`, { method: "DELETE" });
     if (res.ok) router.refresh();
   }

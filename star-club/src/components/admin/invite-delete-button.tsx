@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Trash2, Loader2 } from "lucide-react";
@@ -9,7 +10,7 @@ export function InviteDeleteButton({ inviteId }: { inviteId: string }) {
   const router = useRouter();
 
   async function handleDelete() {
-    if (!confirm("¿Eliminar este código de invitación?")) return;
+    if (!await confirmDialog("¿Eliminar este código de invitación?")) return;
     setLoading(true);
     await fetch(`/api/invites?id=${inviteId}`, { method: "DELETE" });
     setLoading(false);

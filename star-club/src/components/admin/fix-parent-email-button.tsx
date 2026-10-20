@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/feedback";
 import { useState } from "react";
 import { AlertTriangle, Pencil, Check, X } from "lucide-react";
 
@@ -16,7 +17,7 @@ export default function FixParentEmailButton({ userId, userName, currentEmail }:
   const [done, setDone] = useState(false);
 
   async function save() {
-    if (!email.includes("@")) return alert("Ingresa un email válido");
+    if (!email.includes("@")) return toast.error("Ingresa un email válido");
     setSaving(true);
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
@@ -29,7 +30,7 @@ export default function FixParentEmailButton({ userId, userName, currentEmail }:
         setDone(true);
         setTimeout(() => window.location.reload(), 800);
       } else {
-        alert(data.error ?? "Error al actualizar");
+        toast.error(data.error ?? "Error al actualizar");
       }
     } finally {
       setSaving(false);

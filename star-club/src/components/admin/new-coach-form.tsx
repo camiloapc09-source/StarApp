@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/feedback";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,10 @@ export default function NewCoachForm() {
     try {
       const res = await fetch('/api/admin/users', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, role: 'COACH' }) });
       const data = await res.json();
-      if (!res.ok) alert(data.error || 'Failed'); else alert('Created');
+      if (!res.ok) toast.error(data.error || 'No se pudo crear el entrenador'); else toast.success('Entrenador creado');
     } catch (e) {
       console.error(e);
-      alert('Failed');
+      toast.error('No se pudo crear el entrenador');
     } finally { setLoading(false); }
   }
 

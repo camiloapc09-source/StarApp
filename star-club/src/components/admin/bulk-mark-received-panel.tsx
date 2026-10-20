@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog, toast } from "@/components/ui/feedback";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -209,7 +210,7 @@ export default function BulkMarkReceivedPanel({
   // del mes siguiente. Borrarlo cortaba la cadena y el alumno no volvía a tener
   // cobros nunca más.
   async function skipPayment(payment: Payment, label: string) {
-    if (!window.confirm(
+    if (!await confirmDialog(
       `¿${label} no vino en este periodo?
 
 "${payment.concept}" quedará como "No vino" (no se cobra) y se creará el cobro del mes siguiente.`,
@@ -219,7 +220,7 @@ export default function BulkMarkReceivedPanel({
       const res = await fetch(`/api/payments/${payment.id}/skip`, { method: "POST" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error ?? "No se pudo marcar el cobro");
+        toast.error(data.error ?? "No se pudo marcar el cobro");
         return;
       }
       setSelected((prev) => {
@@ -235,7 +236,7 @@ export default function BulkMarkReceivedPanel({
 
   async function deletePayments(ids: string[], label: string) {
     if (ids.length === 0) return;
-    if (!window.confirm(
+    if (!await confirmDialog(
       ids.length === 1
         ? `¿Eliminar este cobro de ${label}? Esta acción no se puede deshacer.`
         : `¿Eliminar los ${ids.length} cobros pendientes de ${label}? Úsalo para deportistas retirados (si solo faltó un mes, usa "No vino"). No se puede deshacer.`,

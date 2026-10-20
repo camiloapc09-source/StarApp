@@ -1,5 +1,6 @@
 "use client";
 
+import { toast } from "@/components/ui/feedback";
 import { useState } from "react";
 import { UserPlus, Copy, Check, X } from "lucide-react";
 
@@ -27,7 +28,7 @@ export default function InviteParentButton({ playerId, playerName }: Props) {
         setUrl(`${window.location.origin}/register?code=${data.code}`);
         setOpen(true);
       } else {
-        alert(data.error || "Error generando enlace");
+        toast.error(data.error || "Error generando enlace");
       }
     } finally {
       setLoading(false);

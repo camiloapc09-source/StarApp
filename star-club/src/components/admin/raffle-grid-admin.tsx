@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Clock, XCircle, Eye, EyeOff, Upload, Search, MessageCircle } from "lucide-react";
@@ -158,7 +159,7 @@ export default function RaffleGridAdmin({
   }
 
   async function handleRelease(number: number) {
-    if (!confirm(`¿Liberar el número ${String(number).padStart(2, "0")}?`)) return;
+    if (!await confirmDialog(`¿Liberar el número ${String(number).padStart(2, "0")}?`)) return;
     setReleasing(true);
     try {
       const res = await fetch(`/api/rifas/${raffleId}/tickets/${number}/release`, { method: "DELETE" });

@@ -1,5 +1,6 @@
 "use client";
 
+import { confirmDialog } from "@/components/ui/feedback";
 import { useState, useRef } from "react";
 import { Camera, X, Loader2, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -49,7 +50,7 @@ export default function AdminPlayerPhotoButton({ playerId, playerName, currentPh
   }
 
   async function handleDelete() {
-    if (!confirm(`¿Eliminar la foto de ${playerName}?`)) return;
+    if (!await confirmDialog(`¿Eliminar la foto de ${playerName}?`)) return;
     setDeleting(true);
     const res = await fetch(`/api/admin/players/${playerId}/photo`, { method: "DELETE" });
     if (res.ok) {
