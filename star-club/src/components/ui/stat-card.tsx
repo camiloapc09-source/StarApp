@@ -34,7 +34,7 @@ export function StatCard({ label, value, change, icon, gradient, className }: St
 
       {/* Value + label */}
       <div>
-        <p className="text-[28px] font-black tracking-tight leading-none mb-1" style={{ color: "rgba(255,255,255,0.95)" }}>
+        <p className="text-[22px] sm:text-[28px] font-black tracking-tight leading-none mb-1 break-words" style={{ color: "rgba(255,255,255,0.95)" }}>
           {value}
         </p>
         <p className="text-[10px] font-semibold tracking-[0.15em] uppercase leading-tight" style={{ color: "rgba(255,255,255,0.55)" }}>

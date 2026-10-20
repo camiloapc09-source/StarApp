@@ -36,10 +36,13 @@ export default function EditSessionButton({ session, categories, coaches = [], u
   const [title, setTitle] = useState(session.title);
   const [type, setType]   = useState(session.type);
   const [date, setDate]   = useState(() => {
-    // Convert UTC ISO → local datetime-local format for the input
+    // Las sesiones guardan la hora de reloj en UTC (ver lib/dates), así que
+    // se leen con getters UTC. Antes se usaba la hora local del navegador: en
+    // Colombia el campo mostraba 5 horas menos y, al guardar (aunque solo se
+    // cambiara el título), el entreno quedaba corrido 5 horas antes.
     const d = new Date(session.date);
     const pad = (n: number) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
   });
   const [notes,      setNotes]      = useState(session.notes ?? "");
   const [categoryId, setCategoryId] = useState(session.categoryId ?? "");

@@ -1,3 +1,4 @@
+import { sessionClockNow, formatSessionDate, formatSessionTime, capitalizeFirst } from "@/lib/dates";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
@@ -10,8 +11,9 @@ import EvidencePanel from "@/components/coach/evidence-panel";
 import { getDictionary } from "@/lib/dict";
 import { Users, Calendar, UserCheck, BarChart3, Zap, Clock } from "lucide-react";
 import Link from "next/link";
-import { format } from "date-fns";
 import { RequestPlayerProfileButton } from "@/components/coach/request-player-profile-button";
+
+const SESSION_TYPE_LABELS: Record<string, string> = { TRAINING: "Entreno", MATCH: "Partido", EVENT: "Evento" };
 
 export default async function CoachDashboard() {
   const session = await auth();
@@ -20,6 +22,7 @@ export default async function CoachDashboard() {
 
   const linkedPlayerId = (session.user as any).linkedPlayerId as string | null;
   const clubId = (session.user as { clubId?: string }).clubId ?? "";
+  const now = sessionClockNow();
 
   // Check if coach has a pending player profile request
   const coachUser = await db.user.findUnique({
@@ -31,15 +34,20 @@ export default async function CoachDashboard() {
     await Promise.all([
       db.session.count({ where: { coachId: session.user.id } }),
       db.player.count({ where: { clubId, status: "ACTIVE" } }),
+      // "Recientes" = ya pasaron (antes salían también las futuras con "0
+      // presentes"). Las horas de sesión van en hora de reloj (ver lib/dates).
       db.session.findMany({
         take: 5,
-        where: { coachId: session.user.id },
+        where: { coachId: session.user.id, date: { lt: now } },
         orderBy: { date: "desc" },
-        include: { category: true, _count: { select: { attendances: true } } },
+        include: {
+          category: true,
+          _count: { select: { attendances: { where: { status: { in: ["PRESENT", "LATE"] } } } } },
+        },
       }),
       db.session.findMany({
         take: 3,
-        where: { coachId: session.user.id, date: { gte: new Date() } },
+        where: { coachId: session.user.id, date: { gte: now } },
         orderBy: { date: "asc" },
         include: { category: true },
       }),
@@ -155,9 +163,9 @@ export default async function CoachDashboard() {
                       className="flex items-center gap-3 p-3 rounded-xl hover:bg-[var(--bg-hover)] transition-all"
                     >
                       <div className="w-10 h-10 rounded-xl bg-[var(--bg-elevated)] flex flex-col items-center justify-center">
-                        <span className="text-xs font-bold leading-none">{format(new Date(s.date), "dd")}</span>
+                        <span className="text-xs font-bold leading-none">{formatSessionDate(s.date, { day: "2-digit" })}</span>
                         <span className="text-[10px]" style={{ color: "var(--text-muted)" }}>
-                          {format(new Date(s.date), "MMM")}
+                          {formatSessionDate(s.date, { month: "short" }).replace(".", "")}
                         </span>
                       </div>
                       <div className="flex-1 min-w-0">
@@ -169,7 +177,7 @@ export default async function CoachDashboard() {
                       <Badge
                         variant={s.type === "MATCH" ? "warning" : s.type === "EVENT" ? "info" : "default"}
                       >
-                        {s.type}
+                        {SESSION_TYPE_LABELS[s.type] ?? s.type}
                       </Badge>
                     </div>
                   ))
@@ -195,7 +203,7 @@ export default async function CoachDashboard() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{s.title}</p>
                         <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-                          {format(new Date(s.date), "MMM dd, yyyy HH:mm")}
+                          {capitalizeFirst(formatSessionDate(s.date, { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, ""))} · {formatSessionTime(s.date)}
                         </p>
                       </div>
                     </div>

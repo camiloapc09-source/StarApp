@@ -142,15 +142,19 @@ export default async function PlayerProfilePage({ params }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Personal info */}
           <Card className="p-6 space-y-5">
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
+            {/* En celular las acciones bajan a su propia línea: antes se salían
+                de la pantalla y no se podía editar ni eliminar sin desplazarse. */}
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3 min-w-0">
                 <Avatar name={player.user.name} src={player.user.avatar ?? undefined} size="lg" />
-                <div>
+                <div className="min-w-0">
                   <h2 className="font-semibold text-base">{player.user.name}</h2>
-                  <p className="text-sm mt-0.5" style={{ color: "var(--text-muted)" }}>{player.user.email}</p>
+                  <p className="text-sm mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
+                    {player.documentNumber ? `Doc. ${player.documentNumber}` : player.user.email}
+                  </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
               <AdminPlayerPhotoButton
                 playerId={player.id}
                 playerName={player.user.name}

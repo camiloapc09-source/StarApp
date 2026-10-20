@@ -14,11 +14,9 @@ export function getInitials(name: string): string {
     .slice(0, 2);
 }
 
+/** Pesos colombianos: "$1.400.000". Antes estaba en dólares ("$1,400,000.00"). */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
+  return `$${Math.round(amount).toLocaleString("es-CO")}`;
 }
 
 export function calculateLevel(xp: number): number {

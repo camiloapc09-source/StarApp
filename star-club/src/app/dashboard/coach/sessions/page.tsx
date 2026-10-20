@@ -5,8 +5,7 @@ import { Header } from "@/components/dashboard/header";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { sessionClockNow, formatSessionDate, formatSessionTime, capitalizeFirst } from "@/lib/dates";
 import { getDictionary } from "@/lib/dict";
 import { Users } from "lucide-react";
 import CreateSessionForm from "@/components/coach/create-session-form";
@@ -34,6 +33,13 @@ export default async function CoachSessionsPage() {
 
   const dict = await getDictionary();
 
+  // Antes salían las 36+ sesiones en una sola lista, futuras y pasadas
+  // mezcladas. Ahora: próximas primero (de la más cercana a la más lejana) y
+  // solo las últimas pasadas.
+  const now = sessionClockNow();
+  const upcoming = sessions.filter((s) => s.date >= now).sort((a, b) => a.date.getTime() - b.date.getTime());
+  const past = sessions.filter((s) => s.date < now).slice(0, 15);
+
   type BadgeVariant = "default" | "success" | "warning" | "error" | "info" | "accent";
   const typeLabel: Record<string, string> = { TRAINING: "Entrenamiento", MATCH: "Partido", EVENT: "Evento" };
   const typeVariant: Record<string, BadgeVariant> = { TRAINING: "default", MATCH: "warning", EVENT: "success" };
@@ -55,46 +61,64 @@ export default async function CoachSessionsPage() {
             <p style={{ color: "var(--text-muted)" }}>Aún no tienes sesiones. ¡Crea la primera arriba!</p>
           </Card>
         ) : (
-          <div className="space-y-3">
-            {sessions.map((s) => (
-              <Card key={s.id} className="p-0 overflow-hidden">
-                <div className="px-5 py-4 flex items-center gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="font-semibold text-sm">{s.title}</h3>
-                      <Badge variant={typeVariant[s.type] ?? "default"} >{typeLabel[s.type] ?? s.type}</Badge>
-                    </div>
-                    <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
-                      {format(new Date(s.date), "EEEE dd MMM yyyy · HH:mm", { locale: es })}
-                      {s.category && ` · ${s.category.name}`}
-                      {s.location && ` · ${s.location}`}
-                    </p>
+          <div className="space-y-6">
+            {[
+              { key: "up", title: "Próximas", items: upcoming, empty: "No tienes sesiones programadas." },
+              { key: "past", title: "Pasadas", items: past, empty: "Aún no hay sesiones pasadas." },
+            ].map((group) => (
+              <section key={group.key}>
+                <h2 className="text-[11px] font-bold tracking-[0.18em] uppercase mb-2.5 px-1" style={{ color: "var(--text-muted)" }}>
+                  {group.title} · {group.items.length}
+                </h2>
+                {group.items.length === 0 ? (
+                  <p className="text-sm px-1" style={{ color: "var(--text-muted)" }}>{group.empty}</p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {group.items.map((s) => (
+                      <Card key={s.id} className="p-0 overflow-hidden">
+                        <div className="px-4 sm:px-5 py-3.5 flex items-center gap-3 flex-wrap">
+                          <div className="flex-1 min-w-[12rem]">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="font-semibold text-sm">{s.title}</h3>
+                              <Badge variant={typeVariant[s.type] ?? "default"} >{typeLabel[s.type] ?? s.type}</Badge>
+                            </div>
+                            <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                              {capitalizeFirst(formatSessionDate(s.date, { weekday: "long", day: "numeric", month: "short" }))} · {formatSessionTime(s.date)}
+                              {s.category && ` · ${s.category.name}`}
+                              {s.location && ` · ${s.location}`}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            {group.key === "past" && (
+                              <div className="text-center">
+                                <div className="flex items-center gap-1 text-sm font-semibold">
+                                  <Users size={13} style={{ color: "var(--accent)" }} />
+                                  {s._count.attendances}
+                                </div>
+                                <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>asist.</p>
+                              </div>
+                            )}
+                            <Link
+                              href={`/dashboard/coach/attendance/${s.id}`}
+                              className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
+                              style={{ background: "var(--accent)", color: "var(--on-accent)" }}
+                            >
+                              Pasar lista
+                            </Link>
+                            <EditSessionButton
+                              session={{ id: s.id, title: s.title, type: s.type, date: s.date.toISOString(), notes: s.notes, categoryId: s.categoryId, coachId: s.coachId, location: s.location }}
+                              categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+                              userRole="COACH"
+                              locations={locations}
+                            />
+                            <DeleteSessionButton sessionId={s.id} sessionTitle={s.title} />
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
                   </div>
-                  <div className="flex items-center gap-4 flex-shrink-0">
-                    <div className="text-center hidden sm:block">
-                      <div className="flex items-center gap-1 text-sm font-semibold">
-                        <Users size={13} style={{ color: "var(--accent)" }} />
-                        {s._count.attendances}
-                      </div>
-                      <p className="text-[10px]" style={{ color: "var(--text-muted)" }}>asist.</p>
-                    </div>
-                    <Link
-                      href={`/dashboard/coach/attendance/${s.id}`}
-                      className="px-3 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"
-                      style={{ background: "var(--accent)", color: "var(--on-accent)" }}
-                    >
-                      Pasar lista
-                    </Link>
-                    <EditSessionButton
-                      session={{ id: s.id, title: s.title, type: s.type, date: s.date.toISOString(), notes: s.notes, categoryId: s.categoryId, coachId: s.coachId, location: s.location }}
-                      categories={categories.map((c) => ({ id: c.id, name: c.name }))}
-                      userRole="COACH"
-                      locations={locations}
-                    />
-                    <DeleteSessionButton sessionId={s.id} sessionTitle={s.title} />
-                  </div>
-                </div>
-              </Card>
+                )}
+              </section>
             ))}
           </div>
         )}

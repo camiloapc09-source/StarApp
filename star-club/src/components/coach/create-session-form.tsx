@@ -1,5 +1,6 @@
 "use client";
 
+import { sessionClockNow } from "@/lib/dates";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
@@ -23,9 +24,11 @@ export default function CreateSessionForm({ categories, userRole, coaches = [], 
   const [title, setTitle] = useState("");
   const [type, setType] = useState("TRAINING");
   const [date, setDate] = useState(() => {
-    const d = new Date();
-    d.setMinutes(0, 0, 0);
-    return d.toISOString().slice(0, 16);
+    // Próxima hora en punto, en hora de reloj del club. Antes toISOString()
+    // daba la hora UTC: a las 10 p.m. proponía "03:00 a.m." del día siguiente.
+    const clock = sessionClockNow();
+    clock.setUTCHours(clock.getUTCHours() + 1, 0, 0, 0);
+    return clock.toISOString().slice(0, 16);
   });
   const [categoryId, setCategoryId] = useState("");
   const [coachId, setCoachId] = useState("");
@@ -165,7 +168,7 @@ export default function CreateSessionForm({ categories, userRole, coaches = [], 
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Notas opcionales"
-          className="flex-1 rounded-xl px-4 py-3 text-sm outline-none border"
+          className="flex-1 min-w-0 rounded-xl px-4 py-3 text-sm outline-none border"
           style={inputStyle}
         />
         <button
