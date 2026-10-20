@@ -233,3 +233,39 @@ export function isWithin(date: Date | string | null | undefined, range: { start:
   const t = new Date(date).getTime();
   return t >= range.start.getTime() && t <= range.end.getTime();
 }
+
+/*
+ * ─── HORAS DE SESIONES ──────────────────────────────────────────────────────
+ * Las sesiones se guardan con la hora "de reloj" en UTC: un entreno a las
+ * 4 p.m. queda como 16:00Z (el formulario manda "YYYY-MM-DDTHH:mm" y el
+ * servidor, que corre en UTC, lo lee así). Por eso:
+ *  - para mostrarlas se formatea en UTC, no en la zona del servidor ni del
+ *    navegador (en un equipo en Colombia salían 5 horas antes);
+ *  - para compararlas con "ahora" hay que usar el reloj del club en esa misma
+ *    convención, no `new Date()`.
+ */
+
+/** "Ahora" en hora del club, expresado como hora de reloj en UTC (convención de sesiones). */
+export function sessionClockNow(timeZone: string = CLUB_TIMEZONE): Date {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone, year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(new Date());
+  const get = (t: string) => Number(parts.find((p) => p.type === t)?.value);
+  return new Date(Date.UTC(get("year"), get("month") - 1, get("day"), get("hour"), get("minute")));
+}
+
+/** Formatea la fecha/hora de una sesión respetando su hora de reloj. */
+export function formatSessionDate(date: Date | string, options: Intl.DateTimeFormatOptions): string {
+  return new Intl.DateTimeFormat("es-CO", { ...options, timeZone: "UTC" }).format(new Date(date));
+}
+
+/** Hora de una sesión como "4:00 p. m.". */
+export function formatSessionTime(date: Date | string): string {
+  return formatSessionDate(date, { hour: "numeric", minute: "2-digit", hour12: true });
+}
+
+/** Primera letra en mayúscula ("miércoles 21 de octubre" → "Miércoles 21 de octubre"). */
+export function capitalizeFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}

@@ -2,25 +2,28 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
 import { Header } from "@/components/dashboard/header";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import {
-  Calendar, CreditCard, CheckCircle2, AlertTriangle,
-  TrendingUp, Clock, ArrowRight, Zap, Shield, Users,
+  CheckCircle2, AlertTriangle, ArrowRight, MapPin, Clock, Flame, Shield,
+  Trophy, Hourglass, CalendarDays, ChevronRight,
 } from "lucide-react";
-import { format, startOfMonth, endOfMonth } from "date-fns";
-import { es } from "date-fns/locale";
 import Link from "next/link";
 import PaymentSubmitForm from "@/components/parent/payment-submit-form";
-import { UpcomingSessionsCard } from "@/components/shared/upcoming-sessions-card";
+import {
+  clubGreeting, daysUntilDue, dueLabel, sessionClockNow, formatSessionDate,
+  formatSessionTime, capitalizeFirst,
+} from "@/lib/dates";
+import { xpProgress, xpForNextLevel, LEVEL_TITLES } from "@/lib/utils";
 
-function getGreeting() {
-  const h = new Date().getHours();
-  if (h < 12) return "Buenos días";
-  if (h < 18) return "Buenas tardes";
-  return "Buenas noches";
-}
+const OPEN = ["PENDING", "OVERDUE", "SUBMITTED"];
+const money = (n: number) => `$${n.toLocaleString("es-CO")}`;
+
+const ATT_META: Record<string, { label: string; color: string }> = {
+  PRESENT: { label: "Asistió",  color: "var(--success)" },
+  LATE:    { label: "Tarde",    color: "var(--warning)" },
+  EXCUSED: { label: "Excusado", color: "var(--info)" },
+  ABSENT:  { label: "Faltó",    color: "var(--error)" },
+};
 
 export default async function ParentDashboard({
   searchParams,
@@ -39,29 +42,8 @@ export default async function ParentDashboard({
         include: {
           player: {
             include: {
-              user: true,
-              category: true,
-              attendances: {
-                include: { session: true },
-                where: {
-                  session: {
-                    date: { gte: startOfMonth(new Date()), lte: endOfMonth(new Date()) },
-                  },
-                },
-                take: 8,
-                orderBy: { createdAt: "desc" },
-              },
-              payments: {
-                where: {
-                  OR: [
-                    { status: "SUBMITTED" },
-                    { status: "OVERDUE" },
-                    { status: "PENDING", dueDate: { lte: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000) } },
-                  ],
-                },
-                take: 5,
-                orderBy: { dueDate: "asc" },
-              },
+              user: { select: { name: true, avatar: true } },
+              category: { select: { name: true } },
             },
           },
         },
@@ -79,272 +61,321 @@ export default async function ParentDashboard({
         <Header title="Inicio" notificationCount={unreadNotifications} />
         <div className="p-4 md:p-8 text-center py-16">
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-            style={{ background: "color-mix(in srgb, var(--accent) 12%, transparent)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
+            style={{ background: "var(--accent-glow)", border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)" }}>
             <Shield size={28} style={{ color: "var(--accent-light)" }} />
           </div>
-          <p className="font-semibold mb-2">Sin jugador vinculado</p>
+          <p className="font-semibold mb-2">Sin deportista vinculado</p>
           <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-            Tu cuenta no está vinculada a ningún jugador. Contacta al administrador.
+            Tu cuenta no está vinculada a ningún deportista. Contacta al administrador del club.
           </p>
         </div>
       </div>
     );
   }
 
-  // Pick selected child or default to first
   const allChildren = parent.children;
-  const activeChild = allChildren.find((c) => c.player.id === selectedPlayerId) ?? allChildren[0];
-  const { player } = activeChild;
+  const { player } = allChildren.find((c) => c.player.id === selectedPlayerId) ?? allChildren[0];
   const firstName = session.user.name?.split(" ")[0] ?? "";
+  const childFirst = player.user.name.split(" ")[0];
 
-  const totalSessions = await db.session.count({
-    where: {
-      ...(player.categoryId ? { categoryId: player.categoryId } : {}),
-      date: { gte: startOfMonth(new Date()), lte: endOfMonth(new Date()) },
-    },
-  });
+  // Las sesiones guardan la hora de reloj en UTC (ver lib/dates): "ahora" y el
+  // inicio del mes van en esa misma convención.
+  const now = sessionClockNow();
+  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const categoryFilter = player.categoryId
+    ? { OR: [{ categoryId: player.categoryId }, { categoryId: null }] }
+    : {};
 
-  const presentCount    = player.attendances.filter((a) => a.status === "PRESENT").length;
-  const attendanceRate  = totalSessions > 0 ? Math.round((presentCount / totalSessions) * 100) : 0;
-  const overduePayments = player.payments.filter((p) => p.status === "OVERDUE");
-  const hasOverdue      = overduePayments.length > 0;
+  const [openPayments, upcoming, pastSessionsCount, monthAttendance] = await Promise.all([
+    db.payment.findMany({
+      where: { playerId: player.id, status: { in: OPEN } },
+      orderBy: { dueDate: "asc" },
+    }),
+    db.session.findMany({
+      where: { clubId: player.clubId, date: { gte: now }, ...categoryFilter },
+      orderBy: { date: "asc" },
+      take: 4,
+      select: { id: true, title: true, date: true, type: true, location: true, notes: true },
+    }),
+    // Asistencia: solo sesiones que YA pasaron. Antes se contaban también las
+    // futuras del mes y solo se leían 8 registros, así que un niño que iba a
+    // todo salía con 53% y en rojo.
+    db.session.count({
+      where: { clubId: player.clubId, date: { gte: monthStart, lt: now }, ...categoryFilter },
+    }),
+    db.attendance.findMany({
+      where: { playerId: player.id, session: { date: { gte: monthStart, lt: now } } },
+      include: { session: { select: { title: true, date: true } } },
+      orderBy: { session: { date: "desc" } },
+    }),
+  ]);
 
-  const quickActions = [
-    { label: "Pagos",      href: "/dashboard/parent/payments",  color: "#60A5FA", bg: "rgba(96,165,250,0.15)"  },
-    { label: "Uniformes",  href: "/dashboard/parent/uniforms",  color: "#FB923C", bg: "rgba(251,146,60,0.15)"  },
-    { label: "Reportes",   href: "/dashboard/parent/reports",   color: "#34D399", bg: "rgba(52,211,153,0.15)"  },
-    { label: "Perfil",     href: "/dashboard/parent/profile",   color: "#F472B6", bg: "rgba(244,114,182,0.15)" },
-  ];
+  const attended = monthAttendance.filter((a) => a.status === "PRESENT" || a.status === "LATE").length;
+  const attendanceRate = pastSessionsCount > 0 ? Math.round((attended / pastSessionsCount) * 100) : null;
+  const rateColor = attendanceRate === null ? "var(--text-muted)"
+    : attendanceRate >= 80 ? "var(--success)" : attendanceRate >= 60 ? "var(--warning)" : "var(--error)";
+
+  // ── Estado de pagos ──────────────────────────────────────────────────────
+  const overdue   = openPayments.filter((p) => p.status === "OVERDUE");
+  const submitted = openPayments.filter((p) => p.status === "SUBMITTED");
+  const pending   = openPayments.filter((p) => p.status === "PENDING");
+  const nextPending = pending[0] ?? null;
+  const overdueTotal = overdue.reduce((s, p) => s + p.amount, 0);
+  const dueSoon = nextPending && daysUntilDue(nextPending.dueDate) <= 7;
+  // Lo que se puede pagar desde aquí: vencidos y el próximo si vence pronto.
+  const payable = [...overdue, ...(dueSoon && nextPending ? [nextPending] : [])];
+
+  type Tone = "danger" | "warning" | "info" | "success";
+  const status: { tone: Tone; title: string; detail: string } =
+    overdue.length > 0
+      ? { tone: "danger", title: `Debes ${money(overdueTotal)}`, detail: `${overdue.length === 1 ? "1 pago vencido" : `${overdue.length} pagos vencidos`} de ${childFirst}` }
+      : dueSoon && nextPending
+        ? { tone: "warning", title: `${money(nextPending.amount)} · ${dueLabel(nextPending.dueDate).toLowerCase()}`, detail: nextPending.concept }
+        : submitted.length > 0
+          ? { tone: "info", title: "Pago en revisión", detail: "El club está verificando tu comprobante" }
+          : { tone: "success", title: "Estás al día", detail: nextPending ? `Próximo pago: ${money(nextPending.amount)} · ${dueLabel(nextPending.dueDate).toLowerCase()}` : "No tienes pagos pendientes" };
+
+  const TONE: Record<Tone, { color: string; Icon: typeof CheckCircle2 }> = {
+    danger:  { color: "var(--error)",   Icon: AlertTriangle },
+    warning: { color: "var(--warning)", Icon: Clock },
+    info:    { color: "var(--info)",    Icon: Hourglass },
+    success: { color: "var(--success)", Icon: CheckCircle2 },
+  };
+  const tone = TONE[status.tone];
+
+  const progress = Math.round(xpProgress(player.xp, player.level));
+  const nextLevelXp = xpForNextLevel(player.level);
+  const [nextSession, ...laterSessions] = upcoming;
 
   return (
     <div>
       <Header title="Inicio" notificationCount={unreadNotifications} />
 
-      <div className="p-4 md:p-8 space-y-5">
+      <div className="p-4 md:p-8 space-y-4 max-w-3xl">
 
-        {/* Greeting banner */}
-        <div
-          className="rounded-2xl p-5 relative overflow-hidden"
-          style={{
-            background: "linear-gradient(135deg, color-mix(in srgb, var(--accent-secondary) 28%, transparent) 0%, rgba(49,46,129,0.20) 50%, color-mix(in srgb, var(--bg-card) 80%, transparent) 100%)",
-            border: "1px solid color-mix(in srgb, var(--accent) 20%, transparent)",
-          }}
-        >
-          <div className="absolute inset-0 pointer-events-none"
-            style={{ background: "radial-gradient(ellipse 60% 80% at 90% 50%, color-mix(in srgb, var(--accent) 12%, transparent) 0%, transparent 70%)" }} />
-          <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-1 relative" style={{ color: "color-mix(in srgb, var(--accent-light) 70%, transparent)" }}>
-            {getGreeting()}
-          </p>
-          <h2 className="text-2xl font-black tracking-tight text-white relative">{firstName} 👋</h2>
-          <p className="text-sm mt-1 relative" style={{ color: "rgba(255,255,255,0.45)" }}>
-            {hasOverdue
-              ? `${player.user.name} tiene ${overduePayments.length} pago${overduePayments.length !== 1 ? "s" : ""} vencido${overduePayments.length !== 1 ? "s" : ""} — revísalos hoy.`
-              : `Todo al día · Asistencia de ${player.user.name}: ${attendanceRate}% este mes.`}
-          </p>
+        {/* ── Saludo + selector de hijo ─────────────────────────────── */}
+        <div className="flex items-end justify-between gap-3 pt-1">
+          <div>
+            <p className="text-xs font-semibold" style={{ color: "var(--text-muted)" }}>{clubGreeting()},</p>
+            <h2 className="font-display text-[34px] leading-none tracking-wide mt-1">{firstName} 👋</h2>
+          </div>
         </div>
 
-        {/* Multi-child selector — only shown if parent has more than 1 child */}
         {allChildren.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {allChildren.map((child) => {
-              const isActive = child.player.id === player.id;
+          <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" role="tablist" aria-label="Elegir deportista">
+            {allChildren.map(({ player: child }) => {
+              const active = child.id === player.id;
               return (
                 <Link
-                  key={child.player.id}
-                  href={`/dashboard/parent?playerId=${child.player.id}`}
-                  className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-semibold flex-shrink-0 transition-all"
+                  key={child.id}
+                  href={`/dashboard/parent?playerId=${child.id}`}
+                  role="tab"
+                  aria-selected={active}
+                  className="flex items-center gap-2 pl-1.5 pr-3.5 py-1.5 rounded-full text-sm font-semibold flex-shrink-0 transition-all"
                   style={{
-                    background: isActive ? "color-mix(in srgb, var(--accent) 18%, transparent)" : "rgba(255,255,255,0.04)",
-                    border: `1px solid ${isActive ? "color-mix(in srgb, var(--accent) 40%, transparent)" : "rgba(255,255,255,0.07)"}`,
-                    color: isActive ? "var(--accent-lighter)" : "rgba(255,255,255,0.50)",
+                    background: active ? "var(--accent)" : "var(--bg-card)",
+                    color: active ? "var(--on-accent)" : "var(--text-secondary)",
+                    border: `1px solid ${active ? "transparent" : "var(--border-primary)"}`,
                   }}
                 >
-                  <Users size={13} />
-                  {child.player.user.name.split(" ")[0]}
+                  <Avatar name={child.user.name} src={child.user.avatar} size="sm" />
+                  {child.user.name.split(" ")[0]}
                 </Link>
               );
             })}
           </div>
         )}
 
-        {/* Alert for overdue */}
-        {hasOverdue && (
-          <div className="rounded-2xl p-4 flex items-center gap-3"
-            style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.25)" }}>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: "rgba(239,68,68,0.15)" }}>
-              <AlertTriangle size={18} style={{ color: "#F87171" }} />
+        {/* ── Estado de pagos (lo primero que un papá necesita saber) ── */}
+        <section
+          className="rounded-3xl p-5 relative overflow-hidden"
+          style={{
+            background: `linear-gradient(135deg, color-mix(in srgb, ${tone.color} 16%, var(--bg-card)) 0%, var(--bg-card) 75%)`,
+            border: `1px solid color-mix(in srgb, ${tone.color} 30%, transparent)`,
+          }}
+        >
+          <div className="flex items-start gap-3.5">
+            <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+              style={{ background: `color-mix(in srgb, ${tone.color} 18%, transparent)` }}>
+              <tone.Icon size={22} style={{ color: tone.color }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold" style={{ color: "#F87171" }}>
-                {overduePayments.length} pago{overduePayments.length !== 1 ? "s" : ""} vencido{overduePayments.length !== 1 ? "s" : ""}
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: "rgba(248,113,113,0.65)" }}>
-                Total: ${overduePayments.reduce((s, p) => s + p.amount, 0).toLocaleString("es-CO")}
-              </p>
-            </div>
-            <Link href="/dashboard/parent/payments" className="text-xs font-bold flex items-center gap-1 flex-shrink-0" style={{ color: "#F87171" }}>
-              Ver <ArrowRight size={12} />
-            </Link>
-          </div>
-        )}
-
-        {/* Player card */}
-        <div className="rounded-2xl p-4 flex items-center gap-4"
-          style={{ background: "color-mix(in srgb, var(--bg-card) 75%, transparent)", border: "1px solid rgba(255,255,255,0.07)", backdropFilter: "blur(16px)" }}>
-          <Avatar name={player.user.name} size="lg" />
-          <div className="flex-1 min-w-0">
-            <p className="font-black text-[17px] truncate">{player.user.name}</p>
-            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.38)" }}>
-              {player.category?.name ?? "Sin categoría"}
-              {player.jerseyNumber ? ` · #${player.jerseyNumber}` : ""}
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <Badge variant={player.status === "ACTIVE" ? "success" : "warning"}>
-                {player.status === "ACTIVE" ? "Activo" : "Pendiente"}
-              </Badge>
-              <span className="flex items-center gap-1 text-xs font-bold" style={{ color: "var(--accent-light)" }}>
-                <Zap size={10} />{player.xp} XP
-              </span>
+              <p className="text-[11px] font-bold tracking-[0.18em] uppercase" style={{ color: tone.color }}>Pagos</p>
+              <p className="font-display text-[30px] leading-none tracking-wide mt-1">{status.title}</p>
+              <p className="text-sm mt-1.5" style={{ color: "var(--text-secondary)" }}>{status.detail}</p>
             </div>
           </div>
-          {/* Attendance ring */}
-          <div className="flex-shrink-0 flex flex-col items-center gap-1">
-            <div className="relative w-14 h-14">
-              <svg className="w-14 h-14 -rotate-90" viewBox="0 0 56 56">
-                <circle cx="28" cy="28" r="22" fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="5" />
-                <circle cx="28" cy="28" r="22" fill="none"
-                  stroke={attendanceRate >= 80 ? "#34D399" : attendanceRate >= 60 ? "#FCD34D" : "#F87171"}
-                  strokeWidth="5"
-                  strokeDasharray={`${(attendanceRate / 100) * 138.2} 138.2`}
-                  strokeLinecap="round" />
-              </svg>
-              <span className="absolute inset-0 flex items-center justify-center text-[13px] font-black">
-                {attendanceRate}%
-              </span>
-            </div>
-            <span className="text-[9px] font-bold tracking-wide uppercase" style={{ color: "rgba(255,255,255,0.50)" }}>
-              Asistencia
-            </span>
-          </div>
-        </div>
 
-        {/* Quick actions */}
-        <div className="grid grid-cols-4 gap-2">
-          {quickActions.map((a) => (
-            <Link key={a.href} href={a.href}
-              className="flex flex-col items-center gap-2 py-3.5 rounded-2xl text-center transition-all hover:opacity-80"
-              style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: a.bg }}>
-                {a.label === "Pagos"     && <CreditCard size={16} style={{ color: a.color }} strokeWidth={1.8} />}
-                {a.label === "Uniformes" && <Shield size={16} style={{ color: a.color }} strokeWidth={1.8} />}
-                {a.label === "Reportes"  && <TrendingUp size={16} style={{ color: a.color }} strokeWidth={1.8} />}
-                {a.label === "Perfil"    && <Clock size={16} style={{ color: a.color }} strokeWidth={1.8} />}
-              </div>
-              <span className="text-[10px] font-semibold" style={{ color: "rgba(255,255,255,0.45)" }}>{a.label}</span>
-            </Link>
-          ))}
-        </div>
-
-        {/* Upcoming sessions */}
-        <UpcomingSessionsCard categoryId={player.categoryId} />
-
-        {/* Attendance & Payments */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-[14px]">Asistencia este mes</h2>
-              <Calendar size={15} style={{ color: "var(--accent)" }} />
-            </div>
-            <div className="flex items-baseline gap-2 mb-3">
-              <span className="text-3xl font-black">{attendanceRate}%</span>
-              <span className="text-xs" style={{ color: "var(--text-muted)" }}>
-                {presentCount} de {totalSessions} sesiones
-              </span>
-            </div>
-            <div className="w-full rounded-full overflow-hidden mb-4" style={{ height: 5, background: "var(--bg-elevated)" }}>
-              <div className="h-full rounded-full transition-all duration-700"
-                style={{
-                  width: `${attendanceRate}%`,
-                  background: attendanceRate >= 80 ? "var(--success)" : attendanceRate >= 60 ? "var(--warning)" : "var(--error)",
-                }} />
-            </div>
-            <div className="space-y-2">
-              {player.attendances.length === 0 ? (
-                <p className="text-sm" style={{ color: "var(--text-muted)" }}>Sin sesiones registradas este mes.</p>
-              ) : (
-                player.attendances.slice(0, 4).map((att) => (
-                  <div key={att.id} className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                        style={{
-                          background: att.status === "PRESENT" ? "var(--success)"
-                            : att.status === "LATE" ? "var(--warning)" : "var(--error)",
-                        }} />
-                      <span className="truncate" style={{ color: "var(--text-secondary)" }}>{att.session.title}</span>
+          {payable.length > 0 && (
+            <div className="mt-4 space-y-3">
+              {payable.map((p) => (
+                <div key={p.id} className="rounded-2xl p-3.5 space-y-2.5" style={{ background: "color-mix(in srgb, var(--bg-primary) 55%, transparent)" }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate">{p.concept}</p>
+                      <p className="text-xs mt-0.5" style={{ color: p.status === "OVERDUE" ? "var(--error)" : "var(--text-muted)" }}>
+                        {dueLabel(p.dueDate)}
+                      </p>
                     </div>
-                    <span className="text-xs flex-shrink-0 ml-2" style={{ color: "var(--text-muted)" }}>
-                      {format(new Date(att.session.date), "d MMM", { locale: es })}
-                    </span>
+                    <p className="font-display text-2xl tracking-wide flex-shrink-0">{money(p.amount)}</p>
                   </div>
-                ))
-              )}
+                  <PaymentSubmitForm paymentId={p.id} />
+                </div>
+              ))}
             </div>
-          </Card>
+          )}
 
-          <Card>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-[14px]">Pagos</h2>
-              <CreditCard size={15} style={{ color: "var(--accent)" }} />
+          <Link href="/dashboard/parent/payments"
+            className="mt-4 flex items-center justify-center gap-1.5 w-full py-3 rounded-2xl text-sm font-bold transition-opacity hover:opacity-90"
+            style={payable.length > 0
+              ? { background: "var(--accent)", color: "var(--on-accent)" }
+              : { background: "color-mix(in srgb, white 6%, transparent)", color: "var(--text-primary)" }}>
+            {payable.length > 0 ? "Pagar en línea o ver detalle" : "Ver historial de pagos"} <ArrowRight size={15} />
+          </Link>
+        </section>
+
+        {/* ── Deportista: nivel, XP, racha y asistencia ─────────────── */}
+        <section className="rounded-3xl p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-primary)" }}>
+          <div className="flex items-center gap-4">
+            <div className="relative flex-shrink-0">
+              <Avatar name={player.user.name} src={player.user.avatar} size="lg" />
+              <span className="absolute -bottom-1 -right-1 font-display text-sm leading-none px-1.5 py-1 rounded-lg"
+                style={{ background: "var(--accent)", color: "var(--on-accent)" }}>
+                {player.level}
+              </span>
             </div>
-            {player.payments.length === 0 ? (
-              <div className="flex items-center gap-2.5 py-2">
-                <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: "rgba(0,255,135,0.10)" }}>
-                  <CheckCircle2 size={16} style={{ color: "var(--success)" }} />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">Al día</p>
-                  <p className="text-xs" style={{ color: "var(--text-muted)" }}>Sin pagos pendientes</p>
-                </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-[17px] truncate">{player.user.name}</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
+                {player.category?.name ?? "Sin categoría"}
+                {player.jerseyNumber ? ` · #${player.jerseyNumber}` : ""}
+                {player.position ? ` · ${player.position}` : ""}
+              </p>
+            </div>
+            {player.streak > 0 && (
+              <div className="flex flex-col items-center flex-shrink-0 px-2.5 py-1.5 rounded-2xl"
+                style={{ background: "color-mix(in srgb, var(--accent-2) 14%, transparent)" }}
+                title={`${player.streak} días de racha`}>
+                <Flame size={18} style={{ color: "var(--accent-2)" }} />
+                <span className="font-display text-lg leading-none mt-0.5" style={{ color: "var(--accent-2)" }}>{player.streak}</span>
               </div>
-            ) : (
-              <div className="space-y-3">
-                {player.payments.map((p) => {
-                  const isOverdue   = p.status === "OVERDUE";
-                  const isSubmitted = p.status === "SUBMITTED";
+            )}
+          </div>
+
+          {/* Nivel */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs mb-1.5">
+              <span className="flex items-center gap-1.5 font-semibold">
+                <Trophy size={13} style={{ color: "var(--accent-light)" }} />
+                Nivel {player.level} · {LEVEL_TITLES[player.level] ?? ""}
+              </span>
+              <span style={{ color: "var(--text-muted)" }}>
+                {player.xp.toLocaleString("es-CO")}{nextLevelXp < 999999 ? ` / ${nextLevelXp.toLocaleString("es-CO")}` : ""} XP
+              </span>
+            </div>
+            <div className="h-2.5 rounded-full overflow-hidden" style={{ background: "var(--bg-elevated)" }}
+              role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label="Progreso al siguiente nivel">
+              <div className="h-full rounded-full xp-bar-animate"
+                style={{ width: `${progress}%`, background: "linear-gradient(90deg, var(--accent), var(--accent-2))" }} />
+            </div>
+          </div>
+
+          {/* Asistencia del mes */}
+          <div className="mt-5 pt-4" style={{ borderTop: "1px solid var(--border-primary)" }}>
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-[11px] font-bold tracking-[0.18em] uppercase" style={{ color: "var(--text-muted)" }}>Asistencia este mes</p>
+                <p className="mt-1 flex items-baseline gap-2">
+                  <span className="font-display text-4xl leading-none tracking-wide" style={{ color: rateColor }}>
+                    {attendanceRate === null ? "—" : `${attendanceRate}%`}
+                  </span>
+                  <span className="text-xs" style={{ color: "var(--text-muted)" }}>
+                    {pastSessionsCount > 0 ? `${attended} de ${pastSessionsCount} sesiones` : "Aún no hay sesiones este mes"}
+                  </span>
+                </p>
+              </div>
+              <Link href="/dashboard/parent/reports" className="text-xs font-semibold flex items-center gap-0.5" style={{ color: "var(--accent-light)" }}>
+                Ver reporte <ChevronRight size={14} />
+              </Link>
+            </div>
+            {monthAttendance.length > 0 && (
+              <div className="flex gap-1.5 mt-3 flex-wrap" aria-label="Últimas sesiones">
+                {monthAttendance.slice(0, 12).reverse().map((a) => {
+                  const meta = ATT_META[a.status] ?? ATT_META.ABSENT;
                   return (
-                    <div key={p.id} className="space-y-2 pb-3 border-b last:border-0 last:pb-0"
-                      style={{ borderColor: "var(--border-primary)" }}>
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{p.concept}</p>
-                          <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                            Vence {format(new Date(p.dueDate), "d MMM yyyy", { locale: es })}
-                          </p>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <p className="text-sm font-bold" style={{ color: isOverdue ? "var(--error)" : "var(--text-primary)" }}>
-                            ${p.amount.toLocaleString("es-CO")}
-                          </p>
-                          <Badge variant={isOverdue ? "error" : isSubmitted ? "default" : "warning"}>
-                            {isOverdue ? "Vencido" : isSubmitted ? "En revisión" : "Pendiente"}
-                          </Badge>
-                        </div>
-                      </div>
-                      {!isSubmitted && <PaymentSubmitForm paymentId={p.id} />}
-                    </div>
+                    <span key={a.id}
+                      title={`${a.session.title} · ${formatSessionDate(a.session.date, { day: "numeric", month: "short" })} · ${meta.label}`}
+                      className="w-6 h-6 rounded-lg"
+                      style={{ background: `color-mix(in srgb, ${meta.color} 22%, transparent)`, border: `1.5px solid ${meta.color}` }} />
                   );
                 })}
               </div>
             )}
-            <Link href="/dashboard/parent/payments"
-              className="flex items-center gap-1 text-xs mt-4 font-semibold hover:opacity-80 transition-opacity"
-              style={{ color: "var(--accent)" }}>
-              Ver historial <ArrowRight size={11} />
-            </Link>
-          </Card>
-        </div>
+          </div>
+        </section>
+
+        {/* ── Próximo entreno ───────────────────────────────────────── */}
+        <section className="rounded-3xl p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border-primary)" }}>
+          <div className="flex items-center justify-between mb-3.5">
+            <h2 className="text-[11px] font-bold tracking-[0.18em] uppercase" style={{ color: "var(--text-muted)" }}>Próximo entreno</h2>
+            <CalendarDays size={16} style={{ color: "var(--accent-light)" }} />
+          </div>
+
+          {!nextSession ? (
+            <p className="text-sm py-3" style={{ color: "var(--text-muted)" }}>No hay entrenos programados por ahora.</p>
+          ) : (
+            <>
+              <div className="flex gap-4 items-stretch">
+                <div className="w-[68px] flex-shrink-0 rounded-2xl flex flex-col items-center justify-center py-2"
+                  style={{ background: nextSession.type === "MATCH" ? "color-mix(in srgb, var(--accent-2) 18%, transparent)" : "var(--accent-glow)" }}>
+                  <span className="text-[11px] font-bold uppercase" style={{ color: nextSession.type === "MATCH" ? "var(--accent-2)" : "var(--accent-light)" }}>
+                    {formatSessionDate(nextSession.date, { weekday: "short" }).replace(".", "")}
+                  </span>
+                  <span className="font-display text-[34px] leading-none">{formatSessionDate(nextSession.date, { day: "numeric" })}</span>
+                  <span className="text-[11px] font-semibold uppercase" style={{ color: "var(--text-muted)" }}>
+                    {formatSessionDate(nextSession.date, { month: "short" }).replace(".", "")}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0 py-0.5">
+                  {nextSession.type === "MATCH" && (
+                    <span className="inline-block text-[10px] font-bold tracking-wider uppercase px-2 py-0.5 rounded-md mb-1"
+                      style={{ background: "var(--accent-2)", color: "#fff" }}>Partido</span>
+                  )}
+                  <p className="font-bold leading-snug">{nextSession.title}</p>
+                  <p className="text-sm mt-1 flex items-center gap-1.5" style={{ color: "var(--text-secondary)" }}>
+                    <Clock size={13} /> {formatSessionTime(nextSession.date)}
+                  </p>
+                  {nextSession.location && (
+                    <p className="text-sm mt-0.5 flex items-center gap-1.5 truncate" style={{ color: "var(--text-secondary)" }}>
+                      <MapPin size={13} className="flex-shrink-0" /> <span className="truncate">{nextSession.location}</span>
+                    </p>
+                  )}
+                </div>
+              </div>
+              {nextSession.notes && (
+                <p className="text-sm mt-3.5 px-3.5 py-2.5 rounded-xl" style={{ background: "var(--bg-elevated)", color: "var(--text-secondary)" }}>
+                  📌 {nextSession.notes}
+                </p>
+              )}
+
+              {laterSessions.length > 0 && (
+                <ul className="mt-4 pt-3 space-y-0.5" style={{ borderTop: "1px solid var(--border-primary)" }}>
+                  {laterSessions.map((s) => (
+                    <li key={s.id} className="flex items-center gap-3 py-2 text-sm">
+                      <span className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                        style={{ background: s.type === "MATCH" ? "var(--accent-2)" : "var(--accent)" }} />
+                      <span className="flex-1 min-w-0 truncate">{s.title}</span>
+                      <span className="text-xs flex-shrink-0" style={{ color: "var(--text-muted)" }}>
+                        {capitalizeFirst(formatSessionDate(s.date, { weekday: "short", day: "numeric", month: "short" }).replace(/\./g, ""))}
+                        {" · "}{formatSessionTime(s.date)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          )}
+        </section>
       </div>
     </div>
   );

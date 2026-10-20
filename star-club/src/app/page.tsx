@@ -21,6 +21,9 @@ export default async function Home() {
   }
 
   const clubs = await db.club.findMany({
+    // El club de pruebas/demostración no se lista en la portada pública:
+    // se entra directo por /demo.
+    where: { slug: { not: "demo" } },
     select: { name: true, slug: true, sport: true, logo: true, city: true },
     orderBy: { name: "asc" },
   });

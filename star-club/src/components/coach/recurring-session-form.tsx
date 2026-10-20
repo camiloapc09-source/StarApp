@@ -95,7 +95,10 @@ export default function RecurringSessionForm({ categories, coaches = [], userRol
         body: JSON.stringify({
           title: title.trim(),
           type,
-          date: d.toISOString().slice(0, 16),
+          // Hora de reloj "YYYY-MM-DDTHH:mm", igual que el formulario de una
+          // sola sesión. Antes se usaba toISOString(), que la pasaba a UTC:
+          // un entreno a la 1 p.m. quedaba guardado y mostrado a las 6 p.m.
+          date: format(d, "yyyy-MM-dd'T'HH:mm"),
           categoryId: categoryId || null,
           coachId: coachId || null,
           location: location || null,

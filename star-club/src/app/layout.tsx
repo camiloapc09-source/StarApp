@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Bebas_Neue } from "next/font/google";
 import "./globals.css";
 import PWARegister from "@/components/pwa-register";
 import AuthSessionProvider from "@/components/session-provider";
@@ -7,6 +7,13 @@ import { FeedbackHost } from "@/components/ui/feedback";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
+
+// Títulos y cifras grandes: condensada y deportiva, como la marca de los clubes.
+const display = Bebas_Neue({
+  variable: "--font-bebas",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -48,7 +55,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}
     >
       <head>
         <meta name="theme-color" content="#0a0a0a" />

@@ -5,6 +5,23 @@ function getResend() {
 }
 const FROM = process.env.RESEND_FROM ?? "Nova <noreply@resend.dev>";
 
+/**
+ * Dominios que no reciben correo: cuentas migradas (`@bb.internal`), el club
+ * de pruebas y dominios reservados. Antes se les enviaba igual; cada envío
+ * rebotaba y los rebotes bajan la reputación del remitente, así que los
+ * correos reales empezaban a caer en spam.
+ */
+const UNDELIVERABLE = /(\.internal|\.local|\.invalid|\.test|\.example|@example\.(com|org|net)|@demo\.starapp)$/i;
+
+export function isDeliverableEmail(to: string | null | undefined): to is string {
+  return !!to && to.includes("@") && !UNDELIVERABLE.test(to.trim());
+}
+
+async function send(to: string, subject: string, html: string) {
+  if (!isDeliverableEmail(to)) return;
+  await getResend().emails.send({ from: FROM, to, subject, html }).catch(console.error);
+}
+
 function base(content: string) {
   return `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nova</title></head>
 <body style="margin:0;padding:0;background:#080812;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
@@ -67,7 +84,7 @@ export async function sendOverduePaymentEmail({
     ${body("Sube el comprobante de pago desde la app para que el administrador lo confirme.")}
     ${btn("Ver pagos →", `${appUrl}/dashboard/parent/payments`)}
   `);
-  await getResend().emails.send({ from: FROM, to, subject: `⚠️ Pago vencido — ${playerName}`, html }).catch(console.error);
+  await send(to, `⚠️ Pago vencido — ${playerName}`, html);
 }
 
 // ─── Pago confirmado → al padre ───────────────────────────────────────────────
@@ -86,7 +103,7 @@ export async function sendPaymentConfirmedEmail({
     ${body("Gracias por mantenerte al día. Puedes ver el historial completo en la app.")}
     ${btn("Ver historial →", `${appUrl}/dashboard/parent/payments`)}
   `);
-  await getResend().emails.send({ from: FROM, to, subject: `✓ Pago confirmado — ${playerName}`, html }).catch(console.error);
+  await send(to, `✓ Pago confirmado — ${playerName}`, html);
 }
 
 // ─── Bienvenida al padre ──────────────────────────────────────────────────────
@@ -104,7 +121,7 @@ export async function sendParentWelcomeEmail({
     ${btn("Ir a la app →", `${appUrl}/dashboard/parent`)}
     <p style="margin:20px 0 0;font-size:13px;color:rgba(255,255,255,0.30);">Si tienes dudas, contacta al administrador del club.</p>
   `);
-  await getResend().emails.send({ from: FROM, to, subject: `Bienvenido/a a ${clubName} — Nova`, html }).catch(console.error);
+  await send(to, `Bienvenido/a a ${clubName} — Nova`, html);
 }
 
 // ─── Evidencia aprobada → al jugador ─────────────────────────────────────────
@@ -122,5 +139,5 @@ export async function sendEvidenceApprovedEmail({
     ${body("Sigue así — cada misión completada te acerca al siguiente nivel.")}
     ${btn("Ver mis misiones →", `${appUrl}/dashboard/player/missions`)}
   `);
-  await getResend().emails.send({ from: FROM, to, subject: `+${xpReward} XP — Misión aprobada`, html }).catch(console.error);
+  await send(to, `+${xpReward} XP — Misión aprobada`, html);
 }
