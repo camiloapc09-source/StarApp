@@ -236,7 +236,7 @@ export function ClubLoginForm({ club }: { club: Club }) {
         <p className="text-center text-xs mt-5" style={{ color: "rgba(255,255,255,0.28)" }}>
           ¿No tienes cuenta?{" "}
           <Link
-            href={`/${club.slug}/register`}
+            href={`/register?club=${club.slug}`}
             className="font-semibold transition-colors"
             style={{ color: "rgba(167,139,250,0.80)" }}
             onMouseEnter={(e) => (e.currentTarget.style.color = "#A78BFA")}

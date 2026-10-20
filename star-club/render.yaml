@@ -4,7 +4,10 @@ services:
     env: node
     region: oregon
     plan: starter
-    buildCommand: npm install && npx prisma db push --accept-data-loss && npm run build
+    # `db push` SIN --accept-data-loss: aplica solo cambios de esquema que no
+    # destruyen datos (columnas/tablas nuevas). Si un cambio fuera a borrar
+    # datos, el deploy FALLA en vez de borrarlos en silencio.
+    buildCommand: npm install && npx prisma db push && npm run build
     startCommand: npm start
     # Disco persistente para archivos subidos (evidencias, avatares, fotos, logo).
     # Sin esto, el filesystem de Render es efímero y todo se borra en cada deploy.
