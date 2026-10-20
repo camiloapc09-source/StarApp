@@ -347,8 +347,14 @@ export default async function AdminPlayersPage({ searchParams }: Props) {
 
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium">{player.user.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: "var(--text-muted)" }}>
-                        {player.user.email}
+                      {/* Antes mostraba el correo, que en muchas cuentas es interno
+                          ("1043…@bb.internal") y no le dice nada al admin. */}
+                      <p className="text-xs mt-0.5 truncate" style={{ color: "var(--text-muted)" }}>
+                        {[
+                          player.category?.name ?? "Sin categoría",
+                          player.jerseyNumber ? `#${player.jerseyNumber}` : null,
+                          player.documentNumber ? `Doc. ${player.documentNumber}` : null,
+                        ].filter(Boolean).join(" · ")}
                       </p>
                     </div>
 

@@ -472,7 +472,9 @@ export default function BulkMarkReceivedPanel({
                                       ? <CheckSquare size={16} style={{ color: "#34D399" }} />
                                       : <Square size={16} style={{ color: "rgba(255,255,255,0.50)" }} />}
                                   </div>
-                                  <div className="flex-1 min-w-0">
+                                  {/* Ancho mínimo: en celular el texto quedaba con 0 px y se
+                                      partía letra por letra; ahora los botones bajan a otra línea. */}
+                                  <div className="flex-1 min-w-[11rem]">
                                     <p className="text-sm font-medium truncate">{payment.concept}</p>
                                     {/* "Vence hoy" (ámbar) / "Vencido hace 3 días" (rojo).
                                         Antes decía "Vencido 0d" el mismo día del vencimiento. */}
@@ -488,7 +490,7 @@ export default function BulkMarkReceivedPanel({
                                       </p>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-2 flex-wrap">
+                                  <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto pl-7 sm:pl-0">
                                     <RecordPaymentModal
                                       paymentId={payment.id}
                                       playerName={g.player.user.name}

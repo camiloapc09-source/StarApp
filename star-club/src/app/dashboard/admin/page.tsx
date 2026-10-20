@@ -138,7 +138,7 @@ export default async function AdminDashboard() {
               <div className="flex items-center justify-between px-5 pt-5 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
                 <h2 className="font-bold text-[15px]">{t.common.recentPlayers}</h2>
                 <Link href="/dashboard/admin/players" className="flex items-center gap-1 text-xs font-semibold hover:text-[var(--accent-light)] transition-colors" style={{ color: "color-mix(in srgb, var(--accent-light) 75%, transparent)" }}>
-                  {t.common.viewAll} <ArrowRight size={12} />
+                  {t.common.viewAll.replace(/\s*→\s*$/, "")} <ArrowRight size={12} />
                 </Link>
               </div>
               <div className="divide-y" style={{ borderColor: "rgba(255,255,255,0.04)" }}>
@@ -160,7 +160,7 @@ export default async function AdminDashboard() {
                             <Zap size={11} />{player.xp} XP
                           </div>
                           <Badge variant={player.status === "ACTIVE" ? "success" : player.status === "PENDING" ? "warning" : "default"}>
-                            {player.status}
+                            {player.status === "ACTIVE" ? "Activo" : player.status === "PENDING" ? "Pendiente" : "Inactivo"}
                           </Badge>
                         </div>
                       </div>
