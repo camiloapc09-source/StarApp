@@ -103,7 +103,7 @@ export async function runPaymentReminders(
   // ── 1. Marcar como vencidos los cobros cuyo día de vencimiento YA TERMINÓ ──
   const toMark = await db.payment.findMany({
     where: { ...clubFilter, status: "PENDING", dueDate: { lt: cutoff } },
-    select: { id: true, playerId: true, concept: true, amount: true, dueDate: true, clubId: true },
+    select: { id: true, playerId: true, concept: true, amount: true, dueDate: true, clubId: true, promisedDate: true },
   });
 
   if (toMark.length > 0) {
@@ -124,12 +124,17 @@ export async function runPaymentReminders(
 
   const dueSoon = await db.payment.findMany({
     where: { ...clubFilter, status: "PENDING", dueDate: { gte: soonFrom, lt: soonTo } },
-    select: { id: true, playerId: true, concept: true, amount: true, dueDate: true, clubId: true },
+    select: { id: true, playerId: true, concept: true, amount: true, dueDate: true, clubId: true, promisedDate: true },
   });
 
+  // Quien prometió pagar (y su promesa no ha pasado) no recibe avisos de
+  // "vencido" ni "por vencer": ya hablamos con él y se le recuerda el día que dijo.
+  const hasActivePromise = (p: { promisedDate: Date | null }) =>
+    p.promisedDate !== null && p.promisedDate >= cutoff;
+
   const allPayments = [
-    ...toMark.map((p) => ({ ...p, kind: "overdue" as ReminderKind })),
-    ...dueSoon.map((p) => ({ ...p, kind: "due-soon" as ReminderKind })),
+    ...toMark.filter((p) => !hasActivePromise(p)).map((p) => ({ ...p, kind: "overdue" as ReminderKind })),
+    ...dueSoon.filter((p) => !hasActivePromise(p)).map((p) => ({ ...p, kind: "due-soon" as ReminderKind })),
   ];
   if (allPayments.length === 0) return result;
 

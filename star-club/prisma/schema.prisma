@@ -265,12 +265,19 @@ model Payment {
   proofUrl      String?
   proofNote     String?
   wompiReference String? @unique // referencia única del checkout Wompi, para correlacionar el webhook
+  /// Promesa de pago: el acudiente dijo "te pago el viernes". Se guarda aquí
+  /// para recordarlo ese día (una sola vez) y no escribirle antes.
+  promisedDate  DateTime?
+  promiseNote   String?
+  /// Cuándo se le recordó la promesa. Si tiene valor, no se vuelve a avisar.
+  promiseRemindedAt DateTime?
   createdAt     DateTime @default(now())
 
   @@index([clubId])
   @@index([playerId])
   @@index([status])
   @@index([dueDate])
+  @@index([promisedDate])
 }
 
 // ─── GAMIFICATION ─────────────────────────────────────────

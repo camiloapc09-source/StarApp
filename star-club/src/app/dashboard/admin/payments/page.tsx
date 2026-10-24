@@ -18,7 +18,7 @@ import CompletedPaymentsAccordion from "@/components/admin/completed-payments-ac
 import { Suspense } from "react";
 import PaymentSearch from "@/components/admin/payment-search";
 import { syncOverdueStatuses } from "@/lib/payment-reminders";
-import { monthRange, isWithin } from "@/lib/dates";
+import { monthRange, isWithin, toDateOnlyString, clubToday } from "@/lib/dates";
 import { hasContact } from "@/lib/phone";
 import { evaluateDiscount } from "@/lib/discount";
 
@@ -68,7 +68,7 @@ export default async function AdminPaymentsPage({
     select: {
       id: true, playerId: true, amount: true, concept: true,
       status: true, dueDate: true, paidAt: true,
-      paymentMethod: true, proofNote: true,
+      paymentMethod: true, proofNote: true, promisedDate: true, promiseNote: true,
       player: {
         include: {
           user: { select: { name: true, avatar: true, phone: true } },
@@ -154,6 +154,12 @@ export default async function AdminPaymentsPage({
     pendingAmt: [...pending, ...overdue].reduce((s, p) => s + p.amount, 0),
     overdueAmt: overdue.reduce((s, p) => s + p.amount, 0),
   };
+
+  // Promesas de pago de cobros todavía abiertos.
+  const todayStart = clubToday();
+  const withPromise = [...pending, ...overdue].filter((p) => p.promisedDate);
+  const promisesToday = withPromise.filter((p) => p.promisedDate!.getTime() === todayStart.getTime());
+  const promisesBroken = withPromise.filter((p) => p.promisedDate!.getTime() < todayStart.getTime());
 
   const clubName = club?.name ?? "el club";
   const clubCountry = club?.country ?? "CO";
@@ -325,6 +331,37 @@ export default async function AdminPaymentsPage({
           </div>
         )}
 
+        {/* Promesas de pago: lo que hay que mirar hoy y lo que se quedó sin cumplir */}
+        {(promisesToday.length > 0 || promisesBroken.length > 0) && (
+          <Card className="p-4 space-y-3">
+            <p className="text-[10px] font-bold tracking-[0.18em] uppercase" style={{ color: "rgba(255,255,255,0.32)" }}>
+              Promesas de pago
+            </p>
+            {promisesToday.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs font-semibold" style={{ color: "#818cf8" }}>Para hoy ({promisesToday.length})</p>
+                {promisesToday.map((p) => (
+                  <p key={p.id} className="text-sm">
+                    {p.player.user.name} · ${p.amount.toLocaleString("es-CO")}
+                    {p.promiseNote ? <span style={{ color: "rgba(255,255,255,0.5)" }}> · {p.promiseNote}</span> : null}
+                  </p>
+                ))}
+              </div>
+            )}
+            {promisesBroken.length > 0 && (
+              <div className="space-y-1">
+                <p className="text-xs font-semibold" style={{ color: "var(--error)" }}>Sin cumplir ({promisesBroken.length})</p>
+                {promisesBroken.map((p) => (
+                  <p key={p.id} className="text-sm">
+                    {p.player.user.name} · ${p.amount.toLocaleString("es-CO")}
+                    <span style={{ color: "rgba(255,255,255,0.5)" }}> · prometió el {format(p.promisedDate!, "d 'de' MMMM", { locale: es })}</span>
+                  </p>
+                ))}
+              </div>
+            )}
+          </Card>
+        )}
+
         {/* Action tools */}
         <div className="flex flex-wrap items-center gap-3">
           <BulkPaymentButton />
@@ -463,6 +500,8 @@ export default async function AdminPaymentsPage({
                 concept: p.concept,
                 status: p.status,
                 dueDate: p.dueDate,
+                promisedDate: p.promisedDate ? toDateOnlyString(p.promisedDate) : null,
+                promiseNote: p.promiseNote,
                 player: {
                   id: p.playerId,
                   // `Player.phone` es lo que escribe el admin en "Nuevo jugador".

@@ -13,6 +13,7 @@ import {
 import { Avatar } from "@/components/ui/avatar";
 import RecordPaymentModal from "@/components/admin/record-payment-modal";
 import AddPhoneButton from "@/components/admin/add-phone-button";
+import { PaymentPromiseButton } from "@/components/admin/payment-actions";
 import { daysUntilDue, dueLabel, dueColor, dueState, clubGreeting } from "@/lib/dates";
 import { resolveContact, whatsappLink } from "@/lib/phone";
 import { evaluateDiscount } from "@/lib/discount";
@@ -32,6 +33,9 @@ interface Payment {
   concept: string;
   status: string;
   dueDate: string | Date;
+  /** Fecha prometida por el acudiente, "YYYY-MM-DD". */
+  promisedDate?: string | null;
+  promiseNote?: string | null;
   player: {
     id?: string;
     /** Celular guardado en el perfil de jugador — el que escribe el admin. */
@@ -482,6 +486,12 @@ export default function BulkMarkReceivedPanel({
                                       {dueLabel(payment.dueDate)}
                                       {" · "}${payment.amount.toLocaleString("es-CO")}
                                     </p>
+                                    {payment.promisedDate && (
+                                      <p className="text-[11px] mt-0.5 font-semibold" style={{ color: "#818cf8" }}>
+                                        Prometió pagar el {format(new Date(`${payment.promisedDate}T12:00:00`), "EEEE d 'de' MMMM", { locale: es })}
+                                        {payment.promiseNote ? ` · ${payment.promiseNote}` : ""}
+                                      </p>
+                                    )}
                                     {/* El descuento se ve sin tener que abrir el modal. */}
                                     {rowDiscount?.applies && (
                                       <p className="text-[11px] mt-0.5 font-semibold" style={{ color: "#34D399" }}>
@@ -500,6 +510,7 @@ export default function BulkMarkReceivedPanel({
                                       earlyPaymentDays={earlyPaymentDays}
                                       earlyPaymentDiscount={earlyPaymentDiscount}
                                     />
+                                    <PaymentPromiseButton paymentId={payment.id} promisedDate={payment.promisedDate ?? null} />
                                     {pWaHref && (
                                       <a href={pWaHref} target="_blank" rel="noreferrer"
                                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold transition-all hover:opacity-80"

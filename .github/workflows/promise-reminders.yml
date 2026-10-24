@@ -1,0 +1,25 @@
+name: Recordatorio de promesas de pago
+
+# 14:00 UTC = 9:00 a. m. hora de Colombia (UTC-5).
+# Recuerda UNA sola vez los pagos que el acudiente prometió para HOY.
+on:
+  schedule:
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+jobs:
+  promise-reminders:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar al endpoint de promesas
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          BASE_URL="${APP_URL:-https://starapp-9qb7.onrender.com}"
+          HTTP_CODE=$(curl -s -o /tmp/body.txt -w "%{http_code}" \
+            -X POST "$BASE_URL/api/cron/promise-reminders" \
+            -H "Authorization: Bearer $CRON_SECRET")
+          echo "HTTP $HTTP_CODE"
+          cat /tmp/body.txt
+          [ "$HTTP_CODE" = "200" ] || { echo "::error::Falló con código $HTTP_CODE"; exit 1; }
